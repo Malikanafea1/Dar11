@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.name }} - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ patient.name }}</h1>
+    <div>
+        <a href="{{ url_for('main.patients') }}" class="btn btn-secondary">
+            <i class="fas fa-list me-1"></i> قائمة المرضى
+        </a>
+        <a href="{{ url_for('main.edit_patient', id=patient.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i> تعديل
+        </a>
+        <a href="{{ url_for('main.patient_statement', id=patient.id) }}" class="btn btn-info">
+            <i class="fas fa-file-invoice-dollar me-1"></i> كشف حساب
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Patient Info Card -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-injured me-2"></i> بيانات المريض</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5 class="mb-3">الحالة:</h5>
+                    {% if patient.is_active %}
+                    <span class="badge bg-success rounded-pill d-inline-flex align-items-center p-2 fs-6 mb-3">
+                        <i class="fas fa-check-circle me-1"></i> نشط
+                    </span>
+                    <form action="{{ url_for('main.toggle_patient_status', id=patient.id) }}" method="POST" class="mb-3">
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-sign-out-alt me-1"></i> تسجيل خروج المريض
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="badge bg-danger rounded-pill d-inline-flex align-items-center p-2 fs-6 mb-3">
+                        <i class="fas fa-times-circle me-1"></i> غير نشط (خرج بتاريخ {{ patient.discharge_date.strftime('%Y-%m-%d') }})
+                    </span>
+                    <form action="{{ url_for('main.toggle_patient_status', id=patient.id) }}" method="POST" class="mb-3">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="fas fa-sign-in-alt me-1"></i> إعادة تنشيط المريض
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">تاريخ الدخول:</p>
+                        <p class="mb-3 fs-5">{{ patient.admission_date.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">مدة الإقامة:</p>
+                        <p class="mb-3 fs-5">{{ patient.total_stay_days }} يوم</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">التكلفة اليومية:</p>
+                        <p class="mb-3 fs-5">{{ patient.daily_rate }} ج.م</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted">الرصيد الحالي:</p>
+                        <p class="mb-3 fs-5 {{ 'text-danger' if patient.balance < 0 else 'text-success' }}">
+                            {{ patient.balance }} ج.م
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">رقم الهاتف:</p>
+                        <p class="mb-3">{{ patient.phone or 'غير محدد' }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">الرقم القومي:</p>
+                        <p class="mb-3">{{ patient.national_id or 'غير محدد' }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">العنوان:</p>
+                        <p class="mb-3">{{ patient.address or 'غير محدد' }}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <p class="mb-1 text-muted">ملاحظات:</p>
+                        <p class="mb-0">{{ patient.notes or 'لا توجد ملاحظات' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary Card -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i> ملخص مالي</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">تكلفة الإقامة</h6>
+                        <h4>{{ patient.total_stay_cost }} ج.م</h4>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">المصروفات الإضافية</h6>
+                        <h4>{{ patient.total_expenses }} ج.م</h4>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h6 class="text-muted">إجمالي المدفوعات</h6>
+                        <h4>{{ patient.total_payments }} ج.م</h4>
+                    </div>
+                </div>
+                <div class="alert {{ 'alert-danger' if patient.balance < 0 else 'alert-success' }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">الرصيد الحالي:</h6>
+                            <h3 class="mb-0">{{ patient.balance }} ج.م</h3>
+                        </div>
+                        {% if patient.is_active and current_user.can_manage_finances %}
+                        <a href="{{ url_for('main.add_collection') }}" class="btn btn-primary">
+                            <i class="fas fa-cash-register me-1"></i> تسجيل دفعة
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i> إضافة مصروف</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.add_patient_expense', id=patient.id) }}">
+                    {{ expense_form.csrf_token }}
+                    {{ expense_form.patient_id }}
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ expense_form.expense_type.label(class="form-label") }}
+                            {{ expense_form.expense_type(class="form-select") }}
+                            {% for error in expense_form.expense_type.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ expense_form.amount.label(class="form-label") }}
+                            {{ expense_form.amount(class="form-control", placeholder="أدخل المبلغ") }}
+                            {% for error in expense_form.amount.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ expense_form.date.label(class="form-label") }}
+                            {{ expense_form.date(class="form-control", type="date") }}
+                            {% for error in expense_form.date.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ expense_form.description.label(class="form-label") }}
+                        {{ expense_form.description(class="form-control", placeholder="أدخل وصف المصروف") }}
+                        {% for error in expense_form.description.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ expense_form.submit(class="btn btn-danger") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Activities Card -->
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i> المعاملات الأخيرة</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" id="activityTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses" type="button" role="tab" aria-controls="expenses" aria-selected="true">المصروفات</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">المدفوعات</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="activityTabContent">
+                    <div class="tab-pane fade show active" id="expenses" role="tabpanel" aria-labelledby="expenses-tab">
+                        {% if patient.expenses.all() %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>النوع</th>
+                                        <th>الوصف</th>
+                                        <th>المبلغ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for expense in patient.expenses.order_by('date', 'created_at').limit(10).all() %}
+                                    <tr>
+                                        <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            {% set expense_types = {'cigarettes': 'سجائر', 'medical_tests': 'فحوصات طبية', 
+                                                                   'medications': 'أدوية', 'personal_expenses': 'مصاريف شخصية',
+                                                                   'haircut': 'حلاقة', 'buffet': 'بوفيه', 
+                                                                   'laundry': 'غسيل ملابس', 'other': 'أخرى'} %}
+                                            {{ expense_types[expense.expense_type] }}
+                                        </td>
+                                        <td>{{ expense.description or '-' }}</td>
+                                        <td>{{ expense.amount }} ج.م</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center">لا توجد مصروفات مسجلة</p>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+                        {% if patient.payments.all() %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>المبلغ</th>
+                                        <th>المُحصل</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in patient.payments.order_by('date', 'created_at').limit(10).all() %}
+                                    <tr>
+                                        <td>{{ payment.date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ payment.amount }} ج.م</td>
+                                        <td>{{ payment.collector.username }}</td>
+                                        <td>{{ payment.notes or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center">لا توجد مدفوعات مسجلة</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,269 @@
+/* RTL Specific Styles for Dar El Hayah System
+ * This file contains custom styles for right-to-left (RTL) Arabic interface
+ */
+
+/* Fix for input alignment in RTL mode */
+.form-control {
+    text-align: right;
+}
+
+/* Fix alignment issues in tables */
+.table td, .table th {
+    text-align: right;
+}
+
+/* Fix for form validation feedback icons */
+.form-control.is-invalid,
+.form-control.is-valid {
+    padding-left: calc(1.5em + 0.75rem);
+    padding-right: 0.75rem;
+    background-position: left calc(0.375em + 0.1875rem) center;
+}
+
+/* Fix for dropdown menu alignment */
+.dropdown-menu {
+    text-align: right;
+}
+
+/* Fix for RTL list groups */
+.list-group {
+    padding-right: 0;
+}
+
+/* Fix for modal close button */
+.modal-header .btn-close {
+    margin: -0.5rem auto -0.5rem -0.5rem;
+}
+
+/* Fix for input groups */
+.input-group > .form-control,
+.input-group > .form-select {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+}
+
+/* Fix form check alignment */
+.form-check {
+    padding-right: 1.5em;
+    padding-left: 0;
+}
+
+.form-check .form-check-input {
+    float: right;
+    margin-right: -1.5em;
+    margin-left: 0;
+}
+
+/* Progress bar direction fix */
+.progress {
+    direction: ltr;
+}
+
+/* RTL navigation arrows fix */
+.carousel-control-next {
+    right: auto;
+    left: 0;
+}
+
+.carousel-control-prev {
+    right: 0;
+    left: auto;
+}
+
+.carousel-control-next-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e");
+}
+
+.carousel-control-prev-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+/* Fix for badge alignment and spacing */
+.badge {
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+/* Fix spacing for card elements */
+.card-title, .card-subtitle {
+    text-align: right;
+}
+
+/* Fix dropdown menus direction */
+.dropdown-item {
+    text-align: right;
+}
+
+.dropdown-toggle::after {
+    margin-right: 0.255em;
+    margin-left: 0;
+}
+
+/* Fix accordion direction */
+.accordion-button::after {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Fix button groups */
+.btn-group > .btn:not(:last-child):not(.dropdown-toggle),
+.btn-group > .btn-group:not(:last-child) > .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.btn-group > .btn:not(:first-child),
+.btn-group > .btn-group:not(:first-child) > .btn {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+/* Better Arabic font support */
+body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Segoe UI", "Tahoma", "Arial", sans-serif;
+}
+
+/* Fix for the modal dialog */
+.modal-footer {
+    justify-content: flex-start;
+}
+
+.modal-header {
+    flex-direction: row-reverse;
+}
+
+/* Add space for badge groups */
+.badge-group .badge {
+    margin-bottom: 5px;
+}
+
+/* Fix for file input */
+.form-file-text {
+    text-align: right;
+}
+
+/* Fix list style in RTL */
+ul, ol {
+    padding-right: 2rem;
+    padding-left: 0;
+}
+
+/* Fix breadcrumb separator */
+.breadcrumb-item + .breadcrumb-item::before {
+    float: right;
+    padding-left: 0.5rem;
+    padding-right: 0;
+}
+
+.breadcrumb-item + .breadcrumb-item {
+    padding-right: 0.5rem;
+    padding-left: 0;
+}
+
+/* Improved arabic number inputs display */
+input[type="number"] {
+    direction: ltr;
+    text-align: right;
+}
+
+/* Specific overrides for date inputs which should be LTR */
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="week"] {
+    direction: ltr;
+}
+
+/* Fix for pagination */
+.pagination {
+    padding-right: 0;
+}
+
+.page-item:first-child .page-link {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.page-item:last-child .page-link {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Fix checkbox layout */
+.form-check-inline {
+    margin-left: 0.75rem;
+    margin-right: 0;
+}
+
+/* Fix printing styles */
+@media print {
+    body {
+        text-align: right;
+        direction: rtl;
+    }
+}
+
+/* Custom styles for Dar El Hayah application */
+.report-content {
+    line-height: 1.8;
+    text-align: right;
+}
+
+.table-responsive {
+    direction: rtl;
+}
+
+.alert {
+    text-align: right;
+}
+
+/* Card margins for better layout */
+.card {
+    margin-bottom: 1.5rem;
+}
+
+/* Improve readability of finance numbers */
+.text-success, .text-danger {
+    font-weight: 500;
+}
+
+/* Improve visual hierarchy in dashboard */
+.dashboard-stat-value {
+    font-size: 2rem;
+    font-weight: 500;
+}
+
+.dashboard-stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Fix font size issues with Arabic */
+@media (max-width: 768px) {
+    body {
+        font-size: 0.95rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.6rem;
+    }
+    
+    h3 {
+        font-size: 1.4rem;
+    }
+}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}التحصيلات - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>التحصيلات</h1>
+    <a href="{{ url_for('main.add_collection') }}" class="btn btn-primary">
+        <i class="fas fa-cash-register me-1"></i> تسجيل دفعة جديدة
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i> سجل التحصيلات</h5>
+    </div>
+    <div class="card-body">
+        {% if collections %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>المريض</th>
+                        <th>المبلغ</th>
+                        <th>المُحصِل</th>
+                        <th>ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for collection in collections %}
+                    <tr>
+                        <td>{{ collection.date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('main.view_patient', id=collection.patient_id) }}">
+                                {{ collection.patient.name }}
+                            </a>
+                        </td>
+                        <td>{{ collection.amount }} ج.م</td>
+                        <td>{{ collection.collector.username }}</td>
+                        <td>{{ collection.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> لا توجد أي تحصيلات مسجلة حتى الآن
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}دار الحياة - مركز علاج نفسي وإدمان{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4">مرحباً بك في نظام دار الحياة</h1>
+        <p class="lead">نظام إدارة متكامل لمركز علاج نفسي وإدمان</p>
+        
+        <div class="mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-user-injured text-primary me-2"></i>
+                                إدارة المرضى
+                            </h5>
+                            <p class="card-text">إضافة المرضى، متابعة الإقامة، تسجيل المصروفات، وإعداد كشوف الحساب.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-cash-register text-primary me-2"></i>
+                                إدارة التحصيلات
+                            </h5>
+                            <p class="card-text">تسجيل المدفوعات بسهولة وتتبع الأرصدة والمستحقات.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-user-tie text-primary me-2"></i>
+                                إدارة الموظفين
+                            </h5>
+                            <p class="card-text">إدارة شؤون الموظفين، الرواتب، المكافآت، والسلف.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-users text-primary me-2"></i>
+                                المجموعات العلاجية
+                            </h5>
+                            <p class="card-text">إدارة المجموعات العلاجية، مراحل العلاج، وتقارير المعالجين.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-chart-line text-primary me-2"></i>
+                                تقارير مالية
+                            </h5>
+                            <p class="card-text">تقارير مالية يومية وشهرية وسنوية لمتابعة أداء المركز.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-hand-holding-usd text-primary me-2"></i>
+                                إدارة المصروفات
+                            </h5>
+                            <p class="card-text">تسجيل ومتابعة مصروفات المركز بمختلف أنواعها.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </a>
+            {% else %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-tachometer-alt"></i> لوحة التحكم
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

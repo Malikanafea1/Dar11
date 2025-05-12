@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}المجموعات العلاجية - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>المجموعات العلاجية</h1>
+    {% if current_user.can_manage_therapy %}
+    <a href="{{ url_for('main.add_therapy_group') }}" class="btn btn-primary">
+        <i class="fas fa-users me-1"></i> إنشاء مجموعة جديدة
+    </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% if groups %}
+        {% for group in groups %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header {{ 'bg-primary' if group.is_active else 'bg-secondary' }} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i> {{ group.name }}
+                        {% if not group.is_active %}
+                        <span class="badge bg-danger ms-2">غير نشطة</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">المعالج المسؤول:</p>
+                            <p class="fs-5">{{ group.therapist.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">عدد المرضى:</p>
+                            <p class="fs-5">{{ group.members.filter_by(exit_date=None).count() }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted">وصف المجموعة:</p>
+                        <p>{{ group.description or 'لا يوجد وصف' }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="mb-1 text-muted">مواعيد الجلسات:</p>
+                        <p>{{ group.schedule or 'غير محددة' }}</p>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <a href="{{ url_for('main.view_therapy_group', id=group.id) }}" class="btn btn-info">
+                            <i class="fas fa-eye me-1"></i> عرض التفاصيل
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> لا توجد مجموعات علاجية حتى الآن
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

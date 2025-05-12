@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ group.name }}</h1>
+    <div>
+        <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-secondary">
+            <i class="fas fa-list me-1"></i> قائمة المجموعات العلاجية
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Group Info Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> معلومات المجموعة</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <p class="mb-1 text-muted">الحالة:</p>
+                    {% if group.is_active %}
+                    <p class="mb-0">
+                        <span class="badge bg-success rounded-pill d-inline-flex align-items-center p-2">
+                            <i class="fas fa-check-circle me-1"></i> نشطة
+                        </span>
+                    </p>
+                    {% else %}
+                    <p class="mb-0">
+                        <span class="badge bg-danger rounded-pill d-inline-flex align-items-center p-2">
+                            <i class="fas fa-times-circle me-1"></i> غير نشطة
+                        </span>
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <p class="mb-1 text-muted">المعالج المسؤول:</p>
+                    <p class="fs-5">{{ group.therapist.name }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <p class="mb-1 text-muted">عدد المرضى الحاليين:</p>
+                    <p class="fs-5">{{ members|length }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <p class="mb-1 text-muted">مواعيد الجلسات:</p>
+                    <p>{{ group.schedule or 'غير محددة' }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <p class="mb-1 text-muted">وصف المجموعة:</p>
+                    <p>{{ group.description or 'لا يوجد وصف' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Group Members and Add Member Form -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-user-friends me-2"></i> أعضاء المجموعة</h5>
+            </div>
+            <div class="card-body">
+                {% if members %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>تاريخ الانضمام</th>
+                                <th>مرحلة العلاج</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('main.view_patient', id=member.patient_id) }}">
+                                        {{ member.patient.name }}
+                                    </a>
+                                </td>
+                                <td>{{ member.join_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ member.treatment_stage or '-' }}</td>
+                                <td>
+                                    {% if can_add_patients %}
+                                    <form action="{{ url_for('main.remove_therapy_group_member', group_id=group.id, member_id=member.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('هل أنت متأكد من إزالة المريض من المجموعة؟')">
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> لا يوجد مرضى في هذه المجموعة حالياً
+                </div>
+                {% endif %}
+                
+                {% if can_add_patients %}
+                <hr>
+                <h5 class="mb-3">إضافة مريض للمجموعة</h5>
+                <form method="POST" action="{{ url_for('main.add_therapy_group_member', id=group.id) }}">
+                    {{ member_form.csrf_token }}
+                    {{ member_form.group_id }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ member_form.patient_id.label(class="form-label") }}
+                            {{ member_form.patient_id(class="form-select") }}
+                            {% for error in member_form.patient_id.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ member_form.treatment_stage.label(class="form-label") }}
+                            {{ member_form.treatment_stage(class="form-control", placeholder="مثال: المرحلة الأولى") }}
+                            {% for error in member_form.treatment_stage.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ member_form.notes.label(class="form-label") }}
+                        {{ member_form.notes(class="form-control", rows=2, placeholder="ملاحظات عن المريض في المجموعة") }}
+                        {% for error in member_form.notes.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ member_form.submit(class="btn btn-info") }}
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Reports Card -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i> التقارير</h5>
+            </div>
+            <div class="card-body">
+                {% if can_add_reports %}
+                <form method="POST" action="{{ url_for('main.add_therapy_report', id=group.id) }}" class="mb-4">
+                    {{ report_form.csrf_token }}
+                    {{ report_form.group_id }}
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ report_form.report_type.label(class="form-label") }}
+                            {{ report_form.report_type(class="form-select") }}
+                            {% for error in report_form.report_type.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">التاريخ</label>
+                            <input type="text" class="form-control" value="{{ now().strftime('%Y-%m-%d') }}" readonly>
+                            <small class="text-muted">تاريخ اليوم (لا يمكن تغييره)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ report_form.content.label(class="form-label") }}
+                        {{ report_form.content(class="form-control", rows=5, placeholder="اكتب محتوى التقرير هنا...") }}
+                        {% for error in report_form.content.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ report_form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+                <hr>
+                {% endif %}
+                
+                <h5 class="mb-3">آخر التقارير</h5>
+                {% if reports %}
+                <div class="list-group">
+                    {% for report in reports %}
+                    <a href="{{ url_for('main.view_therapy_report', id=report.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                {% if report.report_type == 'daily' %}
+                                <i class="fas fa-calendar-day text-primary me-1"></i> تقرير يومي
+                                {% else %}
+                                <i class="fas fa-calendar-week text-warning me-1"></i> تقرير أسبوعي
+                                {% endif %}
+                            </h6>
+                            <small>{{ report.report_date.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <p class="mb-1 text-truncate">{{ report.content[:100] }}{% if report.content|length > 100 %}...{% endif %}</p>
+                        <small class="text-muted">بواسطة: {{ report.author.username }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> لا توجد تقارير مسجلة لهذه المجموعة حتى الآن
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}تقرير {{ report.report_date.strftime('%Y-%m-%d') }} - {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        {% if report.report_type == 'daily' %}
+        <i class="fas fa-calendar-day text-primary me-2"></i> تقرير يومي
+        {% else %}
+        <i class="fas fa-calendar-week text-warning me-2"></i> تقرير أسبوعي
+        {% endif %}
+    </h1>
+    <div>
+        <a href="{{ url_for('main.view_therapy_group', id=group.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للمجموعة
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> طباعة
+        </button>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> معلومات التقرير</h5>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <p class="text-muted mb-1">المجموعة العلاجية:</p>
+                <p class="fs-5">{{ group.name }}</p>
+            </div>
+            
+            <div class="col-md-4">
+                <p class="text-muted mb-1">تاريخ التقرير:</p>
+                <p class="fs-5">{{ report.report_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+            
+            <div class="col-md-4">
+                <p class="text-muted mb-1">نوع التقرير:</p>
+                <p class="fs-5">
+                    {% if report.report_type == 'daily' %}
+                    <span class="badge bg-primary">تقرير يومي</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">تقرير أسبوعي</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <p class="text-muted mb-1">المعالج المسؤول:</p>
+                <p class="fs-5">{{ group.therapist.name }}</p>
+            </div>
+            
+            <div class="col-md-4">
+                <p class="text-muted mb-1">كاتب التقرير:</p>
+                <p class="fs-5">{{ report.author.username }}</p>
+            </div>
+            
+            <div class="col-md-4">
+                <p class="text-muted mb-1">تاريخ الكتابة:</p>
+                <p class="fs-5">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i> محتوى التقرير</h5>
+    </div>
+    <div class="card-body">
+        <div class="report-content p-3">
+            {{ report.content | replace('\n', '<br>') | safe }}
+        </div>
+    </div>
+</div>
+
+{% if current_user.role == 'therapist' and current_user.id == report.author_id and report.report_date.strftime('%Y-%m-%d') == now().strftime('%Y-%m-%d') %}
+<div class="mt-4">
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> يمكنك تعديل هذا التقرير اليوم فقط. بعد ذلك، لن يكون التعديل ممكناً.
+    </div>
+    <a href="{{ url_for('main.view_therapy_group', id=group.id) }}" class="btn btn-warning">
+        <i class="fas fa-edit me-1"></i> تعديل التقرير
+    </a>
+</div>
+{% endif %}
+
+{% block styles %}
+<style media="print">
+    .btn, nav, footer {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .badge {
+        border: 1px solid #333;
+        padding: 3px 6px;
+    }
+    
+    .report-content {
+        font-size: 14pt;
+        line-height: 1.6;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+{% endblock %}
+{% endblock %}

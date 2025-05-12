@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}إنشاء حساب جديد - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i> إنشاء حساب جديد</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    {{ form.csrf_token }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control", placeholder="أدخل اسم المستخدم") }}
+                            {% for error in form.username.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control", placeholder="أدخل البريد الإلكتروني") }}
+                            {% for error in form.email.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control", placeholder="أدخل كلمة المرور") }}
+                            {% for error in form.password.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.confirm_password.label(class="form-label") }}
+                            {{ form.confirm_password(class="form-control", placeholder="أكد كلمة المرور") }}
+                            {% for error in form.confirm_password.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.role.label(class="form-label") }}
+                        {{ form.role(class="form-select") }}
+                        {% for error in form.role.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if current_user.is_authenticated and current_user.can_manage_users %}
+                    <div class="mb-3">
+                        <label class="form-label">الصلاحيات</label>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_manage_patients(class="form-check-input") }}
+                                    {{ form.can_manage_patients.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_manage_finances(class="form-check-input") }}
+                                    {{ form.can_manage_finances.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_manage_employees(class="form-check-input") }}
+                                    {{ form.can_manage_employees.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_manage_therapy(class="form-check-input") }}
+                                    {{ form.can_manage_therapy.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_manage_users(class="form-check-input") }}
+                                    {{ form.can_manage_users.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    {{ form.can_view_reports(class="form-check-input") }}
+                                    {{ form.can_view_reports.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card-footer text-center">
+                <p class="mb-0">لديك حساب بالفعل؟ <a href="{{ url_for('auth.login') }}">تسجيل الدخول</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

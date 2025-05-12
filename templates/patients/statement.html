@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}كشف حساب {{ patient.name }} - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h1>كشف حساب - {{ patient.name }}</h1>
+    <div>
+        <a href="{{ url_for('main.view_patient', id=patient.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة للمريض
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> طباعة
+        </button>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-user-injured me-2"></i> معلومات المريض</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">الاسم:</p>
+                <p class="fs-5">{{ patient.name }}</p>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">تاريخ الدخول:</p>
+                <p class="fs-5">{{ patient.admission_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">المدة:</p>
+                <p class="fs-5">
+                    {{ patient.total_stay_days }} يوم
+                    {% if patient.discharge_date %}
+                    <span class="text-muted">(خرج بتاريخ {{ patient.discharge_date.strftime('%Y-%m-%d') }})</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">معدل الإقامة اليومية:</p>
+                <p class="fs-5">{{ patient.daily_rate }} ج.م</p>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">تكلفة الإقامة:</p>
+                <p class="fs-5">{{ patient.total_stay_cost }} ج.م</p>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+                <p class="text-muted mb-1">الرصيد الحالي:</p>
+                <p class="fs-5 {{ 'text-danger' if patient.balance < 0 else 'text-success' }}">
+                    {{ patient.balance }} ج.م
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Monthly Summary -->
+    <div class="col-md-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> ملخص شهري</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>الشهر</th>
+                                <th>المصاريف</th>
+                                <th>المدفوعات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month_key, month_data in monthly_summary.items() %}
+                            <tr>
+                                <td>{{ month_data.month }}</td>
+                                <td>{{ "%.2f"|format(month_data.charges) }} ج.م</td>
+                                <td>{{ "%.2f"|format(month_data.payments) }} ج.م</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary -->
+    <div class="col-md-8">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i> ملخص مالي</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        <h6 class="text-muted">إجمالي تكلفة الإقامة</h6>
+                        <h3>{{ patient.total_stay_cost }} ج.م</h3>
+                    </div>
+                    
+                    <div class="col-md-4 text-center mb-4">
+                        <h6 class="text-muted">إجمالي المصروفات الإضافية</h6>
+                        <h3>{{ patient.total_expenses }} ج.م</h3>
+                    </div>
+                    
+                    <div class="col-md-4 text-center mb-4">
+                        <h6 class="text-muted">إجمالي المدفوعات</h6>
+                        <h3>{{ patient.total_payments }} ج.م</h3>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <h5 class="text-muted">الرصيد النهائي</h5>
+                    <h2 class="{{ 'text-danger' if patient.balance < 0 else 'text-success' }}">
+                        {{ patient.balance }} ج.م
+                    </h2>
+                    <p class="mt-2">
+                        {% if patient.balance < 0 %}
+                        مطلوب سداد مبلغ <strong>{{ patient.balance|abs }} ج.م</strong>
+                        {% elif patient.balance > 0 %}
+                        يوجد رصيد زائد قيمته <strong>{{ patient.balance }} ج.م</strong>
+                        {% else %}
+                        تم تسوية الحساب بالكامل
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i> تفاصيل المعاملات</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>التفاصيل</th>
+                        <th>المبلغ</th>
+                        <th>الرصيد المتراكم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td class="{{ 'text-danger' if transaction.amount < 0 else 'text-success' }}">
+                            {{ transaction.amount }} ج.م
+                        </td>
+                        <td class="{{ 'text-danger' if transaction.running_balance < 0 else 'text-success' }}">
+                            {{ transaction.running_balance }} ج.م
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% block styles %}
+<style media="print">
+    .btn, nav, footer, .d-print-none {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    .text-success {
+        color: #28a745 !important;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    table th, table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    
+    .text-muted {
+        color: #6c757d !important;
+    }
+</style>
+{% endblock %}
+{% endblock %}

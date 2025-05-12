@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}إنشاء مجموعة علاجية جديدة - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-users me-2"></i> إنشاء مجموعة علاجية جديدة</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.csrf_token }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control", placeholder="أدخل اسم المجموعة") }}
+                            {% for error in form.name.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.therapist_id.label(class="form-label") }}
+                            {{ form.therapist_id(class="form-select") }}
+                            {% for error in form.therapist_id.errors %}
+                                <small class="text-danger">{{ error }}</small>
+                            {% endfor %}
+                            
+                            {% if not form.therapist_id.choices %}
+                            <small class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                لا يوجد معالجين مسجلين، برجاء إضافة معالج أولاً
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3, placeholder="وصف المجموعة والهدف منها") }}
+                        {% for error in form.description.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.schedule.label(class="form-label") }}
+                        {{ form.schedule(class="form-control", placeholder="مثال: الأحد والثلاثاء 10 صباحاً - 12 ظهراً") }}
+                        {% for error in form.schedule.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-1"></i> رجوع
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

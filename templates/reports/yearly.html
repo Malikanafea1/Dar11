@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}التقرير السنوي - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>التقرير السنوي</h1>
+    <button class="btn btn-primary" onclick="window.print()">
+        <i class="fas fa-print me-1"></i> طباعة
+    </button>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> اختر السنة</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label">السنة</label>
+                    <select name="year" class="form-select">
+                        {% set current_year = now().year %}
+                        {% for year in range(current_year-5, current_year+1) %}
+                        <option value="{{ year }}" {% if year == selected_year|default(current_year) %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">عرض التقرير</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if report_data %}
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i> إجمالي الإيرادات</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-center py-4">
+                    <h2 class="mb-0">{{ report_data.total_income }} ج.م</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card shadow h-100">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-hand-holding-usd me-2"></i> إجمالي المصروفات</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-center py-4">
+                    <h2 class="mb-0">{{ report_data.total_expenses }} ج.م</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card shadow h-100">
+            <div class="card-header {{ 'bg-success' if report_data.profit > 0 else 'bg-danger' }} text-white">
+                <h5 class="mb-0">
+                    {% if report_data.profit >= 0 %}
+                    <i class="fas fa-chart-line me-2"></i> صافي الربح
+                    {% else %}
+                    <i class="fas fa-chart-line me-2"></i> صافي الخسارة
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                <div class="text-center py-4">
+                    <h2 class="mb-0 {{ 'text-success' if report_data.profit >= 0 else 'text-danger' }}">
+                        {{ report_data.profit }} ج.م
+                    </h2>
+                    <p class="text-muted">
+                        {% if report_data.profit >= 0 %}
+                        نسبة الربح: {{ "%.2f"|format(report_data.profit_percentage) }}%
+                        {% else %}
+                        نسبة الخسارة: {{ "%.2f"|format(report_data.profit_percentage|abs) }}%
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> الإيرادات الشهرية</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="incomeChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i> المصروفات الشهرية</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="expensesChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> توزيع المصروفات حسب القسم</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <canvas id="expensesByCategoryChart" width="400" height="400"></canvas>
+            </div>
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>القسم</th>
+                                <th>المبلغ</th>
+                                <th>النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in report_data.expenses_by_category %}
+                            <tr>
+                                <td>{{ category.name }}</td>
+                                <td>{{ category.amount }} ج.م</td>
+                                <td>{{ "%.2f"|format(category.percentage) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-dark">
+                                <th>الإجمالي</th>
+                                <th>{{ report_data.total_expenses }} ج.م</th>
+                                <th>100%</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly income chart
+    const incomeCtx = document.getElementById('incomeChart').getContext('2d');
+    const incomeChart = new Chart(incomeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ report_data.months|safe }},
+            datasets: [{
+                label: 'الإيرادات الشهرية (ج.م)',
+                data: {{ report_data.monthly_income|safe }},
+                backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Monthly expenses chart
+    const expensesCtx = document.getElementById('expensesChart').getContext('2d');
+    const expensesChart = new Chart(expensesCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ report_data.months|safe }},
+            datasets: [{
+                label: 'المصروفات الشهرية (ج.م)',
+                data: {{ report_data.monthly_expenses|safe }},
+                backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Expenses by category chart
+    const categoryCtx = document.getElementById('expensesByCategoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ report_data.category_names|safe }},
+            datasets: [{
+                data: {{ report_data.category_amounts|safe }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 199, 199, 0.7)',
+                    'rgba(78, 52, 199, 0.7)',
+                    'rgba(225, 86, 86, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 199, 199, 1)',
+                    'rgba(78, 52, 199, 1)',
+                    'rgba(225, 86, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+<style media="print">
+    .btn, nav, footer, form {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .text-success {
+        color: #28a745 !important;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table th, .table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    
+    .table-dark {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        font-weight: bold;
+    }
+    
+    canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+</style>
+{% endblock %}
+{% endif %}
+{% endblock %}

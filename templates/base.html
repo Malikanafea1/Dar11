@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}دار الحياة - مركز علاج نفسي وإدمان{% endblock %}</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rtl.css') }}">
+    
+    <!-- Additional CSS -->
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-hospital-alt me-2"></i>
+                دار الحياة
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> لوحة التحكم
+                        </a>
+                    </li>
+                    
+                    {% if current_user.can_manage_patients %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.patients') }}">
+                            <i class="fas fa-user-injured"></i> المرضى
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_finances %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="financeDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-money-bill-wave"></i> المالية
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="financeDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.collections') }}">
+                                    <i class="fas fa-cash-register"></i> التحصيلات
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.expenses') }}">
+                                    <i class="fas fa-hand-holding-usd"></i> المصروفات
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_employees %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.employees') }}">
+                            <i class="fas fa-user-tie"></i> الموظفين
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_therapy or current_user.role == 'therapist' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.therapy_groups') }}">
+                            <i class="fas fa-users"></i> المجموعات العلاجية
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.can_view_reports %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-line"></i> التقارير
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.daily_report') }}">
+                                    <i class="fas fa-calendar-day"></i> تقرير يومي
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.monthly_report') }}">
+                                    <i class="fas fa-calendar-alt"></i> تقرير شهري
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.profit_loss_report') }}">
+                                    <i class="fas fa-chart-pie"></i> الأرباح والخسائر
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.negative_balance_report') }}">
+                                    <i class="fas fa-exclamation-triangle"></i> أرصدة سالبة
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_users %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.users') }}">
+                            <i class="fas fa-users-cog"></i> المستخدمين
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> {{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل دخول
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.register') }}">
+                            <i class="fas fa-user-plus"></i> إنشاء حساب
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">© {{ g.year }} {{ g.site_name }} - نظام إدارة مركز علاج نفسي وإدمان</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Additional JS -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

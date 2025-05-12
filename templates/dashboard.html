@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">لوحة التحكم</h1>
+        <p class="lead">مرحباً بك {{ current_user.username }} في نظام إدارة دار الحياة</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card border-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-user-injured me-2"></i>المرضى النشطين
+                </h5>
+                <p class="card-text display-6">{{ active_patients }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-success h-100">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-money-bill-wave me-2"></i>تحصيلات اليوم
+                </h5>
+                <p class="card-text display-6">{{ today_collections }} ج.م</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-info h-100">
+            <div class="card-body">
+                <h5 class="card-title text-info">
+                    <i class="fas fa-money-bill-wave me-2"></i>تحصيلات الشهر
+                </h5>
+                <p class="card-text display-6">{{ month_collections }} ج.م</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card border-danger h-100">
+            <div class="card-body">
+                <h5 class="card-title text-danger">
+                    <i class="fas fa-hand-holding-usd me-2"></i>مصروفات اليوم
+                </h5>
+                <p class="card-text display-6">{{ today_expenses }} ج.م</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Negative Balance Patients -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    مرضى بأرصدة سالبة
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if negative_balance_patients %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>مدة الإقامة</th>
+                                <th>الرصيد</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in negative_balance_patients %}
+                            <tr>
+                                <td>{{ patient.name }}</td>
+                                <td>{{ patient.total_stay_days }} يوم</td>
+                                <td class="text-danger">{{ patient.balance }} ج.م</td>
+                                <td>
+                                    <a href="{{ url_for('main.view_patient', id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if current_user.can_view_reports %}
+                <a href="{{ url_for('main.negative_balance_report') }}" class="btn btn-warning">
+                    <i class="fas fa-list"></i> عرض جميع الأرصدة السالبة
+                </a>
+                {% endif %}
+                {% else %}
+                <p class="text-center">لا يوجد مرضى بأرصدة سالبة حالياً</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>
+                    أحدث التقارير العلاجية
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_reports %}
+                <div class="list-group">
+                    {% for report in recent_reports %}
+                    <a href="{{ url_for('main.view_therapy_report', id=report.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ report.group.name }}</h6>
+                            <small>{{ report.report_date.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <small>{{ report.report_type }}</small>
+                        <p class="mb-1 text-truncate">{{ report.content[:100] }}{% if report.content|length > 100 %}...{% endif %}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% if current_user.can_manage_therapy or current_user.role == 'therapist' %}
+                <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-info mt-3">
+                    <i class="fas fa-users"></i> عرض المجموعات العلاجية
+                </a>
+                {% endif %}
+                {% else %}
+                <p class="text-center">لا توجد تقارير حديثة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>إجراءات سريعة</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if current_user.can_manage_patients %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_patient') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <span>إضافة مريض جديد</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_finances %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_collection') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-cash-register fa-2x mb-2"></i>
+                            <span>تسجيل دفعة</span>
+                        </a>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_expense') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                            <span>تسجيل مصروف</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_employees %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_employee') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-user-tie fa-2x mb-2"></i>
+                            <span>إضافة موظف</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_therapy %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_therapy_group') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <span>إنشاء مجموعة علاجية</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.can_view_reports %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.daily_report') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i>
+                            <span>تقرير يومي</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.can_manage_users %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('main.add_user') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                            <i class="fas fa-user-shield fa-2x mb-2"></i>
+                            <span>إضافة مستخدم</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
