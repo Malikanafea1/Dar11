@@ -74,7 +74,9 @@ class Patient(db.Model):
     def total_stay_days(self):
         """Calculate total days of stay"""
         end_date = self.discharge_date if self.discharge_date else datetime.now().date()
-        return (end_date - self.admission_date).days + 1  # Including admission day
+        # ضمان أن مدة الإقامة لا تقل عن يوم واحد
+        days = max(1, (end_date - self.admission_date).days + 1)  # Including admission day
+        return days
     
     @hybrid_property
     def total_stay_cost(self):
