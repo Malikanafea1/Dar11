@@ -33,30 +33,33 @@ def logout():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    # Check if there are any existing users
-    if User.query.count() > 0:
-        # If users exist, only logged in users with role 'admin' can create new accounts
+    # إذا لم يكن هناك مستخدمين في النظام، اسمح بإنشاء المستخدم الأول (سيكون مسؤول النظام)
+    if User.query.count() == 0:
+        is_first_user = True
+    else:
+        # إذا كان هناك مستخدمين بالفعل، تحقق إذا كان المستخدم الحالي مسجل دخول ومسؤول نظام
         if not current_user.is_authenticated or current_user.role != 'admin':
-            flash('فقط مسؤول النظام يمكنه إنشاء حسابات جديدة', 'danger')
+            flash('يجب أن تكون مسؤول نظام مسجل دخول لإنشاء حسابات جديدة', 'danger')
             return redirect(url_for('main.index'))
+        is_first_user = False
     
     form = RegisterForm()
     if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            role=form.role.data,
-            can_manage_patients=form.can_manage_patients.data,
-            can_manage_finances=form.can_manage_finances.data,
-            can_manage_employees=form.can_manage_employees.data,
-            can_manage_therapy=form.can_manage_therapy.data,
-            can_manage_users=form.can_manage_users.data,
-            can_view_reports=form.can_view_reports.data
-        )
+        # إنشاء مستخدم جديد
+        user = User()
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role = form.role.data
+        user.can_manage_patients = form.can_manage_patients.data
+        user.can_manage_finances = form.can_manage_finances.data
+        user.can_manage_employees = form.can_manage_employees.data
+        user.can_manage_therapy = form.can_manage_therapy.data
+        user.can_manage_users = form.can_manage_users.data
+        user.can_view_reports = form.can_view_reports.data
         user.set_password(form.password.data)
         
-        # If this is the first user, make them an admin with all permissions
-        if User.query.count() == 0:
+        # المستخدم الأول يكون دائماً مسؤول نظام مع كل الصلاحيات
+        if is_first_user:
             user.role = 'admin'
             user.can_manage_patients = True
             user.can_manage_finances = True
@@ -64,26 +67,16 @@ def register():
             user.can_manage_therapy = True
             user.can_manage_users = True
             user.can_view_reports = True
-        else:
-            # If not created by admin, set role to therapist with limited permissions
-            if not current_user.is_authenticated or current_user.role != 'admin':
-                user.role = 'therapist'
-                user.can_manage_patients = False
-                user.can_manage_finances = False
-                user.can_manage_employees = False
-                user.can_manage_therapy = True
-                user.can_manage_users = False
-                user.can_view_reports = False
         
         db.session.add(user)
         db.session.commit()
         
         flash('تم إنشاء الحساب بنجاح', 'success')
         
-        # If user is first user or not logged in, redirect to login
-        if not current_user.is_authenticated:
+        # إذا كان المستخدم الأول، توجيه إلى صفحة تسجيل الدخول
+        if is_first_user:
             return redirect(url_for('auth.login'))
-        # Otherwise, return to user management
+        # غير ذلك، العودة إلى صفحة إدارة المستخدمين
         return redirect(url_for('main.users'))
     
     return render_template('register.html', form=form)
