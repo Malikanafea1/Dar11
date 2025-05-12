@@ -500,6 +500,10 @@ def view_therapy_group(id):
         if employee and group.therapist_id == employee.id:
             can_add_reports = True
     
+    # Add today's date for the form
+    from datetime import datetime
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    
     return render_template('therapy/view.html', 
                           group=group, 
                           members=members,
@@ -507,7 +511,8 @@ def view_therapy_group(id):
                           member_form=member_form,
                           report_form=report_form,
                           can_add_patients=can_add_patients,
-                          can_add_reports=can_add_reports)
+                          can_add_reports=can_add_reports,
+                          today_date=today_date)
 
 @main_bp.route('/therapy_groups/<int:id>/add_member', methods=['POST'])
 @login_required
