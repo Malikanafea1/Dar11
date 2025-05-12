@@ -1,0 +1,85 @@
+
+Create a complete web-based management system for a psychiatric and addiction treatment center called "Dar El Hayah". The project must be developed in **Egyptian Arabic (language used in the interface and system labels)**, and all monetary values should be handled in **Egyptian Pounds (EGP)**.
+
+The system should include the following modules:
+
+1. **Patient Management**
+   - Add new patients with customizable daily rate.
+   - Track admission date and automatically calculate cost of stay.
+   - Add financial charges to the patient’s account:
+     - Cigarettes
+     - Medical tests
+     - Medications
+     - Personal expenses
+     - Haircut
+     - Buffet
+     - Laundry
+   - Discharge or delete patient records.
+   - Generate full account statement:
+     - Payment history with dates
+     - Monthly cost summary
+     - Paid vs. remaining balance
+
+2. **Collections Module**
+   - Select a patient, enter payment amount, assign collector, and date.
+   - Automatically apply the payment to the patient’s account balance.
+
+3. **Employee Management**
+   - Add employees with roles like:
+     - General Manager
+     - Shift Manager (Halfway / Detox)
+     - Supervisor (Halfway / Detox)
+     - Worker
+     - Chef
+     - Doctor
+     - Therapist
+     - Case Referral Officer
+   - Salary payments
+   - Manage loans, deductions, bonuses, and reward points ("bwanas").
+
+4. **Therapeutic Groups**
+   - Create therapy groups
+   - Assign patients and supervising therapists
+   - Track each patient's treatment stage (editable daily)
+   - Therapists can:
+     - Submit daily and weekly reports
+     - Edit only their own reports, and only on the day they are submitted
+     - Cannot add or remove patients from the group
+
+5. **Daily Expenses Tracking**
+   - Record expenses with category selection:
+     - Kitchen
+     - Buffet
+     - Rent
+     - Maintenance
+     - Medications
+     - Electricity
+     - Gas
+     - Water
+     - Transport
+     - Bonuses
+     - Salaries (automatically calculated into employee accounts)
+     - Miscellaneous
+     - Hospitality
+     - Entertainment Day
+
+6. **Financial Reporting**
+   - Daily report: income, expenses, balance
+   - Monthly report: income, expenses, balance
+   - Mid-year and yearly reports
+   - Monthly profit and loss
+   - Daily report for patients with negative balances
+
+7. **User Permissions**
+   - Add new users with specific roles and access control
+   - Therapist role:
+     - Can access only their assigned therapy groups
+     - Can write/edit daily and weekly reports **for current day only**
+     - Cannot delete or add patients to groups
+   - Full permissions reserved for system administrators
+
+Important:
+- The **interface language must be Egyptian Arabic**
+- All financial amounts must use the **Egyptian Pound (EGP)** currency symbol (ج.م or EGP)
+
+Use Python (preferably Flask), and store data in SQLite or PostgreSQL. Interface should be clean, responsive, and easy to navigate for Arabic-speaking staff.
