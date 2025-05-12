@@ -16,4 +16,7 @@ dependencies = [
     "flask-migrate>=4.1.0",
     "python-dateutil>=2.9.0.post0",
     "flask-wtf>=1.2.2",
+    "flask-dance>=7.1.0",
+    "oauthlib>=3.2.2",
+    "pyjwt>=2.10.1",
 ]

@@ -35,9 +35,9 @@ def logout():
 def register():
     # Check if there are any existing users
     if User.query.count() > 0:
-        # If users exist, only logged in users with right permissions can create new accounts
-        if not current_user.is_authenticated or not current_user.can_manage_users:
-            flash('غير مصرح بإنشاء حسابات جديدة', 'danger')
+        # If users exist, only logged in users with role 'admin' can create new accounts
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            flash('فقط مسؤول النظام يمكنه إنشاء حسابات جديدة', 'danger')
             return redirect(url_for('main.index'))
     
     form = RegisterForm()
@@ -64,6 +64,16 @@ def register():
             user.can_manage_therapy = True
             user.can_manage_users = True
             user.can_view_reports = True
+        else:
+            # If not created by admin, set role to therapist with limited permissions
+            if not current_user.is_authenticated or current_user.role != 'admin':
+                user.role = 'therapist'
+                user.can_manage_patients = False
+                user.can_manage_finances = False
+                user.can_manage_employees = False
+                user.can_manage_therapy = True
+                user.can_manage_users = False
+                user.can_view_reports = False
         
         db.session.add(user)
         db.session.commit()
