@@ -12,53 +12,75 @@
 
 <!-- Stats Cards -->
 <div class="row mb-4">
-    <div class="col-md-3 mb-3">
+    {% if not is_therapist %}
+        {% if current_user.can_manage_patients %}
+        <div class="col-md-3 mb-3">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="fas fa-user-injured me-2"></i>المرضى النشطين
+                    </h5>
+                    <p class="card-text display-6">{{ active_patients }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if current_user.can_manage_finances %}
+        <div class="col-md-3 mb-3">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        <i class="fas fa-money-bill-wave me-2"></i>تحصيلات اليوم
+                    </h5>
+                    <p class="card-text display-6">{{ today_collections }} ج.م</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card border-info h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-info">
+                        <i class="fas fa-money-bill-wave me-2"></i>تحصيلات الشهر
+                    </h5>
+                    <p class="card-text display-6">{{ month_collections }} ج.م</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card border-danger h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">
+                        <i class="fas fa-hand-holding-usd me-2"></i>مصروفات اليوم
+                    </h5>
+                    <p class="card-text display-6">{{ today_expenses }} ج.م</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+    
+    {% if is_therapist %}
+    <div class="col-md-12 mb-3">
         <div class="card border-primary h-100">
-            <div class="card-body">
-                <h5 class="card-title text-primary">
-                    <i class="fas fa-user-injured me-2"></i>المرضى النشطين
+            <div class="card-body text-center">
+                <h5 class="card-title text-primary mb-3">
+                    <i class="fas fa-users me-2"></i>مرحباً بك في نظام المجموعات العلاجية
                 </h5>
-                <p class="card-text display-6">{{ active_patients }}</p>
+                <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-primary">
+                    <i class="fas fa-users"></i> عرض المجموعات العلاجية الخاصة بك
+                </a>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card border-success h-100">
-            <div class="card-body">
-                <h5 class="card-title text-success">
-                    <i class="fas fa-money-bill-wave me-2"></i>تحصيلات اليوم
-                </h5>
-                <p class="card-text display-6">{{ today_collections }} ج.م</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card border-info h-100">
-            <div class="card-body">
-                <h5 class="card-title text-info">
-                    <i class="fas fa-money-bill-wave me-2"></i>تحصيلات الشهر
-                </h5>
-                <p class="card-text display-6">{{ month_collections }} ج.م</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card border-danger h-100">
-            <div class="card-body">
-                <h5 class="card-title text-danger">
-                    <i class="fas fa-hand-holding-usd me-2"></i>مصروفات اليوم
-                </h5>
-                <p class="card-text display-6">{{ today_expenses }} ج.م</p>
-            </div>
-        </div>
-    </div>
+    {% endif %}
 </div>
 
 <div class="row">
     <!-- Negative Balance Patients -->
+    {% if not is_therapist and current_user.can_manage_finances and current_user.can_view_reports %}
     <div class="col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-header bg-warning">
@@ -95,25 +117,24 @@
                         </tbody>
                     </table>
                 </div>
-                {% if current_user.can_view_reports %}
                 <a href="{{ url_for('main.negative_balance_report') }}" class="btn btn-warning">
                     <i class="fas fa-list"></i> عرض جميع الأرصدة السالبة
                 </a>
-                {% endif %}
                 {% else %}
                 <p class="text-center">لا يوجد مرضى بأرصدة سالبة حالياً</p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
     
     <!-- Recent Reports -->
-    <div class="col-md-6 mb-4">
+    <div class="{% if is_therapist or not current_user.can_manage_finances or not current_user.can_view_reports %}col-md-12{% else %}col-md-6{% endif %} mb-4">
         <div class="card h-100">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
                     <i class="fas fa-clipboard-list me-2"></i>
-                    أحدث التقارير العلاجية
+                    {% if is_therapist %}التقارير العلاجية الخاصة بمجموعاتك{% else %}أحدث التقارير العلاجية{% endif %}
                 </h5>
             </div>
             <div class="card-body">
@@ -130,11 +151,9 @@
                     </a>
                     {% endfor %}
                 </div>
-                {% if current_user.can_manage_therapy or current_user.role == 'therapist' %}
                 <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-info mt-3">
-                    <i class="fas fa-users"></i> عرض المجموعات العلاجية
+                    <i class="fas fa-users"></i> {% if is_therapist %}عرض مجموعاتي العلاجية{% else %}عرض المجموعات العلاجية{% endif %}
                 </a>
-                {% endif %}
                 {% else %}
                 <p class="text-center">لا توجد تقارير حديثة</p>
                 {% endif %}
@@ -152,65 +171,89 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    {% if current_user.can_manage_patients %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_patient') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-user-plus fa-2x mb-2"></i>
-                            <span>إضافة مريض جديد</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if current_user.can_manage_finances %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_collection') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-cash-register fa-2x mb-2"></i>
-                            <span>تسجيل دفعة</span>
-                        </a>
-                    </div>
-                    
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_expense') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
-                            <span>تسجيل مصروف</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if current_user.can_manage_employees %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_employee') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-user-tie fa-2x mb-2"></i>
-                            <span>إضافة موظف</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if current_user.can_manage_therapy %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_therapy_group') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-users fa-2x mb-2"></i>
-                            <span>إنشاء مجموعة علاجية</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if current_user.can_view_reports %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.daily_report') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-chart-line fa-2x mb-2"></i>
-                            <span>تقرير يومي</span>
-                        </a>
-                    </div>
-                    {% endif %}
-                    
-                    {% if current_user.can_manage_users %}
-                    <div class="col-md-3 mb-3">
-                        <a href="{{ url_for('main.add_user') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
-                            <i class="fas fa-user-shield fa-2x mb-2"></i>
-                            <span>إضافة مستخدم</span>
-                        </a>
-                    </div>
+                    {% if not is_therapist %}
+                        {% if current_user.can_manage_patients %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_patient') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                                <span>إضافة مريض جديد</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.can_manage_finances %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_collection') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-cash-register fa-2x mb-2"></i>
+                                <span>تسجيل دفعة</span>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_expense') }}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                <span>تسجيل مصروف</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.can_manage_employees %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_employee') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-user-tie fa-2x mb-2"></i>
+                                <span>إضافة موظف</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.can_manage_therapy %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_therapy_group') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <span>إنشاء مجموعة علاجية</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.can_view_reports %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.daily_report') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                <span>تقرير يومي</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if current_user.can_manage_users %}
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ url_for('main.add_user') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-user-shield fa-2x mb-2"></i>
+                                <span>إضافة مستخدم</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <!-- Only show therapy-related actions for therapists -->
+                        <div class="col-md-4 mb-3">
+                            <a href="{{ url_for('main.therapy_groups') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <span>عرض المجموعات العلاجية</span>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <a href="#" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3" onclick="window.location.href='{{ url_for('main.therapy_groups') }}' + '/' + (document.querySelector('[data-group-id]') ? document.querySelector('[data-group-id]').getAttribute('data-group-id') : '') + '/add_report'">
+                                <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                                <span>إضافة تقرير جديد</span>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <a href="#" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3" onclick="window.location.href='{{ url_for('main.therapy_groups') }}' + '/' + (document.querySelector('[data-group-id]') ? document.querySelector('[data-group-id]').getAttribute('data-group-id') : '') + '/add_member'">
+                                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                                <span>إضافة مريض للمجموعة</span>
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
