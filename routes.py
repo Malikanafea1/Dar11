@@ -26,38 +26,63 @@ def dashboard():
     today = date.today()
     start_of_month = date(today.year, today.month, 1)
     
-    # Count active patients
-    active_patients = Patient.query.filter_by(is_active=True).count()
+    # Initialize values
+    active_patients = 0
+    today_collections = 0
+    month_collections = 0
+    today_expenses = 0
+    month_expenses = 0
+    negative_balance_patients = []
     
-    # Count today's collections
-    today_collections = db.session.query(func.sum(Collection.amount)).filter(
-        Collection.date == today
-    ).scalar() or 0
+    # If user is not therapist or has appropriate permissions, show financial info
+    if current_user.role != 'therapist':
+        # Count active patients
+        if current_user.can_manage_patients:
+            active_patients = Patient.query.filter_by(is_active=True).count()
+        
+        # Get financial information if user has permission
+        if current_user.can_manage_finances:
+            # Count today's collections
+            today_collections = db.session.query(func.sum(Collection.amount)).filter(
+                Collection.date == today
+            ).scalar() or 0
+            
+            # Count month's collections
+            month_collections = db.session.query(func.sum(Collection.amount)).filter(
+                Collection.date >= start_of_month,
+                Collection.date <= today
+            ).scalar() or 0
+            
+            # Count today's expenses
+            today_expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.date == today
+            ).scalar() or 0
+            
+            # Count month's expenses
+            month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.date >= start_of_month,
+                Expense.date <= today
+            ).scalar() or 0
+            
+            # Get 5 patients with negative balances
+            if current_user.can_view_reports:
+                negative_balance_patients = Patient.query.filter_by(is_active=True).all()
+                negative_balance_patients = [p for p in negative_balance_patients if p.balance < 0]
+                negative_balance_patients = sorted(negative_balance_patients, key=lambda p: p.balance)[:5]
     
-    # Count month's collections
-    month_collections = db.session.query(func.sum(Collection.amount)).filter(
-        Collection.date >= start_of_month,
-        Collection.date <= today
-    ).scalar() or 0
-    
-    # Count today's expenses
-    today_expenses = db.session.query(func.sum(Expense.amount)).filter(
-        Expense.date == today
-    ).scalar() or 0
-    
-    # Count month's expenses
-    month_expenses = db.session.query(func.sum(Expense.amount)).filter(
-        Expense.date >= start_of_month,
-        Expense.date <= today
-    ).scalar() or 0
-    
-    # Get 5 patients with negative balances
-    negative_balance_patients = Patient.query.filter_by(is_active=True).all()
-    negative_balance_patients = [p for p in negative_balance_patients if p.balance < 0]
-    negative_balance_patients = sorted(negative_balance_patients, key=lambda p: p.balance)[:5]
-    
-    # Get recent therapy reports
-    recent_reports = TherapyReport.query.order_by(TherapyReport.created_at.desc()).limit(5).all()
+    # Get recent therapy reports - this is available to therapists
+    recent_reports = []
+    if current_user.role == 'therapist':
+        # If user is therapist, only show their group reports
+        employee = Employee.query.filter_by(user_account=current_user).first()
+        if employee:
+            therapist_groups = TherapyGroup.query.filter_by(therapist_id=employee.id).all()
+            group_ids = [g.id for g in therapist_groups]
+            recent_reports = TherapyReport.query.filter(TherapyReport.group_id.in_(group_ids)).order_by(
+                TherapyReport.created_at.desc()).limit(5).all()
+    else:
+        # For other users with appropriate permissions, show all reports
+        recent_reports = TherapyReport.query.order_by(TherapyReport.created_at.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
                           active_patients=active_patients,
@@ -66,7 +91,8 @@ def dashboard():
                           today_expenses=today_expenses,
                           month_expenses=month_expenses,
                           negative_balance_patients=negative_balance_patients,
-                          recent_reports=recent_reports)
+                          recent_reports=recent_reports,
+                          is_therapist=(current_user.role == 'therapist'))
 
 # Patient routes
 @main_bp.route('/patients')
