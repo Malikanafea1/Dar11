@@ -23,7 +23,11 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dar-el-hayah-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
 # Configure the database using environment variables
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+# Handle special case for Render PostgreSQL connection string
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
@@ -37,7 +41,7 @@ migrate = Migrate(app, db)
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login'  # type: ignore
 login_manager.login_message = 'الرجاء تسجيل الدخول للوصول إلى هذه الصفحة'
 
 # Register before request handler to set global variables for templates
