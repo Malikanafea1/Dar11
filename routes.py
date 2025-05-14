@@ -772,11 +772,10 @@ def view_therapy_report(id):
     report = TherapyReport.query.get_or_404(id)
     group = report.group
     
-    # Check permissions
+    # Check permissions - المعالجين يمكنهم عرض تقارير أي مجموعة علاجية
     can_view_report = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        if current_user.employee_id and group.therapist_id == current_user.employee_id:
-            can_view_report = True
+        can_view_report = True
     
     if not can_view_report:
         flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
