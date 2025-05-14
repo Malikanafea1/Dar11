@@ -3,13 +3,14 @@ from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 from sqlalchemy import func, or_
 from dateutil.relativedelta import relativedelta
+from werkzeug.security import generate_password_hash
 
 from app import db
 from models import (Patient, PatientExpense, Collection, Employee, SalaryPayment, 
                    TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User)
 from forms import (PatientForm, PatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
                   TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm,
-                  SearchDateRangeForm, RegisterForm)
+                  SearchDateRangeForm, RegisterForm, EditUserForm)
 
 main_bp = Blueprint('main', __name__)
 
@@ -719,6 +720,53 @@ def handle_therapy_groups_404(subpath):
     """
     flash('المسار غير صحيح. يرجى اختيار مجموعة علاجية من القائمة', 'warning')
     return redirect(url_for('main.therapy_groups'))
+
+# تم حذف مسار الـ users المكرر هنا للحفاظ على المسار الموجود مسبقاً
+
+# تم حذف مسار add_user المكرر هنا
+
+@main_bp.route('/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    if not current_user.can_manage_users:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    user = User.query.get_or_404(id)
+    form = EditUserForm(user.username, user.email)
+    
+    if request.method == 'GET':
+        form.username.data = user.username
+        form.email.data = user.email
+        form.role.data = user.role
+        form.can_manage_patients.data = user.can_manage_patients
+        form.can_manage_finances.data = user.can_manage_finances
+        form.can_manage_employees.data = user.can_manage_employees
+        form.can_manage_therapy.data = user.can_manage_therapy
+        form.can_manage_users.data = user.can_manage_users
+        form.can_view_reports.data = user.can_view_reports
+    
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.role = form.role.data
+        user.can_manage_patients = form.can_manage_patients.data
+        user.can_manage_finances = form.can_manage_finances.data
+        user.can_manage_employees = form.can_manage_employees.data
+        user.can_manage_therapy = form.can_manage_therapy.data
+        user.can_manage_users = form.can_manage_users.data
+        user.can_view_reports = form.can_view_reports.data
+        
+        if form.change_password.data and form.password.data:
+            user.password_hash = generate_password_hash(form.password.data)
+            
+        db.session.commit()
+        flash('تم تحديث بيانات المستخدم بنجاح', 'success')
+        return redirect(url_for('main.users'))
+    
+    return render_template('users/edit.html', form=form, user=user)
+
+# تم حذف مسار toggle_user_status المكرر هنا
 
 @main_bp.route('/therapy_reports/<int:id>')
 @login_required
