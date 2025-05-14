@@ -42,6 +42,53 @@ class RegisterForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('البريد الإلكتروني مستخدم بالفعل')
+            
+class EditUserForm(FlaskForm):
+    username = StringField('اسم المستخدم', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=3, max=64)])
+    email = StringField('البريد الإلكتروني', validators=[DataRequired('هذا الحقل مطلوب'), Email('بريد إلكتروني غير صالح')])
+    role = SelectField('الدور', choices=[
+        ('admin', 'مدير النظام'), 
+        ('manager', 'مدير عام'),
+        ('therapist', 'معالج'),
+        ('accountant', 'محاسب'),
+        ('employee', 'موظف')
+    ], validators=[DataRequired('هذا الحقل مطلوب')])
+    
+    # Permissions checkboxes
+    can_manage_patients = BooleanField('إدارة المرضى')
+    can_manage_finances = BooleanField('إدارة المالية')
+    can_manage_employees = BooleanField('إدارة الموظفين')
+    can_manage_therapy = BooleanField('إدارة المجموعات العلاجية')
+    can_manage_users = BooleanField('إدارة المستخدمين')
+    can_view_reports = BooleanField('عرض التقارير')
+    
+    # Option to allow changing password
+    change_password = BooleanField('تغيير كلمة المرور')
+    password = PasswordField('كلمة المرور الجديدة', validators=[Optional(), Length(min=8)])
+    confirm_password = PasswordField('تأكيد كلمة المرور الجديدة', validators=[Optional(), EqualTo('password', 'كلمات المرور غير متطابقة')])
+    
+    submit = SubmitField('حفظ التغييرات')
+    
+    def __init__(self, original_username, original_email, *args, **kwargs):
+        super(EditUserForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+        self.original_email = original_email
+        
+    def validate_username(self, username):
+        if username.data != self.original_username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('اسم المستخدم موجود بالفعل')
+                
+    def validate_email(self, email):
+        if email.data != self.original_email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('البريد الإلكتروني مستخدم بالفعل')
+                
+    def validate_password(self, password):
+        if self.change_password.data and not password.data:
+            raise ValidationError('يجب إدخال كلمة مرور جديدة')
 
 class PatientForm(FlaskForm):
     name = StringField('الاسم', validators=[DataRequired('هذا الحقل مطلوب')])

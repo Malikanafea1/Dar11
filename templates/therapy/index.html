@@ -16,12 +16,15 @@
     {% if groups %}
         {% for group in groups %}
         <div class="col-md-6 mb-4">
-            <div class="card shadow h-100">
+            <div class="card shadow h-100 {% if is_therapist and group.id in therapist_groups_ids %}border border-success border-3{% endif %}">
                 <div class="card-header {{ 'bg-primary' if group.is_active else 'bg-secondary' }} text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-users me-2"></i> {{ group.name }}
                         {% if not group.is_active %}
                         <span class="badge bg-danger ms-2">غير نشطة</span>
+                        {% endif %}
+                        {% if is_therapist and group.id in therapist_groups_ids %}
+                        <span class="badge bg-success ms-2">مجموعتك</span>
                         {% endif %}
                     </h5>
                 </div>

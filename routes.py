@@ -451,20 +451,26 @@ def toggle_employee_status(id):
 def therapy_groups():
     # التحقق أولاً مما إذا كان المستخدم يملك صلاحية أو معالج
     if current_user.can_manage_therapy or current_user.role == 'therapist':
-        if current_user.role == 'therapist':
-            # Therapists can only see their own groups
-            if current_user.employee_id:
-                groups = TherapyGroup.query.filter_by(therapist_id=current_user.employee_id).all()
-            else:
-                groups = []
-        else:
-            # Admins and others with permission can see all groups
-            groups = TherapyGroup.query.all()
+        # يمكن للجميع رؤية كل المجموعات العلاجية
+        groups = TherapyGroup.query.all()
+        
+        # إذا كان المستخدم معالج، نحدد المجموعات الخاصة به لتمييزها في العرض
+        is_therapist = False
+        therapist_groups_ids = []
+        if current_user.role == 'therapist' and current_user.employee_id:
+            is_therapist = True
+            therapist_groups = TherapyGroup.query.filter_by(therapist_id=current_user.employee_id).all()
+            therapist_groups_ids = [group.id for group in therapist_groups]
     else:
         flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
         return redirect(url_for('main.dashboard'))
         
-    return render_template('therapy/index.html', groups=groups)
+    return render_template(
+        'therapy/index.html', 
+        groups=groups, 
+        is_therapist=is_therapist if 'is_therapist' in locals() else False,
+        therapist_groups_ids=therapist_groups_ids if 'therapist_groups_ids' in locals() else []
+    )
 
 @main_bp.route('/therapy_groups/add', methods=['GET', 'POST'])
 @login_required
