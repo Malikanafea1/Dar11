@@ -74,9 +74,10 @@ def dashboard():
     recent_reports = []
     if current_user.role == 'therapist':
         # If user is therapist, only show their group reports
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee:
-            therapist_groups = TherapyGroup.query.filter_by(therapist_id=employee.id).all()
+        # استخدام علاقة employee من المستخدم الحالي مباشرة
+        if current_user.employee_id:
+            employee = current_user.employee
+            therapist_groups = TherapyGroup.query.filter_by(therapist_id=current_user.employee_id).all()
             group_ids = [g.id for g in therapist_groups]
             recent_reports = TherapyReport.query.filter(TherapyReport.group_id.in_(group_ids)).order_by(
                 TherapyReport.created_at.desc()).limit(5).all()
