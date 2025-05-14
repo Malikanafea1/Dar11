@@ -68,6 +68,11 @@ def register():
             user.can_manage_users = True
             user.can_view_reports = True
         
+        # إذا كان المستخدم معالج، امنحه تلقائيًا صلاحية إدارة المجموعات العلاجية
+        if user.role == 'therapist':
+            user.can_manage_therapy = True
+            user.can_view_reports = True
+        
         db.session.add(user)
         db.session.commit()
         
