@@ -453,9 +453,8 @@ def therapy_groups():
     if current_user.can_manage_therapy or current_user.role == 'therapist':
         if current_user.role == 'therapist':
             # Therapists can only see their own groups
-            employee = Employee.query.filter_by(user_account=current_user).first()
-            if employee:
-                groups = TherapyGroup.query.filter_by(therapist_id=employee.id).all()
+            if current_user.employee_id:
+                groups = TherapyGroup.query.filter_by(therapist_id=current_user.employee_id).all()
             else:
                 groups = []
         else:
@@ -479,10 +478,9 @@ def add_therapy_group():
     
     # إذا كان المستخدم معالج، نعين المجموعة له تلقائيًا
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee:
+        if current_user.employee_id:
             # تعطيل حقل اختيار المعالج وتعيينه للمعالج الحالي
-            form.therapist_id.data = employee.id
+            form.therapist_id.data = current_user.employee_id
             form.therapist_id.render_kw = {'disabled': 'disabled'}
         else:
             flash('لم يتم العثور على بيانات المعالج الخاصة بك', 'danger')
@@ -491,11 +489,9 @@ def add_therapy_group():
     if form.validate_on_submit():
         # تحديد معرف المعالج
         therapist_id = form.therapist_id.data
-        if current_user.role == 'therapist':
+        if current_user.role == 'therapist' and current_user.employee_id:
             # إذا كان المستخدم معالج، استخدم معرفه دائمًا
-            employee = Employee.query.filter_by(user_account=current_user).first()
-            if employee:
-                therapist_id = employee.id
+            therapist_id = current_user.employee_id
             
         group = TherapyGroup(
             name=form.name.data,
@@ -518,8 +514,7 @@ def view_therapy_group(id):
     
     # Check permissions
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if not employee or group.therapist_id != employee.id:
+        if not current_user.employee_id or group.therapist_id != current_user.employee_id:
             flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
             return redirect(url_for('main.dashboard'))
     elif not current_user.can_manage_therapy:
@@ -543,15 +538,13 @@ def view_therapy_group(id):
     # المعالج يمكنه إضافة مرضى فقط للمجموعات الخاصة به
     can_add_patients = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_add_patients = True
     
     # Check if current user can add reports (therapist for their own group or admin)
     can_add_reports = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_add_reports = True
     
     # Add today's date for the form
@@ -576,8 +569,7 @@ def add_therapy_group_member(id):
     # التحقق من صلاحيات إضافة المرضى للمجموعة
     can_add_patients = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_add_patients = True
     
     if not can_add_patients:
@@ -618,8 +610,7 @@ def remove_therapy_group_member(group_id, member_id):
     # التحقق من صلاحيات إزالة المرضى من المجموعة
     can_remove_patients = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_remove_patients = True
     
     if not can_remove_patients:
@@ -644,8 +635,7 @@ def add_therapy_report(id):
     # Check permissions
     can_add_report = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_add_report = True
     
     if not can_add_report:
@@ -693,8 +683,7 @@ def view_therapy_report(id):
     # Check permissions
     can_view_report = current_user.can_manage_therapy
     if current_user.role == 'therapist':
-        employee = Employee.query.filter_by(user_account=current_user).first()
-        if employee and group.therapist_id == employee.id:
+        if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_view_report = True
     
     if not can_view_report:
