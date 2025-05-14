@@ -632,6 +632,9 @@ def add_therapy_report(id):
     group = TherapyGroup.query.get_or_404(id)
     form = TherapyReportForm()
     
+    # تعبئة المعرف المطلوب في النموذج
+    form.group_id.data = id
+    
     # Check permissions
     can_add_report = current_user.can_manage_therapy
     if current_user.role == 'therapist':
@@ -673,6 +676,15 @@ def add_therapy_report(id):
             flash('تم إضافة التقرير بنجاح', 'success')
         
     return redirect(url_for('main.view_therapy_group', id=id))
+
+@main_bp.route('/therapy_groups/add_report', methods=['GET'])
+@login_required
+def redirect_add_therapy_report():
+    """
+    معالجة المسار الخاطئ - توجيه المستخدم إلى الصفحة الرئيسية للمجموعات العلاجية
+    """
+    flash('يرجى اختيار مجموعة علاجية أولاً لإضافة تقرير', 'warning')
+    return redirect(url_for('main.therapy_groups'))
 
 @main_bp.route('/therapy_reports/<int:id>')
 @login_required
