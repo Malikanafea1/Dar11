@@ -686,6 +686,34 @@ def redirect_add_therapy_report():
     flash('يرجى اختيار مجموعة علاجية أولاً لإضافة تقرير', 'warning')
     return redirect(url_for('main.therapy_groups'))
 
+@main_bp.route('/therapy_groups/add_member', methods=['GET'])
+@login_required
+def redirect_add_therapy_member():
+    """
+    معالجة المسار الخاطئ - توجيه المستخدم إلى الصفحة الرئيسية للمجموعات العلاجية
+    """
+    flash('يرجى اختيار مجموعة علاجية أولاً لإضافة مريض', 'warning')
+    return redirect(url_for('main.therapy_groups'))
+
+@main_bp.route('/therapy_groups/members/remove', methods=['GET'])
+@login_required
+def redirect_remove_therapy_member():
+    """
+    معالجة المسار الخاطئ - توجيه المستخدم إلى الصفحة الرئيسية للمجموعات العلاجية
+    """
+    flash('يرجى اختيار مجموعة علاجية أولاً لإزالة مريض', 'warning')
+    return redirect(url_for('main.therapy_groups'))
+
+# معالجة عامة لأي مسار غير صحيح متعلق بالمجموعات العلاجية
+@main_bp.route('/therapy_groups/<path:subpath>', methods=['GET', 'POST'])
+@login_required
+def handle_therapy_groups_404(subpath):
+    """
+    معالجة عامة لأي مسار غير موجود تحت therapy_groups
+    """
+    flash('المسار غير صحيح. يرجى اختيار مجموعة علاجية من القائمة', 'warning')
+    return redirect(url_for('main.therapy_groups'))
+
 @main_bp.route('/therapy_reports/<int:id>')
 @login_required
 def view_therapy_report(id):
