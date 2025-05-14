@@ -520,11 +520,8 @@ def view_therapy_group(id):
     group = TherapyGroup.query.get_or_404(id)
     
     # Check permissions
-    if current_user.role == 'therapist':
-        if not current_user.employee_id or group.therapist_id != current_user.employee_id:
-            flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
-            return redirect(url_for('main.dashboard'))
-    elif not current_user.can_manage_therapy:
+    # Allow therapists to view all therapy groups
+    if current_user.role != 'therapist' and not current_user.can_manage_therapy:
         flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
         return redirect(url_for('main.dashboard'))
         
@@ -542,13 +539,14 @@ def view_therapy_group(id):
     reports = TherapyReport.query.filter_by(group_id=id).order_by(TherapyReport.report_date.desc()).limit(10).all()
     
     # Check if current user can add patients
-    # المعالج يمكنه إضافة مرضى فقط للمجموعات الخاصة به
+    # المعالج يمكنه إضافة مرضى للمجموعات الخاصة به فقط
     can_add_patients = current_user.can_manage_therapy
     if current_user.role == 'therapist':
         if current_user.employee_id and group.therapist_id == current_user.employee_id:
             can_add_patients = True
     
-    # Check if current user can add reports (therapist for their own group or admin)
+    # Check if current user can add reports
+    # المعالج يمكنه إضافة تقارير للمجموعات الخاصة به فقط
     can_add_reports = current_user.can_manage_therapy
     if current_user.role == 'therapist':
         if current_user.employee_id and group.therapist_id == current_user.employee_id:
