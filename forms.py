@@ -117,6 +117,22 @@ class PatientExpenseForm(FlaskForm):
     date = DateField('التاريخ', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
     submit = SubmitField('إضافة مصروف')
 
+class EditPatientExpenseForm(FlaskForm):
+    expense_type = SelectField('نوع المصروف', choices=[
+        ('cigarettes', 'سجائر'),
+        ('medical_tests', 'فحوصات طبية'),
+        ('medications', 'أدوية'),
+        ('personal_expenses', 'مصاريف شخصية'),
+        ('haircut', 'حلاقة'),
+        ('buffet', 'بوفيه'),
+        ('laundry', 'غسيل ملابس'),
+        ('other', 'أخرى')
+    ], validators=[DataRequired('هذا الحقل مطلوب')])
+    amount = FloatField('المبلغ (ج.م)', validators=[DataRequired('هذا الحقل مطلوب')])
+    description = StringField('وصف', validators=[Optional()])
+    date = DateField('التاريخ', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
+    submit = SubmitField('حفظ التغييرات')
+
 class CollectionForm(FlaskForm):
     patient_id = SelectField('المريض', coerce=int, validators=[DataRequired('هذا الحقل مطلوب')])
     amount = FloatField('المبلغ (ج.م)', validators=[DataRequired('هذا الحقل مطلوب')])

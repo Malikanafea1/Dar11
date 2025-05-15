@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash
 from app import db
 from models import (Patient, PatientExpense, Collection, Employee, SalaryPayment, 
                    TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User, DashboardNote)
-from forms import (PatientForm, PatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
+from forms import (PatientForm, PatientExpenseForm, EditPatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
                   TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm,
                   SearchDateRangeForm, RegisterForm, EditUserForm, DashboardNoteForm)
 
@@ -308,6 +308,45 @@ def add_patient_expense(id):
         flash('تم إضافة المصروف بنجاح', 'success')
         
     return redirect(url_for('main.view_patient', id=patient.id))
+
+@main_bp.route('/patient_expenses/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_patient_expense(id):
+    if not current_user.can_manage_patients and not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    expense = PatientExpense.query.get_or_404(id)
+    patient = Patient.query.get_or_404(expense.patient_id)
+    form = EditPatientExpenseForm(obj=expense)
+    
+    if form.validate_on_submit():
+        expense.expense_type = form.expense_type.data
+        expense.amount = form.amount.data
+        expense.description = form.description.data
+        expense.date = form.date.data
+        
+        db.session.commit()
+        flash('تم تحديث المصروف بنجاح', 'success')
+        return redirect(url_for('main.view_patient', id=patient.id))
+        
+    return render_template('patients/edit_expense.html', form=form, expense=expense, patient=patient)
+
+@main_bp.route('/patient_expenses/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_patient_expense(id):
+    if not current_user.can_manage_patients and not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    expense = PatientExpense.query.get_or_404(id)
+    patient_id = expense.patient_id
+    
+    db.session.delete(expense)
+    db.session.commit()
+    
+    flash('تم حذف المصروف بنجاح', 'success')
+    return redirect(url_for('main.view_patient', id=patient_id))
 
 @main_bp.route('/patients/<int:id>/statement')
 @login_required
