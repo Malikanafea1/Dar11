@@ -125,7 +125,8 @@ def dashboard():
                           is_therapist=(current_user.role == 'therapist'),
                           notes=notes,
                           tasks=tasks,
-                          note_form=note_form)
+                          note_form=note_form,
+                          today=today)
 
 # Dashboard note routes
 @main_bp.route('/dashboard/notes/<int:id>/complete', methods=['POST'])

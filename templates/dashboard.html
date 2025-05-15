@@ -383,4 +383,101 @@
         </div>
     </div>
 </div>
+
+<!-- Add Note/Task Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNoteModalLabel">إضافة ملاحظة/مهمة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('main.dashboard') }}">
+                    {{ note_form.csrf_token }}
+                    <div class="mb-3">
+                        {{ note_form.title.label(class="form-label") }}
+                        {{ note_form.title(class="form-control") }}
+                        {% if note_form.title.errors %}
+                            {% for error in note_form.title.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ note_form.content.label(class="form-label") }}
+                        {{ note_form.content(class="form-control", rows="5") }}
+                        {% if note_form.content.errors %}
+                            {% for error in note_form.content.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ note_form.is_task(class="form-check-input") }}
+                        {{ note_form.is_task.label(class="form-check-label") }}
+                    </div>
+                    <div class="mb-3" id="due-date-field" style="display: none;">
+                        {{ note_form.due_date.label(class="form-label") }}
+                        {{ note_form.due_date(class="form-control", type="date") }}
+                        {% if note_form.due_date.errors %}
+                            {% for error in note_form.due_date.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">إلغاء</button>
+                        {{ note_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for dashboard -->
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+.notes-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+</style>
+
+<!-- Custom JavaScript for dashboard -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide due date field based on task checkbox
+        const isTaskCheckbox = document.getElementById('is_task');
+        const dueDateField = document.getElementById('due-date-field');
+        
+        // Set initial state
+        if (isTaskCheckbox && isTaskCheckbox.checked) {
+            dueDateField.style.display = 'block';
+        }
+        
+        // Add event listener for changes
+        if (isTaskCheckbox) {
+            isTaskCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    dueDateField.style.display = 'block';
+                } else {
+                    dueDateField.style.display = 'none';
+                }
+            });
+        }
+        
+        // Set is_task to true when clicking on task add button
+        const taskAddBtn = document.querySelector('.task-add-btn');
+        if (taskAddBtn && isTaskCheckbox) {
+            taskAddBtn.addEventListener('click', function() {
+                isTaskCheckbox.checked = true;
+                dueDateField.style.display = 'block';
+            });
+        }
+    });
+</script>
 {% endblock %}
