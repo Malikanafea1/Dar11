@@ -73,7 +73,7 @@
                         <tbody>
                             {% for patient in active_patients %}
                             <tr>
-                                <td>{{ patient.id }}</td>
+                                <td>{{ patient.sequence_number }}</td>
                                 <td>{{ patient.name }}</td>
                                 <td>{{ patient.phone or '-' }}</td>
                                 <td>{{ patient.admission_date.strftime('%Y-%m-%d') }}</td>
@@ -126,7 +126,7 @@
                         <tbody>
                             {% for patient in inactive_patients %}
                             <tr>
-                                <td>{{ patient.id }}</td>
+                                <td>{{ patient.sequence_number }}</td>
                                 <td>{{ patient.name }}</td>
                                 <td>{{ patient.phone or '-' }}</td>
                                 <td>{{ patient.admission_date.strftime('%Y-%m-%d') }}</td>
