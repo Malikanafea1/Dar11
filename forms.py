@@ -147,8 +147,14 @@ class EmployeeForm(FlaskForm):
     address = StringField('العنوان', validators=[Optional()])
     hire_date = DateField('تاريخ التعيين', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
     monthly_salary = FloatField('الراتب الشهري (ج.م)', validators=[DataRequired('هذا الحقل مطلوب')])
+    salary_view_password = StringField('كلمة مرور لعرض الراتب (للمدراء العامين فقط)', validators=[Optional()])
     notes = TextAreaField('ملاحظات', validators=[Optional()])
     submit = SubmitField('حفظ')
+    
+    def __init__(self, *args, **kwargs):
+        super(EmployeeForm, self).__init__(*args, **kwargs)
+        # سيتم عرض حقل كلمة المرور لعرض الراتب إذا كان الموظف مدير عام
+        # سيتم التحقق من ذلك عن طريق JavaScript في الواجهة
 
 class SalaryPaymentForm(FlaskForm):
     employee_id = SelectField('الموظف', coerce=int, validators=[DataRequired('هذا الحقل مطلوب')])

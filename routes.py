@@ -358,6 +358,7 @@ def add_employee():
     form.hire_date.data = date.today()
     
     if form.validate_on_submit():
+        # إنشاء موظف جديد
         employee = Employee(
             name=form.name.data,
             role=form.role.data,
@@ -369,6 +370,11 @@ def add_employee():
             notes=form.notes.data,
             is_active=True
         )
+        
+        # إذا كان المدير العام وتم إدخال كلمة مرور لعرض الراتب
+        if form.role.data == 'general_manager' and form.salary_view_password.data:
+            employee.salary_view_password = form.salary_view_password.data
+        
         db.session.add(employee)
         db.session.commit()
         flash('تم إضافة الموظف بنجاح', 'success')
@@ -450,6 +456,10 @@ def edit_employee(id):
         employee.hire_date = form.hire_date.data
         employee.monthly_salary = form.monthly_salary.data
         employee.notes = form.notes.data
+        
+        # إذا كان مدير عام وتم إدخال كلمة مرور جديدة لعرض الراتب
+        if form.role.data == 'general_manager' and form.salary_view_password.data:
+            employee.salary_view_password = form.salary_view_password.data
         
         db.session.commit()
         flash('تم تحديث بيانات الموظف بنجاح', 'success')

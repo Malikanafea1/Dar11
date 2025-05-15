@@ -105,7 +105,25 @@
 
                 <div class="mb-3">
                     <p class="mb-1 text-muted">الراتب الشهري:</p>
+                    {% if employee.is_general_manager %}
+                    <div id="salaryDisplay">
+                        <p class="fs-5" id="hiddenSalary">
+                            <i class="fas fa-lock me-1"></i> محمي بكلمة مرور
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" 
+                                    data-bs-toggle="modal" data-bs-target="#viewSalaryModal">
+                                عرض الراتب
+                            </button>
+                        </p>
+                        <p class="fs-5 d-none" id="visibleSalary">
+                            {{ employee.monthly_salary }} ج.م
+                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="hideSalaryBtn">
+                                إخفاء
+                            </button>
+                        </p>
+                    </div>
+                    {% else %}
                     <p class="fs-5">{{ employee.monthly_salary }} ج.م</p>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
@@ -129,6 +147,29 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Modal إدخال كلمة المرور لعرض الراتب -->
+    <div class="modal fade" id="viewSalaryModal" tabindex="-1" aria-labelledby="viewSalaryModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="viewSalaryModalLabel">إدخال كلمة المرور لعرض الراتب</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>يرجى إدخال كلمة المرور لعرض راتب المدير العام:</p>
+            <div class="mb-3">
+              <input type="password" class="form-control" id="salaryPassword" placeholder="كلمة المرور">
+              <div class="invalid-feedback" id="passwordError">كلمة المرور غير صحيحة</div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-primary" id="confirmSalaryPassword">عرض الراتب</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Payment Form and History -->
