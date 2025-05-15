@@ -6,13 +6,20 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>{{ employee.name }}</h1>
     <div>
+        <!-- زر العودة لقائمة الموظفين -->
         <a href="{{ url_for('main.employees') }}" class="btn btn-secondary">
             <i class="fas fa-list me-1"></i> قائمة الموظفين
         </a>
         
+        <!-- زر التعديل -->
+        <a href="{{ url_for('main.edit_employee', id=employee.id) }}" class="btn btn-info">
+            <i class="fas fa-edit me-1"></i> تعديل
+        </a>
+        
+        <!-- زر تنشيط/تعطيل الموظف -->
         <form class="d-inline" action="{{ url_for('main.toggle_employee_status', id=employee.id) }}" method="POST">
             {% if employee.is_active %}
-            <button type="submit" class="btn btn-danger">
+            <button type="submit" class="btn btn-warning">
                 <i class="fas fa-user-slash me-1"></i> تعطيل الموظف
             </button>
             {% else %}
@@ -21,7 +28,34 @@
             </button>
             {% endif %}
         </form>
+        
+        <!-- زر الحذف مع تأكيد JavaScript -->
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal">
+            <i class="fas fa-trash-alt me-1"></i> حذف الموظف
+        </button>
     </div>
+</div>
+
+<!-- Modal تأكيد الحذف -->
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1" aria-labelledby="deleteEmployeeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteEmployeeModalLabel">تأكيد حذف الموظف</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>هل أنت متأكد من رغبتك في حذف الموظف <strong>{{ employee.name }}</strong>؟</p>
+        <p class="text-danger"><strong>تحذير:</strong> سيتم حذف جميع بيانات الموظف والمدفوعات المرتبطة به بشكل نهائي.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <form action="{{ url_for('main.delete_employee', id=employee.id) }}" method="POST">
+          <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="row">

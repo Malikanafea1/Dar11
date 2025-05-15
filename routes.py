@@ -431,6 +431,51 @@ def add_employee_payment(id):
         
     return redirect(url_for('main.view_employee', id=employee.id))
 
+@main_bp.route('/employees/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_employee(id):
+    if not current_user.can_manage_employees:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    employee = Employee.query.get_or_404(id)
+    form = EmployeeForm(obj=employee)
+    
+    if form.validate_on_submit():
+        employee.name = form.name.data
+        employee.role = form.role.data
+        employee.national_id = form.national_id.data
+        employee.phone = form.phone.data
+        employee.address = form.address.data
+        employee.hire_date = form.hire_date.data
+        employee.monthly_salary = form.monthly_salary.data
+        employee.notes = form.notes.data
+        
+        db.session.commit()
+        flash('تم تحديث بيانات الموظف بنجاح', 'success')
+        return redirect(url_for('main.view_employee', id=employee.id))
+        
+    return render_template('employees/edit.html', form=form, employee=employee)
+
+@main_bp.route('/employees/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_employee(id):
+    if not current_user.can_manage_employees:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    employee = Employee.query.get_or_404(id)
+    
+    # تخزين الاسم قبل الحذف للرسالة
+    name = employee.name
+    
+    # حذف الموظف
+    db.session.delete(employee)
+    db.session.commit()
+    
+    flash(f'تم حذف الموظف {name} بنجاح', 'success')
+    return redirect(url_for('main.employees'))
+
 @main_bp.route('/employees/<int:id>/toggle_status', methods=['POST'])
 @login_required
 def toggle_employee_status(id):

@@ -149,6 +149,7 @@ class Employee(db.Model):
     address = db.Column(db.String(200), nullable=True)
     hire_date = db.Column(db.Date, nullable=False, default=datetime.now().date())
     monthly_salary = db.Column(db.Float, nullable=False)
+    salary_view_password = db.Column(db.String(100), nullable=True)  # كلمة مرور لعرض الراتب (للمدراء)
     is_active = db.Column(db.Boolean, default=True)
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
@@ -157,6 +158,24 @@ class Employee(db.Model):
     # Relationships
     salary_payments = db.relationship('SalaryPayment', backref='employee', lazy='dynamic')
     therapy_groups = db.relationship('TherapyGroup', backref='therapist', lazy='dynamic')
+    
+    @hybrid_property
+    def is_general_manager(self):
+        """التحقق مما إذا كان الموظف مدير عام"""
+        return self.role == 'general_manager'
+    
+    def check_salary_password(self, password):
+        """التحقق من صحة كلمة مرور عرض الراتب"""
+        # للمدراء العامين فقط يتم التحقق من كلمة المرور
+        if not self.is_general_manager:
+            return True
+            
+        # إذا لم يتم تعيين كلمة مرور، نعتبر أي كلمة مرور صحيحة
+        if not self.salary_view_password:
+            return True
+            
+        # التحقق من تطابق كلمة المرور
+        return self.salary_view_password == password
     
     def __repr__(self):
         return f'<Employee {self.name}>'
