@@ -18,7 +18,84 @@ main_bp = Blueprint('main', __name__)
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
-    return render_template('index.html')
+    
+    # بيانات ملخص أداء المركز لهذا الشهر
+    today = date.today()
+    start_of_month = date(today.year, today.month, 1)
+    start_of_prev_month = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+    
+    # إحصاءات الشهر الحالي
+    active_patients_count = Patient.query.filter_by(is_active=True).count()
+    new_patients_this_month = Patient.query.filter(
+        Patient.admission_date >= start_of_month
+    ).count()
+    
+    # تحصيلات الشهر الحالي
+    current_month_collections = db.session.query(func.sum(Collection.amount)).filter(
+        Collection.date >= start_of_month,
+        Collection.date <= today
+    ).scalar() or 0
+    
+    # مصروفات الشهر الحالي
+    current_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.date >= start_of_month,
+        Expense.date <= today
+    ).scalar() or 0
+    
+    # تحصيلات الشهر السابق
+    prev_month_collections = db.session.query(func.sum(Collection.amount)).filter(
+        Collection.date >= start_of_prev_month,
+        Collection.date < start_of_month
+    ).scalar() or 0
+    
+    # مصروفات الشهر السابق
+    prev_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+        Expense.date >= start_of_prev_month,
+        Expense.date < start_of_month
+    ).scalar() or 0
+    
+    # حساب نسبة التغير
+    revenue_change = 0
+    expense_change = 0
+    profit_change = 0
+    
+    if prev_month_collections > 0:
+        revenue_change = ((current_month_collections - prev_month_collections) / prev_month_collections) * 100
+    
+    if prev_month_expenses > 0:
+        expense_change = ((current_month_expenses - prev_month_expenses) / prev_month_expenses) * 100
+    
+    current_month_profit = current_month_collections - current_month_expenses
+    prev_month_profit = prev_month_collections - prev_month_expenses
+    if prev_month_profit != 0:
+        profit_change = ((current_month_profit - prev_month_profit) / abs(prev_month_profit)) * 100
+    
+    # تحديد حالة الأداء العام
+    if profit_change > 5:
+        performance_status = "تقدم"
+        status_color = "success"
+    elif profit_change < -5:
+        performance_status = "تراجع"
+        status_color = "danger"
+    else:
+        performance_status = "ثبات"
+        status_color = "warning"
+    
+    # إضافة تاريخ الشهر الحالي
+    month_name = today.strftime('%B %Y')  # مثال: May 2025
+    
+    return render_template('index.html',
+                          active_patients=active_patients_count,
+                          new_patients=new_patients_this_month,
+                          current_month_collections=current_month_collections,
+                          current_month_expenses=current_month_expenses,
+                          current_month_profit=current_month_profit,
+                          revenue_change=revenue_change,
+                          expense_change=expense_change,
+                          profit_change=profit_change,
+                          performance_status=performance_status,
+                          status_color=status_color,
+                          current_month=month_name)
 
 @main_bp.route('/dashboard', methods=['GET', 'POST'])
 @login_required

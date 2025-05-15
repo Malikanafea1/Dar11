@@ -4,10 +4,119 @@
 
 {% block content %}
 <div class="row justify-content-center mt-5">
-    <div class="col-md-8 text-center">
+    <div class="col-md-10 text-center">
         <h1 class="display-4">مرحباً بك في نظام دار الحياة</h1>
         <p class="lead">نظام إدارة متكامل لمركز علاج نفسي وإدمان</p>
         
+        <!-- ملخص أداء المركز -->
+        <div class="card shadow border-0 mt-4 mb-5">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">ملخص أداء المركز - شهر {{ current_month }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <!-- الحالة العامة -->
+                    <div class="col-md-4 text-center mb-4">
+                        <h4>الحالة العامة</h4>
+                        <div class="d-flex justify-content-center">
+                            <div class="rounded-circle bg-{{ status_color }} d-flex justify-content-center align-items-center" style="width: 150px; height: 150px;">
+                                <div>
+                                    <h2 class="text-white mb-1">{{ performance_status }}</h2>
+                                    <p class="text-white mb-0">
+                                        {{ profit_change|round|int }}% 
+                                        {% if profit_change > 0 %}
+                                            <i class="fas fa-arrow-up"></i>
+                                        {% elif profit_change < 0 %}
+                                            <i class="fas fa-arrow-down"></i>
+                                        {% else %}
+                                            <i class="fas fa-equals"></i>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- إحصاءات المرضى -->
+                    <div class="col-md-8">
+                        <div class="row">
+                            <!-- المرضى النشطين -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-primary mb-0">{{ active_patients }}</h5>
+                                        <small>مرضى نشطين</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- مرضى جدد هذا الشهر -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-primary mb-0">{{ new_patients }}</h5>
+                                        <small>مرضى جدد</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- التحصيلات -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-success mb-0">{{ '{:,.0f}'.format(current_month_collections) }} ج.م</h5>
+                                        <small>تحصيلات
+                                            <span class="{% if revenue_change > 0 %}text-success{% elif revenue_change < 0 %}text-danger{% endif %}">
+                                                ({{ revenue_change|round|int }}%
+                                                {% if revenue_change > 0 %}
+                                                    <i class="fas fa-arrow-up"></i>
+                                                {% elif revenue_change < 0 %}
+                                                    <i class="fas fa-arrow-down"></i>
+                                                {% endif %})
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- المصروفات -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-danger mb-0">{{ '{:,.0f}'.format(current_month_expenses) }} ج.م</h5>
+                                        <small>مصروفات
+                                            <span class="{% if expense_change < 0 %}text-success{% elif expense_change > 0 %}text-danger{% endif %}">
+                                                ({{ expense_change|round|int }}%
+                                                {% if expense_change > 0 %}
+                                                    <i class="fas fa-arrow-up"></i>
+                                                {% elif expense_change < 0 %}
+                                                    <i class="fas fa-arrow-down"></i>
+                                                {% endif %})
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الربح والخسارة -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="{% if current_month_profit > 0 %}text-success{% elif current_month_profit < 0 %}text-danger{% endif %} mb-0">
+                                            صافي الربح: {{ '{:,.0f}'.format(current_month_profit) }} ج.م
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الأقسام الرئيسية -->
         <div class="mt-5">
             <div class="row justify-content-center">
                 <div class="col-md-6">
