@@ -263,8 +263,8 @@ def patient_statement(id):
     # Add payments
     for payment in payments:
         transactions.append({
-            'date': payment.date,
-            'description': f"دفعة - {payment.notes or ''}",
+            'date': payment.date,  # تاريخ الدفعة الذي تم اختياره عند التسجيل
+            'description': f"دفعة - {payment.notes or ''} (تاريخ التسجيل: {payment.created_at.strftime('%Y-%m-%d')})",
             'amount': payment.amount,
             'running_balance': running_balance + payment.amount
         })

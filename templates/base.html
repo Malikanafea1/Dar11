@@ -193,6 +193,274 @@
     <!-- Main JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
+    <!-- Calculator -->
+    <div class="calculator-toggle" id="calcToggle">
+        <i class="fas fa-calculator"></i>
+    </div>
+    
+    <div class="calculator-container" id="calculator">
+        <div class="calculator-header">
+            <h5>الآلة الحاسبة</h5>
+            <button type="button" class="btn-close" id="calcClose"></button>
+        </div>
+        <div class="calculator-body">
+            <div class="calc-display">
+                <input type="text" id="calcDisplay" readonly>
+            </div>
+            <div class="calc-buttons">
+                <button class="calc-btn calc-btn-clear" data-action="clear">C</button>
+                <button class="calc-btn calc-btn-op" data-action="backspace">←</button>
+                <button class="calc-btn calc-btn-op" data-action="divide">÷</button>
+                <button class="calc-btn calc-btn-op" data-action="multiply">×</button>
+                
+                <button class="calc-btn" data-value="7">7</button>
+                <button class="calc-btn" data-value="8">8</button>
+                <button class="calc-btn" data-value="9">9</button>
+                <button class="calc-btn calc-btn-op" data-action="subtract">-</button>
+                
+                <button class="calc-btn" data-value="4">4</button>
+                <button class="calc-btn" data-value="5">5</button>
+                <button class="calc-btn" data-value="6">6</button>
+                <button class="calc-btn calc-btn-op" data-action="add">+</button>
+                
+                <button class="calc-btn" data-value="1">1</button>
+                <button class="calc-btn" data-value="2">2</button>
+                <button class="calc-btn" data-value="3">3</button>
+                <button class="calc-btn calc-btn-eq" data-action="equals">=</button>
+                
+                <button class="calc-btn" data-value="0" style="grid-column: span 2;">0</button>
+                <button class="calc-btn" data-value=".">.</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Calculator Styles */
+        .calculator-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        
+        .calculator-container {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 280px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+        
+        .calculator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .calculator-header h5 {
+            margin: 0;
+        }
+        
+        .calculator-body {
+            padding: 15px;
+        }
+        
+        .calc-display {
+            margin-bottom: 15px;
+        }
+        
+        .calc-display input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.5rem;
+            text-align: right;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        
+        .calc-btn {
+            padding: 12px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .calc-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .calc-btn-op {
+            background-color: #e9ecef;
+        }
+        
+        .calc-btn-clear {
+            background-color: #ff6b6b;
+            color: white;
+        }
+        
+        .calc-btn-eq {
+            background-color: #37b24d;
+            color: white;
+            grid-row: span 2;
+        }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // عناصر الآلة الحاسبة
+            const calcToggle = document.getElementById('calcToggle');
+            const calculator = document.getElementById('calculator');
+            const calcClose = document.getElementById('calcClose');
+            const calcDisplay = document.getElementById('calcDisplay');
+            const calcButtons = document.querySelectorAll('.calc-btn');
+            
+            // متغيرات الحساب
+            let currentInput = '';
+            let currentOperator = '';
+            let previousInput = '';
+            let calculationFinished = false;
+            
+            // إظهار/إخفاء الآلة الحاسبة
+            calcToggle.addEventListener('click', function() {
+                calculator.style.display = calculator.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            // إغلاق الآلة الحاسبة
+            calcClose.addEventListener('click', function() {
+                calculator.style.display = 'none';
+            });
+            
+            // إضافة مستمعات الأحداث لجميع الأزرار
+            calcButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if(button.dataset.value) {
+                        handleNumberInput(button.dataset.value);
+                    } else if(button.dataset.action) {
+                        handleAction(button.dataset.action);
+                    }
+                    updateDisplay();
+                });
+            });
+            
+            // معالجة إدخال الأرقام
+            function handleNumberInput(value) {
+                if(calculationFinished) {
+                    currentInput = value;
+                    calculationFinished = false;
+                } else {
+                    currentInput += value;
+                }
+            }
+            
+            // معالجة العمليات الحسابية
+            function handleAction(action) {
+                switch(action) {
+                    case 'clear':
+                        clearCalculator();
+                        break;
+                    case 'backspace':
+                        currentInput = currentInput.slice(0, -1);
+                        break;
+                    case 'add':
+                    case 'subtract':
+                    case 'multiply':
+                    case 'divide':
+                        handleOperator(action);
+                        break;
+                    case 'equals':
+                        calculate();
+                        break;
+                }
+            }
+            
+            // معالجة عمليات الحساب
+            function handleOperator(operator) {
+                if(currentInput === '' && previousInput === '') return;
+                
+                if(currentOperator !== '' && currentInput !== '') {
+                    calculate();
+                }
+                
+                currentOperator = operator;
+                previousInput = currentInput;
+                currentInput = '';
+            }
+            
+            // تنفيذ العملية الحسابية
+            function calculate() {
+                if(previousInput === '' || currentInput === '' || currentOperator === '') return;
+                
+                const prev = parseFloat(previousInput);
+                const current = parseFloat(currentInput);
+                let result = 0;
+                
+                switch(currentOperator) {
+                    case 'add':
+                        result = prev + current;
+                        break;
+                    case 'subtract':
+                        result = prev - current;
+                        break;
+                    case 'multiply':
+                        result = prev * current;
+                        break;
+                    case 'divide':
+                        result = prev / current;
+                        break;
+                }
+                
+                currentInput = result.toString();
+                previousInput = '';
+                currentOperator = '';
+                calculationFinished = true;
+            }
+            
+            // مسح الآلة الحاسبة
+            function clearCalculator() {
+                currentInput = '';
+                previousInput = '';
+                currentOperator = '';
+                calculationFinished = false;
+            }
+            
+            // تحديث العرض
+            function updateDisplay() {
+                calcDisplay.value = currentInput || '0';
+            }
+            
+            // تهيئة العرض
+            updateDisplay();
+        });
+    </script>
+    
     <!-- Additional JS -->
     {% block scripts %}{% endblock %}
 </body>

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}كشف حساب {{ employee.name }} - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>كشف حساب: {{ employee.name }}</h1>
+    <div>
+        <button class="btn btn-primary me-2" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> طباعة
+        </button>
+        <a href="{{ url_for('main.view_employee', id=employee.id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> رجوع
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i> بيانات الموظف</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">الإسم:</label>
+                    <div class="col-sm-8">
+                        <p class="form-control-plaintext">{{ employee.name }}</p>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">الوظيفة:</label>
+                    <div class="col-sm-8">
+                        <p class="form-control-plaintext">{{ employee_roles.get(employee.role, employee.role) }}</p>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">تاريخ التعيين:</label>
+                    <div class="col-sm-8">
+                        <p class="form-control-plaintext">{{ employee.hire_date.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label class="col-sm-4 col-form-label fw-bold">رقم الهاتف:</label>
+                    <div class="col-sm-8">
+                        <p class="form-control-plaintext">{{ employee.phone or 'غير محدد' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i> ملخص مالي</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 text-center mb-4">
+                        <h6 class="text-muted">الراتب الشهري</h6>
+                        <h3>{{ employee.monthly_salary }} ج.م</h3>
+                    </div>
+                    
+                    <div class="col-md-6 text-center mb-4">
+                        <h6 class="text-muted">إجمالي المدفوعات</h6>
+                        <h3>{{ total_payments }} ج.م</h3>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <h6 class="text-muted">المكافآت</h6>
+                        <h4 class="text-success">{{ bonuses }} ج.م</h4>
+                    </div>
+                    
+                    <div class="col-6 text-center">
+                        <h6 class="text-muted">الخصومات</h6>
+                        <h4 class="text-danger">{{ deductions }} ج.م</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list me-2"></i> سجل المدفوعات</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>نوع الدفعة</th>
+                        <th>المبلغ</th>
+                        <th>الملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ payment.date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% set payment_types = {
+                                'salary': 'راتب',
+                                'bonus': 'مكافأة',
+                                'loan': 'سلفة',
+                                'deduction': 'خصم',
+                                'bwanas': 'بوانص'
+                            } %}
+                            {{ payment_types[payment.payment_type] }}
+                        </td>
+                        <td class="{{ 'text-success' if payment.payment_type in ['salary', 'bonus', 'bwanas'] else 'text-danger' }}">
+                            {{ payment.amount }} ج.م
+                        </td>
+                        <td>{{ payment.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if not payments %}
+        <p class="text-center">لا توجد مدفوعات مسجلة</p>
+        {% endif %}
+    </div>
+</div>
+
+{% block styles %}
+<style media="print">
+    .btn, nav, footer, .d-print-none {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    
+    .card {
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+    }
+    
+    .table {
+        width: 100%;
+    }
+    
+    .text-success {
+        color: #198754 !important;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+</style>
+{% endblock %}
+{% endblock %}
