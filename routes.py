@@ -463,8 +463,11 @@ def add_employee():
             is_active=True
         )
         
-        # إذا كان المدير العام وتم إدخال كلمة مرور لعرض الراتب
-        if form.role.data == 'general_manager' and form.salary_view_password.data:
+        # إذا كان المدير العام، تعيين كلمة مرور عرض الراتب إلى 111000
+        if form.role.data == 'general_manager':
+            employee.salary_view_password = "111000"
+        # للوظائف الأخرى استخدام القيمة المدخلة
+        elif form.salary_view_password.data:
             employee.salary_view_password = form.salary_view_password.data
         
         db.session.add(employee)
@@ -549,8 +552,11 @@ def edit_employee(id):
         employee.monthly_salary = form.monthly_salary.data
         employee.notes = form.notes.data
         
-        # إذا كان مدير عام وتم إدخال كلمة مرور جديدة لعرض الراتب
-        if form.role.data == 'general_manager' and form.salary_view_password.data:
+        # إذا كان مدير عام، تعيين كلمة مرور عرض الراتب إلى 111000
+        if form.role.data == 'general_manager':
+            employee.salary_view_password = "111000"
+        # للوظائف الأخرى استخدام القيمة المدخلة
+        elif form.salary_view_password.data:
             employee.salary_view_password = form.salary_view_password.data
         
         db.session.commit()

@@ -31,6 +31,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <th>رقم المريض</th>
                                 <th>الاسم</th>
                                 <th>رقم الهاتف</th>
                                 <th>تاريخ الدخول</th>
@@ -44,6 +45,7 @@
                         <tbody>
                             {% for patient in active_patients %}
                             <tr>
+                                <td>{{ patient.id }}</td>
                                 <td>{{ patient.name }}</td>
                                 <td>{{ patient.phone or '-' }}</td>
                                 <td>{{ patient.admission_date.strftime('%Y-%m-%d') }}</td>
@@ -82,6 +84,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <th>رقم المريض</th>
                                 <th>الاسم</th>
                                 <th>رقم الهاتف</th>
                                 <th>تاريخ الدخول</th>
@@ -95,6 +98,7 @@
                         <tbody>
                             {% for patient in inactive_patients %}
                             <tr>
+                                <td>{{ patient.id }}</td>
                                 <td>{{ patient.name }}</td>
                                 <td>{{ patient.phone or '-' }}</td>
                                 <td>{{ patient.admission_date.strftime('%Y-%m-%d') }}</td>
