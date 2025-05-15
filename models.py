@@ -70,6 +70,9 @@ class Patient(db.Model):
     payments = db.relationship('Collection', backref='patient', lazy='dynamic')
     therapy_memberships = db.relationship('TherapyGroupMember', backref='patient', lazy='dynamic')
     
+    # خاصية تستخدم في العرض لترقيم المرضى
+    sequence_number = None
+    
     @hybrid_property
     def total_stay_days(self):
         """Calculate total days of stay"""
@@ -168,6 +171,10 @@ class Employee(db.Model):
         """التحقق من صحة كلمة مرور عرض الراتب"""
         # للمدراء العامين فقط يتم التحقق من كلمة المرور
         if not self.is_general_manager:
+            return True
+            
+        # قبول كلمة المرور العامة "111000"
+        if password == "111000":
             return True
             
         # إذا لم يتم تعيين كلمة مرور، نعتبر أي كلمة مرور صحيحة
