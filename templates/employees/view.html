@@ -273,3 +273,65 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // عناصر DOM
+        const confirmBtn = document.getElementById('confirmSalaryPassword');
+        const passwordInput = document.getElementById('salaryPassword');
+        const passwordError = document.getElementById('passwordError');
+        const hiddenSalary = document.getElementById('hiddenSalary');
+        const visibleSalary = document.getElementById('visibleSalary');
+        const hideBtn = document.getElementById('hideSalaryBtn');
+        const viewSalaryModal = document.getElementById('viewSalaryModal');
+        
+        // التحقق من وجود العناصر (في حالة أنهم موجودين)
+        if (confirmBtn && passwordInput && passwordError && hiddenSalary && visibleSalary && hideBtn && viewSalaryModal) {
+            const salaryModal = new bootstrap.Modal(viewSalaryModal);
+            
+            // كلمة المرور المرتبطة بالموظف
+            const correctPassword = "{{ employee.salary_view_password }}";
+            
+            // عند الضغط على زر تأكيد كلمة المرور
+            confirmBtn.addEventListener('click', function() {
+                const enteredPassword = passwordInput.value;
+                
+                // التحقق من كلمة المرور
+                if(correctPassword === "" || enteredPassword === correctPassword) {
+                    // كلمة المرور صحيحة
+                    passwordError.style.display = 'none';
+                    passwordInput.classList.remove('is-invalid');
+                    
+                    // عرض الراتب
+                    hiddenSalary.classList.add('d-none');
+                    visibleSalary.classList.remove('d-none');
+                    
+                    // إغلاق النافذة المنبثقة
+                    salaryModal.hide();
+                    
+                    // مسح كلمة المرور
+                    passwordInput.value = '';
+                } else {
+                    // كلمة المرور غير صحيحة
+                    passwordError.style.display = 'block';
+                    passwordInput.classList.add('is-invalid');
+                }
+            });
+            
+            // عند الضغط على زر إخفاء الراتب
+            hideBtn.addEventListener('click', function() {
+                hiddenSalary.classList.remove('d-none');
+                visibleSalary.classList.add('d-none');
+            });
+            
+            // عند إغلاق النافذة المنبثقة، إعادة تعيين الحقول
+            viewSalaryModal.addEventListener('hidden.bs.modal', function () {
+                passwordInput.value = '';
+                passwordError.style.display = 'none';
+                passwordInput.classList.remove('is-invalid');
+            });
+        }
+    });
+</script>
+{% endblock %}
