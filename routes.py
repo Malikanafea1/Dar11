@@ -196,8 +196,44 @@ def patients():
         flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
         return redirect(url_for('main.dashboard'))
         
-    patients_list = Patient.query.order_by(Patient.is_active.desc(), Patient.name).all()
-    return render_template('patients/index.html', patients=patients_list)
+    sort_by = request.args.get('sort_by', 'admission_date')
+    sort_order = request.args.get('sort_order', 'asc')
+    
+    query = Patient.query.order_by(Patient.is_active.desc())
+    
+    if sort_by == 'name':
+        if sort_order == 'asc':
+            query = query.order_by(Patient.name.asc())
+        else:
+            query = query.order_by(Patient.name.desc())
+    else:  # admission_date is default
+        if sort_order == 'asc':
+            query = query.order_by(Patient.admission_date.asc())
+        else:
+            query = query.order_by(Patient.admission_date.desc())
+    
+    patients_list = query.all()
+    
+    # ترقيم المرضى حسب تاريخ الدخول (الأقدم هو رقم 1)
+    if sort_by == 'admission_date' and sort_order == 'asc':
+        # إنشاء قاموس للترقيم
+        active_patients = [p for p in patients_list if p.is_active]
+        inactive_patients = [p for p in patients_list if not p.is_active]
+        
+        # ترقيم المرضى النشطين
+        for i, patient in enumerate(active_patients, 1):
+            patient.sequence_number = i
+            
+        # ترقيم المرضى غير النشطين
+        for i, patient in enumerate(inactive_patients, 1):
+            patient.sequence_number = i
+    else:
+        # في حالة الترتيب الأبجدي أو ترتيبات أخرى، نضع أرقام تسلسلية عادية
+        for i, patient in enumerate(patients_list, 1):
+            patient.sequence_number = i
+    
+    return render_template('patients/index.html', patients=patients_list, 
+                          sort_by=sort_by, sort_order=sort_order)
 
 @main_bp.route('/patients/add', methods=['GET', 'POST'])
 @login_required

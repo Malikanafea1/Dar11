@@ -24,6 +24,24 @@
                     </button>
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="d-flex justify-content-end">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            ترتيب المرضى <i class="fas fa-sort"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">حسب تاريخ الدخول</h6></li>
+                            <li><a class="dropdown-item {% if sort_by == 'admission_date' and sort_order == 'asc' %}active{% endif %}" href="{{ url_for('main.patients', sort_by='admission_date', sort_order='asc') }}">الأقدم أولاً</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'admission_date' and sort_order == 'desc' %}active{% endif %}" href="{{ url_for('main.patients', sort_by='admission_date', sort_order='desc') }}">الأحدث أولاً</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">حسب الاسم</h6></li>
+                            <li><a class="dropdown-item {% if sort_by == 'name' and sort_order == 'asc' %}active{% endif %}" href="{{ url_for('main.patients', sort_by='name', sort_order='asc') }}">من أ إلى ي</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'name' and sort_order == 'desc' %}active{% endif %}" href="{{ url_for('main.patients', sort_by='name', sort_order='desc') }}">من ي إلى أ</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <ul class="nav nav-tabs mb-3" id="patientsTab" role="tablist">
             <li class="nav-item" role="presentation">
