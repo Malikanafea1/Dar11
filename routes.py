@@ -9,7 +9,7 @@ from app import db
 from models import (Patient, PatientExpense, Collection, Employee, SalaryPayment, 
                    TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User, DashboardNote)
 from forms import (PatientForm, PatientExpenseForm, EditPatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
-                  TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm,
+                  TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm, EditExpenseForm,
                   SearchDateRangeForm, RegisterForm, EditUserForm, DashboardNoteForm)
 
 main_bp = Blueprint('main', __name__)
@@ -1048,6 +1048,42 @@ def add_expense():
         return redirect(url_for('main.expenses'))
         
     return render_template('expenses/add.html', form=form)
+
+@main_bp.route('/expenses/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_expense(id):
+    if not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    expense = Expense.query.get_or_404(id)
+    form = EditExpenseForm(obj=expense)
+    
+    if form.validate_on_submit():
+        expense.category = form.category.data
+        expense.amount = form.amount.data
+        expense.description = form.description.data
+        expense.date = form.date.data
+        
+        db.session.commit()
+        flash('تم تحديث المصروف بنجاح', 'success')
+        return redirect(url_for('main.expenses'))
+        
+    return render_template('expenses/edit.html', form=form, expense=expense)
+
+@main_bp.route('/expenses/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_expense(id):
+    if not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    expense = Expense.query.get_or_404(id)
+    db.session.delete(expense)
+    db.session.commit()
+    
+    flash('تم حذف المصروف بنجاح', 'success')
+    return redirect(url_for('main.expenses'))
 
 # Reports routes
 @main_bp.route('/reports/daily', methods=['GET', 'POST'])

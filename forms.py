@@ -248,6 +248,28 @@ class ExpenseForm(FlaskForm):
     description = StringField('الوصف', validators=[Optional()])
     date = DateField('التاريخ', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
     submit = SubmitField('تسجيل المصروف')
+    
+class EditExpenseForm(FlaskForm):
+    category = SelectField('القسم', choices=[
+        ('kitchen', 'مطبخ'),
+        ('buffet', 'بوفيه'),
+        ('rent', 'إيجار'),
+        ('maintenance', 'صيانة'),
+        ('medications', 'أدوية'),
+        ('electricity', 'كهرباء'),
+        ('gas', 'غاز'),
+        ('water', 'مياه'),
+        ('transport', 'مواصلات'),
+        ('bonuses', 'مكافآت'),
+        ('salaries', 'رواتب'),
+        ('miscellaneous', 'متنوعات'),
+        ('hospitality', 'ضيافة'),
+        ('entertainment', 'يوم ترفيهي')
+    ], validators=[DataRequired('هذا الحقل مطلوب')])
+    amount = FloatField('المبلغ (ج.م)', validators=[DataRequired('هذا الحقل مطلوب')])
+    description = StringField('الوصف', validators=[Optional()])
+    date = DateField('التاريخ', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
+    submit = SubmitField('حفظ التغييرات')
 
 class SearchDateRangeForm(FlaskForm):
     start_date = DateField('من تاريخ', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])

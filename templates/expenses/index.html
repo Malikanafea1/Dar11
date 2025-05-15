@@ -25,6 +25,7 @@
                         <th>الوصف</th>
                         <th>المبلغ</th>
                         <th>بواسطة</th>
+                        <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,6 +54,17 @@
                         <td>{{ expense.description or '-' }}</td>
                         <td>{{ expense.amount }} ج.م</td>
                         <td>{{ expense.recorder.username }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.edit_expense', id=expense.id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" 
+                                        onclick="showDeleteModal('{{ expense.id }}', '{{ categories[expense.category] }}', '{{ expense.amount }}', '{{ expense.date.strftime('%Y-%m-%d') }}', '{{ expense.description or '-' }}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -65,4 +77,48 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modal حذف المصروف -->
+<div class="modal fade" id="deleteExpenseModal" tabindex="-1" aria-labelledby="deleteExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteExpenseModalLabel">تأكيد حذف المصروف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من رغبتك في حذف هذا المصروف؟</p>
+                <p class="mb-0"><strong>القسم:</strong> <span id="expenseCategoryDisplay"></span></p>
+                <p class="mb-0"><strong>المبلغ:</strong> <span id="expenseAmountDisplay"></span> ج.م</p>
+                <p class="mb-0"><strong>التاريخ:</strong> <span id="expenseDateDisplay"></span></p>
+                <p class="mb-0"><strong>الوصف:</strong> <span id="expenseDescriptionDisplay"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteExpenseForm" method="POST">
+                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showDeleteModal(expenseId, expenseCategory, expenseAmount, expenseDate, expenseDescription) {
+        // عرض بيانات المصروف
+        document.getElementById('expenseCategoryDisplay').textContent = expenseCategory;
+        document.getElementById('expenseAmountDisplay').textContent = expenseAmount;
+        document.getElementById('expenseDateDisplay').textContent = expenseDate;
+        document.getElementById('expenseDescriptionDisplay').textContent = expenseDescription;
+        
+        // تعيين عنوان URL لنموذج الحذف
+        document.getElementById('deleteExpenseForm').action = "/expenses/" + expenseId + "/delete";
+        
+        // عرض النافذة المنبثقة
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteExpenseModal'));
+        deleteModal.show();
+    }
+</script>
 {% endblock %}
