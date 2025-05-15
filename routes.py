@@ -81,8 +81,12 @@ def index():
         performance_status = "ثبات"
         status_color = "warning"
     
-    # إضافة تاريخ الشهر الحالي
-    month_name = today.strftime('%B %Y')  # مثال: May 2025
+    # إضافة تاريخ الشهر الحالي بالعربية
+    months_ar = {
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل", 5: "مايو", 6: "يونيو",
+        7: "يوليو", 8: "أغسطس", 9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر"
+    }
+    month_name = f"{months_ar[today.month]} {today.year}"  # مثال: مايو 2025
     
     return render_template('index.html',
                           active_patients=active_patients_count,
