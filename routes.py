@@ -7,10 +7,10 @@ from werkzeug.security import generate_password_hash
 
 from app import db
 from models import (Patient, PatientExpense, Collection, Employee, SalaryPayment, 
-                   TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User)
+                   TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User, DashboardNote)
 from forms import (PatientForm, PatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
                   TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm,
-                  SearchDateRangeForm, RegisterForm, EditUserForm)
+                  SearchDateRangeForm, RegisterForm, EditUserForm, DashboardNoteForm)
 
 main_bp = Blueprint('main', __name__)
 
@@ -20,7 +20,7 @@ def index():
         return redirect(url_for('main.dashboard'))
     return render_template('index.html')
 
-@main_bp.route('/dashboard')
+@main_bp.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     # Get today's date and the start of the current month
@@ -34,6 +34,34 @@ def dashboard():
     today_expenses = 0
     month_expenses = 0
     negative_balance_patients = []
+    
+    # Get user notes and tasks for planner feature
+    notes = DashboardNote.query.filter_by(
+        user_id=current_user.id,
+        is_task=False
+    ).order_by(DashboardNote.created_at.desc()).all()
+    
+    tasks = DashboardNote.query.filter_by(
+        user_id=current_user.id,
+        is_task=True
+    ).order_by(DashboardNote.due_date, DashboardNote.created_at.desc()).all()
+    
+    # Initialize note form for adding new notes/tasks
+    note_form = DashboardNoteForm()
+    
+    # Handle note form submission
+    if request.method == 'POST' and note_form.validate_on_submit():
+        new_note = DashboardNote(
+            user_id=current_user.id,
+            title=note_form.title.data,
+            content=note_form.content.data,
+            is_task=note_form.is_task.data,
+            due_date=note_form.due_date.data if note_form.is_task.data else None
+        )
+        db.session.add(new_note)
+        db.session.commit()
+        flash('تمت إضافة الملاحظة / المهمة بنجاح', 'success')
+        return redirect(url_for('main.dashboard'))
     
     # If user is not therapist or has appropriate permissions, show financial info
     if current_user.role != 'therapist':
@@ -94,7 +122,70 @@ def dashboard():
                           month_expenses=month_expenses,
                           negative_balance_patients=negative_balance_patients,
                           recent_reports=recent_reports,
-                          is_therapist=(current_user.role == 'therapist'))
+                          is_therapist=(current_user.role == 'therapist'),
+                          notes=notes,
+                          tasks=tasks,
+                          note_form=note_form)
+
+# Dashboard note routes
+@main_bp.route('/dashboard/notes/<int:id>/complete', methods=['POST'])
+@login_required
+def toggle_note_complete(id):
+    note = DashboardNote.query.get_or_404(id)
+    
+    # Verify ownership
+    if note.user_id != current_user.id:
+        flash('ليس لديك صلاحية للوصول إلى هذه الملاحظة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    note.is_completed = not note.is_completed
+    db.session.commit()
+    flash('تم تحديث حالة المهمة بنجاح', 'success')
+    return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/dashboard/notes/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_note(id):
+    note = DashboardNote.query.get_or_404(id)
+    
+    # Verify ownership
+    if note.user_id != current_user.id:
+        flash('ليس لديك صلاحية للوصول إلى هذه الملاحظة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    form = DashboardNoteForm()
+    
+    if request.method == 'GET':
+        form.title.data = note.title
+        form.content.data = note.content
+        form.is_task.data = note.is_task
+        form.due_date.data = note.due_date
+    
+    if form.validate_on_submit():
+        note.title = form.title.data
+        note.content = form.content.data
+        note.is_task = form.is_task.data
+        note.due_date = form.due_date.data if form.is_task.data else None
+        db.session.commit()
+        flash('تم تحديث الملاحظة بنجاح', 'success')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('dashboard_note_edit.html', form=form, note=note)
+
+@main_bp.route('/dashboard/notes/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_note(id):
+    note = DashboardNote.query.get_or_404(id)
+    
+    # Verify ownership
+    if note.user_id != current_user.id:
+        flash('ليس لديك صلاحية للوصول إلى هذه الملاحظة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    db.session.delete(note)
+    db.session.commit()
+    flash('تم حذف الملاحظة بنجاح', 'success')
+    return redirect(url_for('main.dashboard'))
 
 # Patient routes
 @main_bp.route('/patients')

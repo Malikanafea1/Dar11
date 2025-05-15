@@ -242,3 +242,14 @@ class SearchDateRangeForm(FlaskForm):
         if self.start_date.data and end_date.data:
             if end_date.data < self.start_date.data:
                 raise ValidationError('تاريخ النهاية يجب أن يكون بعد تاريخ البداية')
+                
+class DashboardNoteForm(FlaskForm):
+    title = StringField('العنوان', validators=[DataRequired('هذا الحقل مطلوب'), Length(max=100)])
+    content = TextAreaField('المحتوى', validators=[Optional()])
+    is_task = BooleanField('هل هي مهمة؟')
+    due_date = DateField('تاريخ الاستحقاق', format='%Y-%m-%d', validators=[Optional()])
+    submit = SubmitField('إضافة')
+    
+    def validate_due_date(self, due_date):
+        if self.is_task.data and not due_date.data:
+            raise ValidationError('يجب تحديد تاريخ استحقاق للمهمة')

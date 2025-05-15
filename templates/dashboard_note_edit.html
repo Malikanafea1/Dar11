@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل ملاحظة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">تعديل ملاحظة</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        <div class="mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control") }}
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="5") }}
+                            {% if form.content.errors %}
+                                {% for error in form.content.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.is_task(class="form-check-input") }}
+                            {{ form.is_task.label(class="form-check-label") }}
+                        </div>
+                        <div class="mb-3" id="due-date-field">
+                            {{ form.due_date.label(class="form-label") }}
+                            {{ form.due_date(class="form-control", type="date") }}
+                            {% if form.due_date.errors %}
+                                {% for error in form.due_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">إلغاء</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide due date field based on task checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const isTaskCheckbox = document.getElementById('is_task');
+        const dueDateField = document.getElementById('due-date-field');
+        
+        function toggleDueDate() {
+            if (isTaskCheckbox.checked) {
+                dueDateField.style.display = 'block';
+            } else {
+                dueDateField.style.display = 'none';
+            }
+        }
+        
+        // Set initial state
+        toggleDueDate();
+        
+        // Add event listener for changes
+        isTaskCheckbox.addEventListener('change', toggleDueDate);
+    });
+</script>
+{% endblock %}
