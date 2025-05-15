@@ -15,6 +15,16 @@
         <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i> قائمة الموظفين</h5>
     </div>
     <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="البحث عن موظف...">
+                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
         <ul class="nav nav-tabs mb-3" id="employeesTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">الموظفين النشطين</button>
@@ -131,4 +141,89 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearch');
+        
+        if (searchInput && clearSearchBtn) {
+            // وظيفة البحث في الجدول
+            searchInput.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterEmployees(searchTerm);
+            });
+            
+            // زر مسح البحث
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                filterEmployees('');
+            });
+            
+            // دالة تصفية الموظفين حسب النص
+            function filterEmployees(searchTerm) {
+                // الحصول على جميع صفوف جداول الموظفين
+                const employeeRows = document.querySelectorAll('#active tbody tr, #inactive tbody tr');
+                
+                employeeRows.forEach(row => {
+                    let matchFound = false;
+                    // البحث في جميع خلايا الصف
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach(cell => {
+                        const cellText = cell.textContent.toLowerCase();
+                        
+                        // إذا كان النص في الخلية يحتوي على مصطلح البحث
+                        if (cellText.indexOf(searchTerm) > -1) {
+                            matchFound = true;
+                        }
+                    });
+                    
+                    // إظهار/إخفاء الصف حسب نتيجة البحث
+                    if (matchFound) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                // عرض رسالة عندما لا توجد نتائج بحث
+                const activeTab = document.querySelector('#active');
+                const inactiveTab = document.querySelector('#inactive');
+                
+                checkNoResults(activeTab, '#active tbody tr:not([style*="display: none"])');
+                checkNoResults(inactiveTab, '#inactive tbody tr:not([style*="display: none"])');
+            }
+            
+            // دالة التحقق من عدم وجود نتائج بحث
+            function checkNoResults(tabElement, visibleRowsSelector) {
+                const visibleRows = document.querySelectorAll(visibleRowsSelector);
+                let noResultsMessage = tabElement.querySelector('.no-search-results');
+                
+                if (visibleRows.length === 0) {
+                    // إنشاء رسالة إذا لم تكن موجودة
+                    if (!noResultsMessage) {
+                        noResultsMessage = document.createElement('div');
+                        noResultsMessage.className = 'alert alert-info no-search-results';
+                        noResultsMessage.innerHTML = '<i class="fas fa-info-circle me-2"></i> لا توجد نتائج تطابق البحث';
+                        
+                        // إضافة الرسالة بعد الجدول
+                        const table = tabElement.querySelector('.table-responsive');
+                        if (table) {
+                            table.parentNode.insertBefore(noResultsMessage, table.nextSibling);
+                        } else {
+                            tabElement.appendChild(noResultsMessage);
+                        }
+                    } else {
+                        noResultsMessage.style.display = 'block';
+                    }
+                } else if (noResultsMessage) {
+                    // إخفاء الرسالة إذا وجدت نتائج
+                    noResultsMessage.style.display = 'none';
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
