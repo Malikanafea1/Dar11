@@ -501,6 +501,44 @@ def toggle_employee_status(id):
     flash(f'تم {status} الموظف بنجاح', 'success')
     return redirect(url_for('main.view_employee', id=employee.id))
 
+@main_bp.route('/employees/<int:id>/statement')
+@login_required
+def employee_statement(id):
+    """عرض كشف حساب الموظف"""
+    if not current_user.can_manage_employees and not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    employee = Employee.query.get_or_404(id)
+    payments = SalaryPayment.query.filter_by(employee_id=id).order_by(SalaryPayment.date).all()
+    
+    # حساب إجمالي المدفوعات والمكافآت والخصومات
+    total_payments = sum(payment.amount for payment in payments if payment.payment_type in ['salary', 'bonus', 'bwanas'])
+    bonuses = sum(payment.amount for payment in payments if payment.payment_type in ['bonus', 'bwanas'])
+    deductions = sum(payment.amount for payment in payments if payment.payment_type in ['deduction', 'loan'])
+    
+    # قاموس أنواع الوظائف بالعربية
+    employee_roles = {
+        'general_manager': 'مدير عام',
+        'shift_manager_halfway': 'مدير نوبة - هاف واي',
+        'shift_manager_detox': 'مدير نوبة - ديتوكس',
+        'supervisor_halfway': 'مشرف - هاف واي',
+        'supervisor_detox': 'مشرف - ديتوكس',
+        'worker': 'عامل',
+        'chef': 'طباخ',
+        'doctor': 'طبيب',
+        'therapist': 'معالج',
+        'case_referral': 'مسؤول تحويل الحالات'
+    }
+    
+    return render_template('employees/statement.html', 
+                          employee=employee, 
+                          payments=payments,
+                          total_payments=total_payments,
+                          bonuses=bonuses,
+                          deductions=deductions,
+                          employee_roles=employee_roles)
+
 # Therapy groups routes
 @main_bp.route('/therapy_groups')
 @login_required

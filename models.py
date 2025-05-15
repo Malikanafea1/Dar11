@@ -275,3 +275,25 @@ class Expense(db.Model):
     
     def __repr__(self):
         return f'<Expense {self.category} - {self.amount}>'
+
+
+class DashboardNote(db.Model):
+    """Model for dashboard notes and tasks"""
+    
+    __tablename__ = 'dashboard_notes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=True)
+    is_task = db.Column(db.Boolean, default=False)  # إذا كانت ملاحظة أو مهمة
+    is_completed = db.Column(db.Boolean, default=False)  # حالة إكمال المهمة
+    due_date = db.Column(db.Date, nullable=True)  # تاريخ استحقاق المهمة
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    author = db.relationship('User', backref=db.backref('notes', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<DashboardNote {self.title}>'
