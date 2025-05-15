@@ -5,8 +5,26 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h1 class="mb-4">لوحة التحكم</h1>
-        <p class="lead">مرحباً بك {{ current_user.username }} في نظام إدارة دار الحياة</p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-2">لوحة التحكم</h1>
+                <p class="lead mb-0">مرحباً بك {{ current_user.username }} في نظام إدارة دار الحياة</p>
+            </div>
+            <div class="d-flex">
+                <form action="{{ url_for('main.dashboard') }}" method="GET" class="position-relative me-2">
+                    <div class="input-group">
+                        <input type="text" id="universal-search" name="q" class="form-control form-control-lg" placeholder="بحث عن مريض، موظف، معاملة..." aria-label="بحث عام">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="d-flex align-items-center">
+                    <span class="fs-5 me-2">{{ today.strftime('%Y-%m-%d') }}</span>
+                    <i class="fas fa-calendar-alt fa-lg text-primary"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -156,6 +174,111 @@
                 </a>
                 {% else %}
                 <p class="text-center">لا توجد تقارير حديثة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Planner Section -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>الملاحظات</h5>
+                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                    <i class="fas fa-plus"></i> إضافة ملاحظة
+                </button>
+            </div>
+            <div class="card-body">
+                {% if notes %}
+                <div class="notes-container">
+                    {% for note in notes %}
+                    <div class="note-card mb-3">
+                        <div class="card border-left-primary shadow h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center py-2 bg-light">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ note.title }}</h6>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" type="button" id="noteDropdown{{ note.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="noteDropdown{{ note.id }}">
+                                        <li><a class="dropdown-item" href="{{ url_for('main.edit_note', id=note.id) }}"><i class="fas fa-edit me-2"></i>تعديل</a></li>
+                                        <li>
+                                            <form action="{{ url_for('main.delete_note', id=note.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash-alt me-2"></i>حذف</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card-body py-2">
+                                <p class="card-text">{{ note.content }}</p>
+                                <small class="text-muted">{{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center">لا توجد ملاحظات حالياً</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>المهام</h5>
+                <button type="button" class="btn btn-sm btn-light task-add-btn" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                    <i class="fas fa-plus"></i> إضافة مهمة
+                </button>
+            </div>
+            <div class="card-body">
+                {% if tasks %}
+                <div class="list-group">
+                    {% for task in tasks %}
+                    <div class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <form action="{{ url_for('main.toggle_note_complete', id=task.id) }}" method="POST" class="me-2">
+                                    <button type="submit" class="btn btn-sm {% if task.is_completed %}btn-success{% else %}btn-outline-secondary{% endif %}" style="width: 30px; height: 30px; border-radius: 50%;">
+                                        {% if task.is_completed %}<i class="fas fa-check"></i>{% endif %}
+                                    </button>
+                                </form>
+                                <div class="{% if task.is_completed %}text-decoration-line-through text-muted{% endif %}">
+                                    <strong>{{ task.title }}</strong>
+                                    {% if task.content %}
+                                    <p class="mb-1 small">{{ task.content }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                {% if task.due_date %}
+                                <span class="badge {% if task.due_date < today %}bg-danger{% elif task.due_date == today %}bg-warning{% else %}bg-info{% endif %} me-2">
+                                    {{ task.due_date.strftime('%Y-%m-%d') }}
+                                </span>
+                                {% endif %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" type="button" id="taskDropdown{{ task.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="taskDropdown{{ task.id }}">
+                                        <li><a class="dropdown-item" href="{{ url_for('main.edit_note', id=task.id) }}"><i class="fas fa-edit me-2"></i>تعديل</a></li>
+                                        <li>
+                                            <form action="{{ url_for('main.delete_note', id=task.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash-alt me-2"></i>حذف</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-center">لا توجد مهام حالياً</p>
                 {% endif %}
             </div>
         </div>
