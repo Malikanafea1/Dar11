@@ -2,6 +2,41 @@
 
 {% block title %}التحصيلات - دار الحياة{% endblock %}
 
+{% block styles %}
+<style>
+    @keyframes highlight-row {
+        0% { background-color: rgba(0, 200, 83, 0.1); }
+        50% { background-color: rgba(0, 200, 83, 0.3); }
+        100% { background-color: rgba(0, 200, 83, 0.1); }
+    }
+    
+    .highlight-success {
+        animation: highlight-row 1.5s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/collection_sound.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // التحقق من وجود إشعار نجاح التحصيل
+    const successAlert = document.querySelector('.alert-success');
+    if (successAlert && successAlert.textContent.includes('تم إضافة المبلغ بنجاح')) {
+        // تشغيل صوت نجاح التحصيل
+        console.log('جاري تشغيل صوت التحصيل الناجح...');
+        playCollectionSuccessSound();
+        
+        // تمييز أحدث تحصيل (الصف الأول في الجدول)
+        const firstRow = document.querySelector('table.table tbody tr:first-child');
+        if (firstRow) {
+            firstRow.classList.add('highlight-success');
+        }
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>التحصيلات</h1>
@@ -25,6 +60,7 @@
                         <th>المبلغ</th>
                         <th>المُحصِل</th>
                         <th>ملاحظات</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,6 +75,11 @@
                         <td>{{ collection.amount }} ج.م</td>
                         <td>{{ collection.collector.username }}</td>
                         <td>{{ collection.notes or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('main.edit_collection', id=collection.id) }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i> تعديل
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

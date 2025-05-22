@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة صفحات الفيسبوك - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fab fa-facebook me-2"></i>إدارة صفحات الفيسبوك</h2>
+                <div>
+                    <a href="{{ url_for('main.add_facebook_page') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus me-2"></i>إضافة صفحة جديدة
+                    </a>
+                    <a href="{{ url_for('main.facebook_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>العودة للوحة التحكم
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">صفحات الفيسبوك المسجلة</h5>
+                </div>
+                <div class="card-body">
+                    {% if pages %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم الصفحة</th>
+                                        <th>معرف الصفحة</th>
+                                        <th>الصفحة الافتراضية</th>
+                                        <th>تاريخ الإضافة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for page in pages %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ page.page_name }}</td>
+                                        <td><code>{{ page.page_id }}</code></td>
+                                        <td>
+                                            {% if page.is_default %}
+                                                <span class="badge bg-success">نعم</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">لا</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ page.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <form method="POST" action="{{ url_for('main.select_facebook_page') }}" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="hidden" name="page_id" value="{{ page.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary me-1">
+                                                        <i class="fas fa-check me-1"></i>تحديد
+                                                    </button>
+                                                </form>
+                                                <a href="{{ url_for('main.edit_facebook_page', page_id=page.id) }}" class="btn btn-sm btn-outline-secondary me-1">
+                                                    <i class="fas fa-edit me-1"></i>تعديل
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-{{ page.id }}">
+                                                    <i class="fas fa-trash me-1"></i>حذف
+                                                </button>
+                                            </div>
+
+                                            <!-- نافذة تأكيد الحذف -->
+                                            <div class="modal fade" id="deleteModal-{{ page.id }}" tabindex="-1" aria-labelledby="deleteModalLabel-{{ page.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteModalLabel-{{ page.id }}">تأكيد حذف الصفحة</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>هل أنت متأكد من رغبتك في حذف صفحة "{{ page.page_name }}"؟</p>
+                                                            <p class="text-danger"><strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه وسيؤدي إلى حذف جميع بيانات الصفحة.</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                            <form method="POST" action="{{ url_for('main.delete_facebook_page', page_id=page.id) }}">
+                                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                                <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fab fa-facebook-square fa-4x text-muted mb-3"></i>
+                            <p class="text-muted">لم يتم إضافة أي صفحات فيسبوك بعد</p>
+                            <a href="{{ url_for('main.add_facebook_page') }}" class="btn btn-primary">إضافة صفحة جديدة</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">كيفية الحصول على معرف الصفحة ورمز الوصول</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>1. الحصول على معرف الصفحة (Page ID)</h6>
+                        <p>يمكنك الحصول على معرف الصفحة من خلال:</p>
+                        <ul>
+                            <li>زيارة صفحتك على فيسبوك وملاحظة الرقم في عنوان URL: <code>facebook.com/YourPageName-<strong>123456789123456</strong>/</code></li>
+                            <li>أو من خلال إعدادات الصفحة ثم قسم "معلومات الصفحة"</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h6>2. الحصول على رمز الوصول للصفحة (Page Access Token)</h6>
+                        <p>للحصول على رمز الوصول:</p>
+                        <ol>
+                            <li>قم بزيارة <a href="https://developers.facebook.com" target="_blank">منصة مطوري فيسبوك</a></li>
+                            <li>أنشئ تطبيقاً جديداً إذا لم يكن لديك تطبيق</li>
+                            <li>انتقل إلى أدوات المطورين &raquo; استكشاف Graph API</li>
+                            <li>حدد تطبيقك وحدد الصفحة التي تريد إدارتها</li>
+                            <li>اضغط على "احصل على رمز" &raquo; "رمز وصول الصفحة"</li>
+                            <li>ستظهر لك قائمة بالصفحات التي تديرها، اختر الصفحة المطلوبة</li>
+                            <li>سيظهر لك رمز الوصول، انسخه واستخدمه هنا</li>
+                        </ol>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>ملاحظة هامة:</strong> رمز الوصول للصفحة حساس للغاية ويجب الحفاظ على سريته. لا تشارك هذا الرمز مع أي شخص.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

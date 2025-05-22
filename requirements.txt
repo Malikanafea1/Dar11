@@ -13,3 +13,11 @@ flask-wtf>=1.2.2
 flask-dance>=7.1.0
 oauthlib>=3.2.2
 pyjwt>=2.10.1
+anthropic
+facebook-sdk
+requests
+numpy
+pydub
+moviepy
+pillow
+gTTS

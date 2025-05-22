@@ -105,25 +105,9 @@
                         </div>
                         {% endif %}
                         
-                        <!-- إدارة الفيسبوك -->
-                        {% if current_user.can_manage_patients %}
-                        <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.facebook_dashboard') }}" class="btn btn-outline-info d-flex align-items-center justify-content-center" style="min-width: 120px;">
-                                <i class="fab fa-facebook ms-1"></i> إدارة فيسبوك
-                            </a>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- تحويل النص لفيديو -->
-                        <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.text_to_video_dashboard') }}" class="btn btn-outline-success d-flex align-items-center justify-content-center" style="min-width: 120px;">
-                                <i class="fas fa-video ms-1"></i> إنشاء فيديو
-                            </a>
-                        </div>
-                        
                         <!-- الدردشة العامة -->
                         <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.chat') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-width: 120px;">
+                            <a href="{{ url_for('main.chat') if 'main.chat' in current_app.view_functions else '#' }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-width: 120px;">
                                 <i class="fas fa-comments ms-1"></i> الدردشة
                             </a>
                         </div>
@@ -144,7 +128,7 @@
                     {% else %}
                         <!-- الدردشة العامة -->
                         <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.chat') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-width: 120px;">
+                            <a href="{{ url_for('main.chat') if 'main.chat' in current_app.view_functions else '#' }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-width: 120px;">
                                 <i class="fas fa-comments ms-1"></i> الدردشة
                             </a>
                         </div>
@@ -207,19 +191,10 @@
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <!-- Sound Effects JS -->
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
-    <!-- Calculator JS -->
-    <script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
-    <!-- Chat Popup JS -->
-    <script src="{{ url_for('static', filename='js/chat-popup-fix.js') }}"></script>
     
     <!-- آلة حاسبة آيفون 18 -->
     <div class="simple-calc-btn" id="simpleCalcToggle">
         <i class="fas fa-calculator"></i>
-    </div>
-    
-    <!-- زر الدردشة المنبثقة -->
-    <div class="chat-popup-btn" id="chatPopupToggle">
-        <i class="fas fa-comments"></i>
     </div>
     
     <div class="simple-calc" id="simpleCalc">
@@ -257,17 +232,6 @@
         </div>
     </div>
     
-    <!-- نافذة الدردشة المنبثقة -->
-    <div class="chat-popup" id="chatPopupWindow">
-        <div class="chat-popup-header">
-            <h5><i class="fas fa-comments me-2"></i>الدردشة العامة</h5>
-            <button type="button" class="btn-close" id="chatPopupClose"></button>
-        </div>
-        <div class="chat-popup-body" id="chatPopupContent">
-            <!-- سيتم تحميل محتوى الدردشة هنا عبر JavaScript -->
-        </div>
-    </div>
-    
     <style>
         /* آلة حاسبة آيفون 18 */
         .simple-calc-btn {
@@ -278,26 +242,6 @@
             height: 55px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* زر الدردشة المنبثقة */
-        .chat-popup-btn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #0078d4, #005ea2);
             color: white;
             display: flex;
             justify-content: center;
@@ -322,43 +266,6 @@
             overflow: hidden;
             padding: 5px;
             border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* نافذة الدردشة المنبثقة */
-        .chat-popup {
-            position: fixed;
-            bottom: 85px;
-            left: 20px;
-            width: 350px;
-            height: 500px;
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: none;
-            z-index: 999;
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .chat-popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background-color: #0078d4;
-            color: white;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .chat-popup-header h5 {
-            margin: 0;
-            font-weight: 500;
-        }
-        
-        .chat-popup-body {
-            height: calc(100% - 50px);
-            overflow-y: auto;
-            background-color: #f8f9fa;
         }
         
         .simple-calc-header {
@@ -388,83 +295,337 @@
             margin-bottom: 15px;
             border: none;
             border-radius: 12px;
-            background-color: #1a1a1a;
+            background-color: #111;
             color: white;
+            font-weight: 300;
         }
         
         .simple-calc-buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 12px;
         }
         
         .simple-calc-btn {
+            padding: 18px 0;
+            font-size: 1.3rem;
             border: none;
-            width: 100%;
-            height: 55px;
             border-radius: 50%;
-            font-size: 1.2rem;
+            width: 60px;
+            height: 60px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-        }
-        
-        .simple-calc-btn.function {
-            background-color: #a5a5a5;
-            color: #000;
-        }
-        
-        .simple-calc-btn.operator {
-            background-color: #ff9f0a;
-            color: white;
-        }
-        
-        .simple-calc-btn.number, .simple-calc-btn.decimal {
-            background-color: #333;
-            color: white;
-        }
-        
-        .simple-calc-btn.equal {
-            background-color: #ff9f0a;
-            color: white;
-        }
-        
-        .simple-calc-btn.zero {
-            grid-column: span 2;
-            border-radius: 50px;
-            justify-content: flex-start;
-            padding-left: 22px;
+            font-weight: 500;
         }
         
         .simple-calc-btn:active {
             transform: scale(0.95);
         }
         
-        /* ستايل رسائل الدردشة المنبثقة */
-        .chat-messages {
-            padding: 15px;
+        .simple-calc-btn.number {
+            background-color: #333;
+            color: white;
         }
         
-        .message-container {
-            margin-bottom: 10px;
+        .simple-calc-btn.operator {
+            background-color: #FF9F0A;
+            color: white;
         }
         
-        .message-bubble {
-            padding: 10px 15px;
-            border-radius: 15px;
-            display: inline-block;
-            max-width: 80%;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        .simple-calc-btn.function {
+            background-color: #A5A5A5;
+            color: black;
         }
         
-        .chat-form {
-            padding: 10px;
-            background-color: white;
-            border-top: 1px solid #e9ecef;
+        .simple-calc-btn.equal {
+            background-color: #FF9F0A;
+            color: white;
+        }
+        
+        .simple-calc-btn.zero {
+            width: 100%;
+            border-radius: 50px;
+            grid-column: span 2;
+            padding-left: 24px;
+            justify-content: flex-start;
+        }
+        
+        /* ستايل الهيدر الجديد */
+        .site-header {
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .site-logo {
+            color: #333;
+        }
+        
+        .nav-buttons-container {
+            min-height: 40px;
+        }
+        
+        .btn-labels {
+            margin-top: -15px;
         }
     </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // عناصر الآلة الحاسبة
+            var calcToggle = document.getElementById('simpleCalcToggle');
+            var calculator = document.getElementById('simpleCalc');
+            var calcClose = document.getElementById('simpleCalcClose');
+            var display = document.getElementById('simpleCalcDisplay');
+            
+            // المتغيرات - Variables
+            var currentNumber = '0';
+            var firstOperand = 0;
+            var operator = '';
+            var waitingForSecondOperand = false;
+            var calculationComplete = false;
+            
+            // فتح/إغلاق الآلة الحاسبة - Open/Close calculator
+            calcToggle.addEventListener('click', function() {
+                calculator.style.display = calculator.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            calcClose.addEventListener('click', function() {
+                calculator.style.display = 'none';
+            });
+            
+            // إضافة المستمعين لأزرار الأرقام - Add listeners for number buttons
+            document.querySelectorAll('.simple-calc-btn.number').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    handleNumber(button.textContent);
+                });
+            });
+            
+            // إضافة المستمعين لأزرار العمليات الحسابية - Add listeners for operation buttons
+            document.querySelector('.simple-calc-btn.add').addEventListener('click', function() {
+                handleOperator('+');
+            });
+            
+            document.querySelector('.simple-calc-btn.subtract').addEventListener('click', function() {
+                handleOperator('-');
+            });
+            
+            document.querySelector('.simple-calc-btn.multiply').addEventListener('click', function() {
+                handleOperator('×');
+            });
+            
+            document.querySelector('.simple-calc-btn.divide').addEventListener('click', function() {
+                handleOperator('÷');
+            });
+            
+            // المساواة - Equals button
+            document.querySelector('.simple-calc-btn.equal').addEventListener('click', function() {
+                calculate();
+            });
+            
+            // الوظائف الإضافية لآيفون 18 - Additional iPhone 18 functions
+            // المسح الكامل AC - All Clear
+            document.querySelector('.simple-calc-btn.function:nth-child(1)').addEventListener('click', function() {
+                clearAll();
+            });
+            
+            // تغيير الإشارة +/- - Change sign
+            document.querySelector('.simple-calc-btn.function:nth-child(2)').addEventListener('click', function() {
+                changeSign();
+            });
+            
+            // النسبة المئوية % - Percentage
+            document.querySelector('.simple-calc-btn.function:nth-child(3)').addEventListener('click', function() {
+                handlePercentage();
+            });
+            
+            // النقطة العشرية - Decimal point
+            document.querySelector('.simple-calc-btn.decimal').addEventListener('click', function() {
+                addDecimal();
+            });
+            
+            // دعم لوحة المفاتيح - Keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (calculator.style.display !== 'block') {
+                    // فتح الآلة الحاسبة بـ Alt+C - Open calculator with Alt+C
+                    if (e.altKey && e.key === 'c') {
+                        calculator.style.display = 'block';
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                
+                // التحقق من المفاتيح المختلفة - Check different keys
+                if (/^[0-9]$/.test(e.key)) {
+                    handleNumber(e.key);
+                    e.preventDefault();
+                } else if (e.key === '.') {
+                    addDecimal();
+                    e.preventDefault();
+                } else if (e.key === '+') {
+                    handleOperator('+');
+                    e.preventDefault();
+                } else if (e.key === '-') {
+                    handleOperator('-');
+                    e.preventDefault();
+                } else if (e.key === '*') {
+                    handleOperator('×');
+                    e.preventDefault();
+                } else if (e.key === '/') {
+                    handleOperator('÷');
+                    e.preventDefault();
+                } else if (e.key === 'Enter' || e.key === '=') {
+                    calculate();
+                    e.preventDefault();
+                } else if (e.key === 'Escape') {
+                    clearAll();
+                    e.preventDefault();
+                } else if (e.key === 'Backspace') {
+                    backspace();
+                    e.preventDefault();
+                } else if (e.key === '%') {
+                    handlePercentage();
+                    e.preventDefault();
+                }
+            });
+            
+            // معالجة الأرقام - Handle number input
+            function handleNumber(number) {
+                if (waitingForSecondOperand || currentNumber === '0' || calculationComplete) {
+                    currentNumber = number;
+                    waitingForSecondOperand = false;
+                    calculationComplete = false;
+                } else {
+                    currentNumber += number;
+                }
+                updateDisplay();
+            }
+            
+            // إضافة النقطة العشرية - Add decimal point
+            function addDecimal() {
+                if (waitingForSecondOperand) {
+                    currentNumber = '0.';
+                    waitingForSecondOperand = false;
+                    calculationComplete = false;
+                } else if (!currentNumber.includes('.')) {
+                    currentNumber += '.';
+                }
+                updateDisplay();
+            }
+            
+            // التعامل مع العمليات الحسابية - Handle operations
+            function handleOperator(op) {
+                const inputValue = parseFloat(currentNumber);
+                
+                if (operator && waitingForSecondOperand) {
+                    operator = op;
+                    return;
+                }
+                
+                if (firstOperand === 0) {
+                    firstOperand = inputValue;
+                } else if (operator) {
+                    const result = performCalculation();
+                    firstOperand = result;
+                    currentNumber = String(result);
+                }
+                
+                waitingForSecondOperand = true;
+                operator = op;
+                updateDisplay();
+            }
+            
+            // تنفيذ العملية الحسابية - Perform calculation
+            function performCalculation() {
+                const secondOperand = parseFloat(currentNumber);
+                let result = 0;
+                
+                switch (operator) {
+                    case '+':
+                        result = firstOperand + secondOperand;
+                        break;
+                    case '-':
+                        result = firstOperand - secondOperand;
+                        break;
+                    case '×':
+                        result = firstOperand * secondOperand;
+                        break;
+                    case '÷':
+                        if (secondOperand === 0) {
+                            alert('لا يمكن القسمة على صفر!');
+                            clearAll();
+                            return 0;
+                        }
+                        result = firstOperand / secondOperand;
+                        break;
+                    default:
+                        return secondOperand;
+                }
+                
+                // تنسيق النتيجة لتجنب الأرقام العشرية الطويلة - Format result
+                if (Number.isInteger(result)) {
+                    return result;
+                } else {
+                    // تقريب إلى 8 أرقام عشرية كحد أقصى - Round to 8 decimal places max
+                    return parseFloat(result.toFixed(8));
+                }
+            }
+            
+            // حساب النتيجة - Calculate result
+            function calculate() {
+                if (!operator) return;
+                
+                const result = performCalculation();
+                currentNumber = String(result);
+                operator = '';
+                firstOperand = 0;
+                waitingForSecondOperand = false;
+                calculationComplete = true;
+                updateDisplay();
+            }
+            
+            // تغيير الإشارة - Change sign
+            function changeSign() {
+                currentNumber = String(parseFloat(currentNumber) * -1);
+                updateDisplay();
+            }
+            
+            // التعامل مع النسبة المئوية - Handle percentage
+            function handlePercentage() {
+                currentNumber = String(parseFloat(currentNumber) / 100);
+                updateDisplay();
+            }
+            
+            // مسح حرف واحد (زر backspace) - Delete one character
+            function backspace() {
+                if (currentNumber.length > 1) {
+                    currentNumber = currentNumber.slice(0, -1);
+                } else {
+                    currentNumber = '0';
+                }
+                updateDisplay();
+            }
+            
+            // مسح كل شيء (زر AC) - Clear all
+            function clearAll() {
+                currentNumber = '0';
+                firstOperand = 0;
+                operator = '';
+                waitingForSecondOperand = false;
+                calculationComplete = false;
+                updateDisplay();
+            }
+            
+            // تحديث العرض - Update display
+            function updateDisplay() {
+                display.value = currentNumber;
+            }
+            
+            // تهيئة الآلة الحاسبة - Initialize calculator
+            clearAll();
+        });
+    </script>
     
     <!-- Additional JS -->
     {% block scripts %}{% endblock %}

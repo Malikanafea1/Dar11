@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}الدردشة العامة - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>الدردشة العامة</h5>
+            </div>
+            <div class="card-body chat-container" style="height: 400px; overflow-y: auto; background-color: #f8f9fa;">
+                <div id="chat-messages">
+                    {% for message in messages %}
+                    <div class="message-container mb-3 {% if message.user_id == current_user.id %}text-end{% endif %}" data-message-id="{{ message.id }}">
+                        <div class="message-bubble p-2 rounded {% if message.user_id == current_user.id %}bg-primary text-white ms-auto{% else %}bg-light{% endif %}" style="display: inline-block; max-width: 75%;">
+                            <div class="message-header mb-1">
+                                <small class="fw-bold">{{ message.user.username }}</small>
+                                <small class="text-muted ms-2">{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <div class="message-content">
+                                {{ message.content }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <form method="POST" action="{{ url_for('main.chat') }}" id="chat-form">
+                    {{ form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ form.message(class="form-control", placeholder="اكتب رسالتك هنا...") }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> إرسال
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // تمرير إلى أسفل نافذة الدردشة عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // إضافة صوت عند إرسال الرسائل
+        const chatForm = document.getElementById('chat-form');
+        if (chatForm) {
+            chatForm.addEventListener('submit', function() {
+                // تشغيل صوت إرسال الرسالة إذا كانت الدالة موجودة
+                if (typeof triggerMessageSent === 'function') {
+                    triggerMessageSent();
+                } else if (typeof playMessageSendSound === 'function') {
+                    playMessageSendSound();
+                }
+            });
+        }
+        
+        // متغير لتخزين آخر معرف رسالة تم استلامها
+        let lastMessageId = 0;
+        
+        // الحصول على آخر معرف رسالة من الصفحة الحالية
+        const messageContainers = document.querySelectorAll('.message-container');
+        if (messageContainers.length > 0) {
+            const lastContainer = messageContainers[messageContainers.length - 1];
+            // محاولة استخراج معرف الرسالة من عنصر HTML (نفترض أنه موجود كسمة data)
+            const messageId = lastContainer.getAttribute('data-message-id');
+            if (messageId) {
+                lastMessageId = parseInt(messageId, 10);
+            }
+        }
+        
+        // دالة للتحقق من وجود رسائل جديدة
+        function checkForNewMessages() {
+            fetch('/chat-messages')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.messages && data.messages.length > 0) {
+                        const latestMessage = data.messages[data.messages.length - 1];
+                        
+                        // إذا كانت هناك رسالة جديدة وليست من المستخدم الحالي
+                        if (latestMessage.id > lastMessageId && latestMessage.sender_id !== data.current_user_id) {
+                            // تحديث آخر معرف للرسالة
+                            lastMessageId = latestMessage.id;
+                            
+                            // تشغيل صوت استلام الرسالة
+                            if (typeof triggerMessageReceived === 'function') {
+                                triggerMessageReceived();
+                            } else if (typeof playMessageReceiveSound === 'function') {
+                                playMessageReceiveSound();
+                            }
+                            
+                            // إعادة تحميل الصفحة لعرض الرسائل الجديدة
+                            location.reload();
+                        } else if (latestMessage.id > lastMessageId) {
+                            // تحديث آخر معرف للرسالة حتى لو كانت من المستخدم الحالي
+                            lastMessageId = latestMessage.id;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('خطأ عند التحقق من الرسائل الجديدة:', error);
+                });
+        }
+        
+        // بدء التحقق من الرسائل الجديدة كل 10 ثوانٍ
+        setInterval(checkForNewMessages, 10000);
+    });
+</script>
+{% endblock %}

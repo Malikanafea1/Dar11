@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}نشر منشور على الفيسبوك - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fab fa-facebook me-2"></i>نشر منشور جديد</h2>
+                <a href="{{ url_for('main.facebook_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>العودة لإدارة الفيسبوك
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">إنشاء منشور جديد</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="6", placeholder="ماذا تريد أن تشارك؟") }}
+                            {% if form.content.errors %}
+                                {% for error in form.content.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="form-text">
+                                <span id="charCount">0</span> / 5000 حرف
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.image_url.label(class="form-label") }}
+                            {{ form.image_url(class="form-control", placeholder="https://example.com/image.jpg") }}
+                            {% if form.image_url.errors %}
+                                {% for error in form.image_url.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="form-text">يمكنك إضافة رابط صورة لتظهر مع المنشور (اختياري)</div>
+                        </div>
+
+                        <!-- معاينة المنشور -->
+                        <div class="card bg-light mb-4" id="postPreview" style="display: none;">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-eye me-2"></i>معاينة المنشور</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex mb-3">
+                                    <div class="me-3">
+                                        <i class="fab fa-facebook-square fa-2x text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">دار الحياة للطب النفسي</h6>
+                                        <small class="text-muted">منذ قليل</small>
+                                    </div>
+                                </div>
+                                <div id="previewContent" class="mb-3"></div>
+                                <div id="previewImage" style="display: none;">
+                                    <img id="previewImg" src="" class="img-fluid rounded" style="max-height: 300px;">
+                                </div>
+                                <div class="border-top pt-3 mt-3">
+                                    <div class="d-flex justify-content-between text-muted">
+                                        <span><i class="fas fa-thumbs-up me-1"></i>إعجاب</span>
+                                        <span><i class="fas fa-comment me-1"></i>تعليق</span>
+                                        <span><i class="fas fa-share me-1"></i>مشاركة</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-primary" onclick="previewPost()">
+                                <i class="fas fa-eye me-2"></i>معاينة
+                            </button>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- نصائح للنشر -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>نصائح للنشر الفعال</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>استخدم كلمات إيجابية ومشجعة</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>أضف هاشتاجات مناسبة مثل #الصحة_النفسية #دار_الحياة</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تأكد من صحة المعلومات الطبية</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>اختر صوراً ذات جودة عالية ومناسبة</li>
+                        <li class="mb-0"><i class="fas fa-check text-success me-2"></i>انشر في الأوقات المناسبة للجمهور</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحديث عداد الأحرف
+document.getElementById('content').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('charCount').textContent = charCount;
+    
+    if (charCount > 4500) {
+        document.getElementById('charCount').className = 'text-warning';
+    } else if (charCount > 4800) {
+        document.getElementById('charCount').className = 'text-danger';
+    } else {
+        document.getElementById('charCount').className = '';
+    }
+});
+
+// معاينة المنشور
+function previewPost() {
+    const content = document.getElementById('content').value;
+    const imageUrl = document.getElementById('image_url').value;
+    
+    if (!content.trim()) {
+        alert('يرجى كتابة محتوى المنشور أولاً');
+        return;
+    }
+    
+    // إظهار معاينة المحتوى
+    document.getElementById('previewContent').innerHTML = content.replace(/\n/g, '<br>');
+    
+    // إظهار الصورة إذا كان هناك رابط
+    if (imageUrl.trim()) {
+        document.getElementById('previewImg').src = imageUrl;
+        document.getElementById('previewImage').style.display = 'block';
+    } else {
+        document.getElementById('previewImage').style.display = 'none';
+    }
+    
+    // إظهار المعاينة
+    document.getElementById('postPreview').style.display = 'block';
+    
+    // التمرير للمعاينة
+    document.getElementById('postPreview').scrollIntoView({ behavior: 'smooth' });
+}
+
+// إخفاء المعاينة عند تعديل المحتوى
+document.getElementById('content').addEventListener('input', function() {
+    document.getElementById('postPreview').style.display = 'none';
+});
+
+document.getElementById('image_url').addEventListener('input', function() {
+    document.getElementById('postPreview').style.display = 'none';
+});
+</script>
+{% endblock %}

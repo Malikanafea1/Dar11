@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}تحويل النص إلى فيديو - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-video me-2"></i>تحويل النص إلى فيديو</h2>
+                <a href="{{ url_for('main.create_text_to_video') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>إنشاء فيديو جديد
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات سريعة -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ user_requests|length }}</h4>
+                            <p class="mb-0">طلباتي</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ user_requests|selectattr("status", "equalto", "completed")|list|length }}</h4>
+                            <p class="mb-0">مكتملة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ user_requests|selectattr("status", "equalto", "processing")|list|length }}</h4>
+                            <p class="mb-0">قيد المعالجة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-cog fa-spin fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ user_requests|selectattr("status", "equalto", "failed")|list|length }}</h4>
+                            <p class="mb-0">فشلت</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- طلباتي -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list me-2"></i>طلبات التحويل الخاصة بي</h5>
+                    <a href="{{ url_for('main.create_text_to_video') }}" class="btn btn-sm btn-outline-primary">طلب جديد</a>
+                </div>
+                <div class="card-body">
+                    {% if user_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>العنوان</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in user_requests[:10] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ request.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ request.text_content[:50] }}{% if request.text_content|length > 50 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            {% if request.status == 'pending' %}
+                                                <span class="badge bg-secondary">في الانتظار</span>
+                                            {% elif request.status == 'processing' %}
+                                                <span class="badge bg-warning">قيد المعالجة</span>
+                                            {% elif request.status == 'completed' %}
+                                                <span class="badge bg-success">مكتمل</span>
+                                            {% elif request.status == 'failed' %}
+                                                <span class="badge bg-danger">فشل</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>
+                                            {% if request.status == 'completed' %}
+                                                {% if request.video_url %}
+                                                    <a href="{{ request.video_url }}" class="btn btn-sm btn-success" target="_blank">
+                                                        <i class="fas fa-download me-1"></i>تحميل
+                                                    </a>
+                                                    <button class="btn btn-sm btn-primary" onclick="showPreview('{{ request.video_url }}', '{{ request.title }}')">
+                                                        <i class="fas fa-play me-1"></i>عرض
+                                                    </button>
+                                                {% endif %}
+                                                {% if request.audio_url %}
+                                                    <a href="{{ request.audio_url }}" class="btn btn-sm btn-info" target="_blank">
+                                                        <i class="fas fa-volume-up me-1"></i>صوت
+                                                    </a>
+                                                {% endif %}
+                                            {% elif request.status == 'processing' %}
+                                                <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                    <i class="fas fa-cog fa-spin me-1"></i>معالجة
+                                                </button>
+                                            {% elif request.status == 'failed' %}
+                                                <button class="btn btn-sm btn-outline-danger" onclick="showError('{{ request.error_message or 'حدث خطأ غير متوقع' }}')">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>تفاصيل
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-video fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">لم تقم بإنشاء أي طلبات بعد</p>
+                            <a href="{{ url_for('main.create_text_to_video') }}" class="btn btn-primary">إنشاء أول فيديو</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- دليل الاستخدام -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>كيفية الاستخدام</h6>
+                </div>
+                <div class="card-body">
+                    <div class="step-item mb-3">
+                        <div class="d-flex align-items-start">
+                            <span class="badge bg-primary rounded-pill me-3">1</span>
+                            <div>
+                                <h6 class="mb-1">اكتب النص</h6>
+                                <small class="text-muted">أدخل النص الذي تريد تحويله إلى فيديو</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item mb-3">
+                        <div class="d-flex align-items-start">
+                            <span class="badge bg-primary rounded-pill me-3">2</span>
+                            <div>
+                                <h6 class="mb-1">اختر الصوت</h6>
+                                <small class="text-muted">حدد نوع الصوت المصري المناسب</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item mb-3">
+                        <div class="d-flex align-items-start">
+                            <span class="badge bg-primary rounded-pill me-3">3</span>
+                            <div>
+                                <h6 class="mb-1">انتظر المعالجة</h6>
+                                <small class="text-muted">سيتم تحويل النص إلى صوت ثم فيديو</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step-item mb-0">
+                        <div class="d-flex align-items-start">
+                            <span class="badge bg-primary rounded-pill me-3">4</span>
+                            <div>
+                                <h6 class="mb-1">حمل النتيجة</h6>
+                                <small class="text-muted">احصل على الفيديو والصوت جاهزين</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نصائح -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>نصائح مهمة</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>استخدم نصوص واضحة ومفهومة</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تجنب النصوص الطويلة جداً</li>
+                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>استخدم علامات الترقيم للوقفات</li>
+                        <li class="mb-0"><i class="fas fa-check text-success me-2"></i>المعالجة قد تستغرق عدة دقائق</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role in ['admin', 'manager'] and all_requests %}
+    <!-- جميع الطلبات (للمديرين فقط) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-users me-2"></i>جميع طلبات التحويل</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>المستخدم</th>
+                                    <th>العنوان</th>
+                                    <th>الحالة</th>
+                                    <th>تاريخ الإنشاء</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in all_requests %}
+                                <tr>
+                                    <td>{{ request.creator.username }}</td>
+                                    <td>
+                                        <strong>{{ request.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ request.text_content[:50] }}{% if request.text_content|length > 50 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        {% if request.status == 'pending' %}
+                                            <span class="badge bg-secondary">في الانتظار</span>
+                                        {% elif request.status == 'processing' %}
+                                            <span class="badge bg-warning">قيد المعالجة</span>
+                                        {% elif request.status == 'completed' %}
+                                            <span class="badge bg-success">مكتمل</span>
+                                        {% elif request.status == 'failed' %}
+                                            <span class="badge bg-danger">فشل</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {% if request.status == 'completed' %}
+                                            {% if request.video_url %}
+                                                <a href="{{ request.video_url }}" class="btn btn-sm btn-success" target="_blank">
+                                                    <i class="fas fa-download me-1"></i>فيديو
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- نافذة عرض الأخطاء -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الخطأ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة معاينة الفيديو -->
+<div class="modal fade" id="videoPreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoTitle">معاينة الفيديو</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="embed-responsive">
+                    <video id="videoPlayer" class="embed-responsive-item w-100" controls>
+                        <source id="videoSource" src="" type="video/mp4">
+                        متصفحك لا يدعم عرض الفيديو
+                    </video>
+                </div>
+
+                <div class="mt-3">
+                    <audio id="audioPlayer" class="w-100" controls>
+                        <source id="audioSource" src="" type="audio/mp3">
+                        متصفحك لا يدعم تشغيل الصوت
+                    </audio>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                <a id="downloadBtn" href="#" class="btn btn-primary" download>
+                    <i class="fas fa-download me-1"></i>تحميل الفيديو
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    new bootstrap.Modal(document.getElementById('errorModal')).show();
+}
+
+function showPreview(videoUrl, title) {
+    // تحديث عنوان النافذة
+    document.getElementById('videoTitle').textContent = title;
+    
+    // تحديث مصدر الفيديو
+    const videoSource = document.getElementById('videoSource');
+    videoSource.src = videoUrl;
+    
+    // تحديث رابط التحميل
+    document.getElementById('downloadBtn').href = videoUrl;
+    
+    // إعادة تحميل مشغل الفيديو
+    const videoPlayer = document.getElementById('videoPlayer');
+    videoPlayer.load();
+    
+    // استخراج اسم الملف الصوتي من اسم ملف الفيديو
+    const audioUrl = videoUrl.replace('/videos/', '/audio/').replace('.mp4', '.mp3');
+    
+    // تحديث مصدر الصوت
+    const audioSource = document.getElementById('audioSource');
+    audioSource.src = audioUrl;
+    
+    // إعادة تحميل مشغل الصوت
+    const audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.load();
+    
+    // عرض النافذة
+    new bootstrap.Modal(document.getElementById('videoPreviewModal')).show();
+}
+
+// تحديث تلقائي للحالة كل 30 ثانية
+setInterval(function() {
+    // في التطبيق الحقيقي، يمكن إضافة AJAX للتحديث التلقائي
+    const processingElements = document.querySelectorAll('.badge.bg-warning');
+    if (processingElements.length > 0) {
+        // إعادة تحميل الصفحة إذا كان هناك طلبات قيد المعالجة
+        // location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}

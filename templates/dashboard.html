@@ -28,6 +28,49 @@
     </div>
 </div>
 
+<!-- التنبيهات والإشعارات -->
+{% if not is_therapist and current_user.can_manage_finances %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% if high_expenses_alert %}
+                    <div class="list-group-item list-group-item-danger d-flex justify-content-between align-items-center" id="high-expenses-alert">
+                        <div>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>تنبيه!</strong> مصروفات اليوم أعلى من المعدل اليومي للشهر ({{ today_expenses }} ج.م)
+                        </div>
+                        <span class="badge bg-danger rounded-pill">جديد</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if due_salaries_alert %}
+                    <div class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center" id="due-salaries-alert">
+                        <div>
+                            <i class="fas fa-coins me-2"></i>
+                            <strong>تذكير!</strong> يوجد {{ employees_without_salary|length }} موظف لم يستلم راتبه لهذا الشهر
+                        </div>
+                        <span class="badge bg-warning text-dark rounded-pill">مهم</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if required_collections_alert %}
+                    <div class="list-group-item list-group-item-primary d-flex justify-content-between align-items-center" id="required-collections-alert">
+                        <div>
+                            <i class="fas fa-hand-holding-usd me-2"></i>
+                            <strong>تحصيلات مطلوبة!</strong> يوجد مرضى برصيد سالب يتطلب تحصيل عاجل
+                        </div>
+                        <a href="{{ url_for('main.negative_balance_report') }}" class="btn btn-sm btn-primary">عرض التقرير</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Stats Cards -->
 <div class="row mb-4">
     {% if not is_therapist %}

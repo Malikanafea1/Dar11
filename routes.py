@@ -4,15 +4,95 @@ from datetime import datetime, timedelta, date
 from sqlalchemy import func, or_
 from dateutil.relativedelta import relativedelta
 from werkzeug.security import generate_password_hash
+from sqlalchemy.sql import desc
 
 from app import db
 from models import (Patient, PatientExpense, Collection, Employee, SalaryPayment, 
-                   TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User, DashboardNote)
-from forms import (PatientForm, PatientExpenseForm, EditPatientExpenseForm, CollectionForm, EmployeeForm, SalaryPaymentForm,
+                   TherapyGroup, TherapyGroupMember, TherapyReport, Expense, User, DashboardNote, ChatMessage)
+from forms import (PatientForm, PatientExpenseForm, EditPatientExpenseForm, CollectionForm, EditCollectionForm, EmployeeForm, SalaryPaymentForm,
                   TherapyGroupForm, TherapyGroupMemberForm, TherapyReportForm, ExpenseForm, EditExpenseForm,
                   SearchDateRangeForm, RegisterForm, EditUserForm, DashboardNoteForm)
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, Length
+
+class ChatMessageForm(FlaskForm):
+    message = StringField('الرسالة', validators=[DataRequired(), Length(max=500)])
+    submit = SubmitField('إرسال')
 
 main_bp = Blueprint('main', __name__)
+
+@main_bp.route('/chat', methods=['GET', 'POST'])
+@login_required
+def chat():
+    form = ChatMessageForm()
+    
+    if form.validate_on_submit():
+        new_message = ChatMessage(
+            user_id=current_user.id,
+            content=form.message.data,
+            timestamp=datetime.now()
+        )
+        db.session.add(new_message)
+        db.session.commit()
+        return redirect(url_for('main.chat'))
+    
+    # الحصول على آخر 50 رسالة بترتيب تصاعدي حسب الوقت
+    messages = ChatMessage.query.filter_by(is_deleted=False).order_by(ChatMessage.timestamp.desc()).limit(50).all()
+    messages.reverse()  # عكس الترتيب ليكون من الأقدم للأحدث
+    
+    return render_template('chat.html', title='الدردشة العامة', 
+                          form=form, messages=messages)
+
+@main_bp.route('/chat-messages', methods=['GET'])
+@login_required
+def get_chat_messages():
+    """API لجلب رسائل الدردشة للنافذة المنبثقة"""
+    # الحصول على آخر 20 رسالة
+    messages = ChatMessage.query.filter_by(is_deleted=False).order_by(ChatMessage.timestamp.desc()).limit(20).all()
+    messages.reverse()  # عكس الترتيب ليكون من الأقدم للأحدث
+    
+    # تحويل الرسائل إلى تنسيق JSON
+    messages_data = []
+    for message in messages:
+        messages_data.append({
+            'id': message.id,
+            'sender_id': message.user_id,
+            'sender_username': message.user.username,
+            'message': message.content,
+            'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M')
+        })
+    
+    from flask import jsonify, current_app
+    from flask_wtf.csrf import generate_csrf
+    
+    return jsonify({
+        'messages': messages_data,
+        'current_user_id': current_user.id,
+        'csrf_token': generate_csrf()
+    })
+
+@main_bp.route('/send-chat-message', methods=['POST'])
+@login_required
+def send_chat_message():
+    """API لإرسال رسالة من النافذة المنبثقة"""
+    from flask import request, jsonify
+    
+    message_content = request.form.get('message', '')
+    
+    if not message_content:
+        return jsonify({'success': False, 'error': 'الرسالة فارغة'})
+    
+    # إنشاء رسالة جديدة
+    new_message = ChatMessage(
+        user_id=current_user.id,
+        content=message_content,
+        timestamp=datetime.now()
+    )
+    db.session.add(new_message)
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 @main_bp.route('/')
 def index():
@@ -174,11 +254,58 @@ def dashboard():
                 Expense.date <= today
             ).scalar() or 0
             
+            # التحقق من المصروفات العالية - حساب متوسط المصروفات اليومية للشهر
+            avg_daily_expenses = 0
+            high_expenses_alert = False
+            avg_threshold = 1.5  # عتبة 150% من المتوسط
+            
+            # عدد الأيام التي مرت من الشهر
+            days_passed = (today - start_of_month).days + 1
+            if days_passed > 1:  # نتأكد من وجود بيانات كافية للمقارنة
+                avg_daily_expenses = month_expenses / days_passed
+                # إذا كانت مصروفات اليوم أعلى من متوسط المصروفات اليومية بنسبة 50%
+                if today_expenses > (avg_daily_expenses * avg_threshold) and today_expenses > 0:
+                    high_expenses_alert = True
+            
+            # التحقق من الرواتب المستحقة
+            due_salaries_alert = False
+            # موظفين لم يستلموا رواتبهم هذا الشهر
+            employees_query = Employee.query.filter_by(is_active=True).all()
+            employees_without_salary = []
+            
+            for employee in employees_query:
+                # التحقق مما إذا كان الموظف استلم راتبه هذا الشهر
+                salary_this_month = SalaryPayment.query.filter(
+                    SalaryPayment.employee_id == employee.id,
+                    SalaryPayment.payment_type == 'salary',
+                    SalaryPayment.date >= start_of_month,
+                    SalaryPayment.date <= today
+                ).first()
+                
+                if not salary_this_month:
+                    employees_without_salary.append(employee)
+            
+            if employees_without_salary:
+                due_salaries_alert = True
+            
+            # التحقق من التحصيلات المطلوبة - مرضى لديهم رصيد سالب
+            required_collections_alert = False
+            negative_balance_patients = []
+            
+            patients_query = Patient.query.filter_by(is_active=True).all()
+            for patient in patients_query:
+                if patient.balance < -2000:  # مبلغ كبير سالب يستدعي تنبيه
+                    negative_balance_patients.append(patient)
+            
             # Get 5 patients with negative balances
             if current_user.can_view_reports:
                 negative_balance_patients = Patient.query.filter_by(is_active=True).all()
                 negative_balance_patients = [p for p in negative_balance_patients if p.balance < 0]
                 negative_balance_patients = sorted(negative_balance_patients, key=lambda p: p.balance)[:5]
+                
+                # إعداد التنبيه للتحصيلات المطلوبة
+                if negative_balance_patients:
+                    required_collections_alert = True
     
     # Get recent therapy reports - this is available to therapists
     recent_reports = []
@@ -207,7 +334,11 @@ def dashboard():
                           notes=notes,
                           tasks=tasks,
                           note_form=note_form,
-                          today=today)
+                          today=today,
+                          high_expenses_alert=high_expenses_alert if 'high_expenses_alert' in locals() else False,
+                          due_salaries_alert=due_salaries_alert if 'due_salaries_alert' in locals() else False,
+                          required_collections_alert=required_collections_alert if 'required_collections_alert' in locals() else False,
+                          employees_without_salary=employees_without_salary if 'employees_without_salary' in locals() else [])
 
 # Dashboard note routes
 @main_bp.route('/dashboard/notes/<int:id>/complete', methods=['POST'])
@@ -567,22 +698,67 @@ def add_collection():
         return redirect(url_for('main.dashboard'))
         
     form = CollectionForm()
-    form.date.data = date.today()
+    
+    # فقط تعيين التاريخ الافتراضي عند عرض النموذج لأول مرة (طلب GET)، وليس عند إرسال النموذج (طلب POST)
+    if request.method == 'GET':
+        form.date.data = date.today()
     
     if form.validate_on_submit():
+        patient = Patient.query.get(form.patient_id.data)
+        old_balance = patient.balance  # سجل الرصيد القديم
+        
+        print(f"تسجيل دفعة جديدة للمريض: {patient.name}")
+        print(f"المبلغ: {form.amount.data} ج.م")
+        print(f"التاريخ: {form.date.data}")
+        print(f"الرصيد قبل التحصيل: {old_balance} ج.م")
+        
         collection = Collection(
             patient_id=form.patient_id.data,
             collector_id=current_user.id,
             amount=form.amount.data,
-            date=form.date.data,
+            date=form.date.data,  # سيتم استخدام التاريخ الفعلي المحدد من قبل المحصل
             notes=form.notes.data
         )
         db.session.add(collection)
         db.session.commit()
+        
+        # إعادة حساب الرصيد بعد إضافة الدفعة
+        db.session.refresh(patient)
+        new_balance = patient.balance
+        print(f"الرصيد بعد التحصيل: {new_balance} ج.م")
+        print(f"تكلفة الإقامة: {patient.total_stay_cost} ج.م")
+        print(f"المصروفات الإضافية: {patient.total_expenses} ج.م")
+        print(f"إجمالي المدفوعات: {patient.total_payments} ج.م")
+        
+        # إعداد متغير جلسة خاص لتشغيل صوت التنبيه في الصفحة التالية
+        from flask import session
+        session['play_collection_sound'] = True
+        
         flash('تم إضافة المبلغ بنجاح', 'success')
         return redirect(url_for('main.collections'))
         
     return render_template('collections/add.html', form=form)
+    
+@main_bp.route('/collections/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_collection(id):
+    if not current_user.can_manage_finances:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+        
+    collection = Collection.query.get_or_404(id)
+    form = EditCollectionForm(obj=collection)
+    
+    if form.validate_on_submit():
+        collection.amount = form.amount.data
+        collection.date = form.date.data
+        collection.notes = form.notes.data
+        
+        db.session.commit()
+        flash('تم تحديث بيانات التحصيل بنجاح', 'success')
+        return redirect(url_for('main.collections'))
+        
+    return render_template('collections/edit.html', form=form, collection=collection)
 
 # Employee routes
 @main_bp.route('/employees')
@@ -1470,3 +1646,378 @@ def toggle_user_status(id):
     status = "تنشيط" if user.is_active else "تعطيل"
     flash(f'تم {status} الحساب بنجاح', 'success')
     return redirect(url_for('main.users'))
+
+# ===================== إدارة الفيسبوك =====================
+
+@main_bp.route('/facebook/pages')
+@login_required
+def facebook_pages():
+    """إدارة صفحات الفيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from models import FacebookPage
+    
+    # جلب جميع الصفحات
+    pages = FacebookPage.query.all()
+    
+    return render_template('facebook/pages.html', pages=pages)
+
+@main_bp.route('/facebook/pages/add', methods=['GET', 'POST'])
+@login_required
+def add_facebook_page():
+    """إضافة صفحة فيسبوك جديدة"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from forms import FacebookPageForm
+    from models import FacebookPage
+    
+    form = FacebookPageForm()
+    
+    if form.validate_on_submit():
+        # إذا تم تحديد هذه الصفحة كافتراضية، نقوم بإلغاء تحديد باقي الصفحات
+        if form.is_default.data:
+            FacebookPage.query.filter_by(is_default=True).update({'is_default': False})
+            db.session.commit()
+        
+        # إنشاء صفحة جديدة
+        new_page = FacebookPage(
+            page_id=form.page_id.data,
+            page_name=form.page_name.data,
+            page_access_token=form.page_access_token.data,
+            is_default=form.is_default.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(new_page)
+        db.session.commit()
+        
+        flash('تمت إضافة الصفحة بنجاح', 'success')
+        return redirect(url_for('main.facebook_pages'))
+    
+    return render_template('facebook/add_page.html', form=form)
+
+@main_bp.route('/facebook/pages/<int:page_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_facebook_page(page_id):
+    """تعديل صفحة فيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from forms import FacebookPageForm
+    from models import FacebookPage
+    
+    page = FacebookPage.query.get_or_404(page_id)
+    form = FacebookPageForm()
+    
+    if request.method == 'GET':
+        form.page_name.data = page.page_name
+        form.page_id.data = page.page_id
+        form.page_access_token.data = page.page_access_token
+        form.is_default.data = page.is_default
+    
+    if form.validate_on_submit():
+        # إذا تم تحديد هذه الصفحة كافتراضية، نقوم بإلغاء تحديد باقي الصفحات
+        if form.is_default.data and not page.is_default:
+            FacebookPage.query.filter_by(is_default=True).update({'is_default': False})
+            db.session.commit()
+        
+        # تحديث بيانات الصفحة
+        page.page_name = form.page_name.data
+        page.page_id = form.page_id.data
+        page.page_access_token = form.page_access_token.data
+        page.is_default = form.is_default.data
+        
+        db.session.commit()
+        
+        flash('تم تحديث الصفحة بنجاح', 'success')
+        return redirect(url_for('main.facebook_pages'))
+    
+    return render_template('facebook/edit_page.html', form=form, page=page)
+
+@main_bp.route('/facebook/pages/<int:page_id>/delete', methods=['POST'])
+@login_required
+def delete_facebook_page(page_id):
+    """حذف صفحة فيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from models import FacebookPage
+    
+    page = FacebookPage.query.get_or_404(page_id)
+    
+    # لا يمكن حذف الصفحة الافتراضية إذا كانت الوحيدة
+    if page.is_default and FacebookPage.query.count() == 1:
+        flash('لا يمكن حذف الصفحة الافتراضية الوحيدة', 'danger')
+        return redirect(url_for('main.facebook_pages'))
+    
+    # إذا كانت الصفحة هي الافتراضية، نقوم بتعيين صفحة أخرى كافتراضية
+    if page.is_default:
+        other_page = FacebookPage.query.filter(FacebookPage.id != page_id).first()
+        if other_page:
+            other_page.is_default = True
+            db.session.commit()
+    
+    # حذف الصفحة
+    db.session.delete(page)
+    db.session.commit()
+    
+    flash('تم حذف الصفحة بنجاح', 'success')
+    return redirect(url_for('main.facebook_pages'))
+
+@main_bp.route('/facebook/select-page', methods=['POST'])
+@login_required
+def select_facebook_page():
+    """اختيار الصفحة النشطة"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from forms import FacebookPageSelectForm
+    from models import FacebookPage
+    from flask import session
+    
+    form = FacebookPageSelectForm()
+    
+    if form.validate_on_submit():
+        page_id = form.page_id.data
+        page = FacebookPage.query.get(page_id)
+        
+        if page:
+            # تخزين معرف الصفحة المحددة في الجلسة
+            session['facebook_page_id'] = page_id
+            flash(f'تم تحديد صفحة "{page.page_name}" كصفحة نشطة', 'success')
+        else:
+            flash('لم يتم العثور على الصفحة المحددة', 'danger')
+    
+    return redirect(url_for('main.facebook_dashboard'))
+
+@main_bp.route('/facebook')
+@login_required
+def facebook_dashboard():
+    """لوحة تحكم إدارة الفيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from models import FacebookMessage, FacebookPost, FacebookComment, FacebookPage
+    from forms import FacebookPageSelectForm
+    from flask import session
+    
+    # جلب الصفحات المتاحة
+    pages = FacebookPage.query.all()
+    
+    # صفحة الفيسبوك المحددة حالياً
+    current_page_id = session.get('facebook_page_id')
+    current_page = None
+    
+    # إذا كان هناك معرف صفحة في الجلسة، نجلب الصفحة
+    if current_page_id:
+        current_page = FacebookPage.query.get(current_page_id)
+    
+    # إذا لم يتم العثور على الصفحة، نستخدم الصفحة الافتراضية
+    if not current_page:
+        current_page = FacebookPage.query.filter_by(is_default=True).first()
+        
+        # إذا لم تكن هناك صفحة افتراضية، نستخدم أول صفحة
+        if not current_page and pages:
+            current_page = pages[0]
+            
+        # تحديث معرف الصفحة في الجلسة
+        if current_page:
+            session['facebook_page_id'] = current_page.id
+    
+    # جلب الرسائل غير المقروءة
+    if current_page:
+        unread_messages = FacebookMessage.query.filter_by(
+            is_replied=False, 
+            page_id=current_page.id
+        ).order_by(FacebookMessage.received_at.desc()).limit(10).all()
+        
+        # جلب آخر المنشورات
+        recent_posts = FacebookPost.query.filter_by(
+            page_id=current_page.id
+        ).order_by(FacebookPost.published_at.desc()).limit(5).all()
+        
+        # جلب التعليقات غير المردود عليها للمنشورات من هذه الصفحة
+        post_ids = [post.id for post in FacebookPost.query.filter_by(page_id=current_page.id).all()]
+        unread_comments = FacebookComment.query.filter(
+            FacebookComment.post_id.in_(post_ids),
+            FacebookComment.is_replied == False
+        ).order_by(FacebookComment.created_at.desc()).limit(10).all()
+    else:
+        # إذا لم تكن هناك صفحات مضافة بعد
+        unread_messages = []
+        recent_posts = []
+        unread_comments = []
+    
+    # إنشاء نموذج اختيار الصفحة
+    select_form = FacebookPageSelectForm()
+    if current_page:
+        select_form.page_id.data = current_page.id
+    
+    return render_template('facebook/dashboard.html', 
+                         unread_messages=unread_messages,
+                         recent_posts=recent_posts,
+                         unread_comments=unread_comments,
+                         pages=pages,
+                         current_page=current_page,
+                         select_form=select_form)
+
+@main_bp.route('/facebook/messages')
+@login_required
+def facebook_messages():
+    """عرض جميع رسائل الفيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from models import FacebookMessage
+    from facebook_service import FacebookService
+    
+    # محاولة تحديث الرسائل من الفيسبوك
+    try:
+        fb_service = FacebookService()
+        fb_service.get_page_messages()
+    except Exception as e:
+        flash('تعذر الاتصال بفيسبوك. تحقق من الإعدادات', 'warning')
+    
+    messages = FacebookMessage.query.order_by(FacebookMessage.received_at.desc()).all()
+    return render_template('facebook/messages.html', messages=messages)
+
+@main_bp.route('/facebook/reply_message', methods=['POST'])
+@login_required
+def reply_facebook_message():
+    """الرد على رسالة فيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية لهذا الإجراء', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from forms import FacebookMessageReplyForm
+    from models import FacebookMessage
+    from facebook_service import FacebookService
+    
+    form = FacebookMessageReplyForm()
+    if form.validate_on_submit():
+        message = FacebookMessage.query.get_or_404(form.message_id.data)
+        
+        try:
+            fb_service = FacebookService()
+            response = fb_service.send_message_reply(message.sender_id, form.reply_text.data)
+            
+            if response:
+                message.is_replied = True
+                message.replied_at = datetime.now()
+                message.replied_by = current_user.id
+                message.reply_text = form.reply_text.data
+                db.session.commit()
+                
+                flash('تم إرسال الرد بنجاح!', 'success')
+            else:
+                flash('فشل في إرسال الرد', 'danger')
+                
+        except Exception as e:
+            flash('حدث خطأ أثناء إرسال الرد', 'danger')
+    
+    return redirect(url_for('main.facebook_messages'))
+
+@main_bp.route('/facebook/post', methods=['GET', 'POST'])
+@login_required
+def facebook_post():
+    """نشر منشور على الفيسبوك"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from forms import FacebookPostForm
+    from models import FacebookPost
+    from facebook_service import FacebookService
+    
+    form = FacebookPostForm()
+    
+    if form.validate_on_submit():
+        try:
+            fb_service = FacebookService()
+            response = fb_service.publish_post(form.content.data, form.image_url.data)
+            
+            if response:
+                # حفظ المنشور في قاعدة البيانات
+                new_post = FacebookPost(
+                    fb_post_id=response.get('id', ''),
+                    content=form.content.data,
+                    image_url=form.image_url.data,
+                    published_by=current_user.id
+                )
+                db.session.add(new_post)
+                db.session.commit()
+                
+                flash('تم نشر المنشور بنجاح!', 'success')
+                return redirect(url_for('main.facebook_dashboard'))
+            else:
+                flash('فشل في نشر المنشور', 'danger')
+                
+        except Exception as e:
+            flash('حدث خطأ أثناء نشر المنشور', 'danger')
+    
+    return render_template('facebook/post.html', form=form)
+
+# ===================== تحويل النص إلى فيديو =====================
+
+@main_bp.route('/text_to_video')
+@login_required
+def text_to_video_dashboard():
+    """لوحة تحكم تحويل النص إلى فيديو"""
+    if not current_user.can_manage_patients:
+        flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    from models import TextToVideoRequest
+    
+    # جلب طلبات المستخدم
+    user_requests = TextToVideoRequest.query.filter_by(created_by=current_user.id).order_by(TextToVideoRequest.created_at.desc()).all()
+    
+    # جلب جميع الطلبات للمديرين
+    all_requests = []
+    if current_user.role in ['admin', 'manager']:
+        all_requests = TextToVideoRequest.query.order_by(TextToVideoRequest.created_at.desc()).limit(20).all()
+    
+    return render_template('text_to_video/dashboard.html', 
+                         user_requests=user_requests,
+                         all_requests=all_requests)
+
+@main_bp.route('/text_to_video/create', methods=['GET', 'POST'])
+@login_required
+def create_text_to_video():
+    """إنشاء طلب تحويل نص إلى فيديو"""
+    from forms import TextToVideoForm
+    from models import TextToVideoRequest
+    from text_to_video_service import TextToVideoService
+    
+    form = TextToVideoForm()
+    
+    if form.validate_on_submit():
+        # إنشاء طلب جديد
+        new_request = TextToVideoRequest(
+            title=form.title.data,
+            text_content=form.text_content.data,
+            created_by=current_user.id
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        
+        # بدء معالجة الطلب في الخلفية (في تطبيق حقيقي نحتاج Celery أو مشابه)
+        try:
+            video_service = TextToVideoService()
+            video_service.process_text_to_video_request(new_request.id)
+        except Exception as e:
+            flash('تم إنشاء الطلب ولكن حدث خطأ في المعالجة', 'warning')
+        
+        flash('تم إنشاء طلب تحويل النص إلى فيديو بنجاح!', 'success')
+        return redirect(url_for('main.text_to_video_dashboard'))
+    
+    return render_template('text_to_video/create.html', form=form)

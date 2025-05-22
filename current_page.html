@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دار الحياة - مركز علاج نفسي وإدمان</title>
+    
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/rtl.css">
+    
+    <!-- Additional CSS -->
+    
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-hospital-alt me-2"></i>
+                دار الحياة
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    
+                </ul>
+                
+                <ul class="navbar-nav">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/login">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل دخول
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/register">
+                            <i class="fas fa-user-plus"></i> إنشاء حساب
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Flash Messages -->
+        
+            
+        
+        
+        <!-- Page Content -->
+        
+<div class="row justify-content-center mt-5">
+    <div class="col-md-10 text-center">
+        <h1 class="display-4">مرحباً بك في نظام دار الحياة</h1>
+        <p class="lead">نظام إدارة متكامل لمركز علاج نفسي وإدمان</p>
+        
+        <!-- ملخص أداء المركز -->
+        <div class="card shadow border-0 mt-4 mb-5">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">ملخص أداء المركز - شهر مايو 2025</h3>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <!-- الحالة العامة -->
+                    <div class="col-md-4 text-center mb-4">
+                        <h4>الحالة العامة</h4>
+                        <div class="d-flex justify-content-center">
+                            <div class="rounded-circle bg-warning d-flex justify-content-center align-items-center" style="width: 150px; height: 150px;">
+                                <div>
+                                    <h2 class="text-white mb-1">ثبات</h2>
+                                    <p class="text-white mb-0">
+                                        0% 
+                                        
+                                            <i class="fas fa-equals"></i>
+                                        
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- إحصاءات المرضى -->
+                    <div class="col-md-8">
+                        <div class="row">
+                            <!-- المرضى النشطين -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-primary mb-0">1</h5>
+                                        <small>مرضى نشطين</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- مرضى جدد هذا الشهر -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-primary mb-0">0</h5>
+                                        <small>مرضى جدد</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- التحصيلات -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-success mb-0">0 ج.م</h5>
+                                        <small>تحصيلات
+                                            <span class="">
+                                                (0%
+                                                )
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- المصروفات -->
+                            <div class="col-6 col-md-3 mb-3">
+                                <div class="card bg-light h-100">
+                                    <div class="card-body text-center">
+                                        <h5 class="text-danger mb-0">0 ج.م</h5>
+                                        <small>مصروفات
+                                            <span class="">
+                                                (0%
+                                                )
+                                            </span>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- الربح والخسارة -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class=" mb-0">
+                                            صافي الربح: 0 ج.م
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- الأقسام الرئيسية -->
+        <div class="mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-user-injured text-primary me-2"></i>
+                                إدارة المرضى
+                            </h5>
+                            <p class="card-text">إضافة المرضى، متابعة الإقامة، تسجيل المصروفات، وإعداد كشوف الحساب.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-cash-register text-primary me-2"></i>
+                                إدارة التحصيلات
+                            </h5>
+                            <p class="card-text">تسجيل المدفوعات بسهولة وتتبع الأرصدة والمستحقات.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-user-tie text-primary me-2"></i>
+                                إدارة الموظفين
+                            </h5>
+                            <p class="card-text">إدارة شؤون الموظفين، الرواتب، المكافآت، والسلف.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-users text-primary me-2"></i>
+                                المجموعات العلاجية
+                            </h5>
+                            <p class="card-text">إدارة المجموعات العلاجية، مراحل العلاج، وتقارير المعالجين.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-chart-line text-primary me-2"></i>
+                                تقارير مالية
+                            </h5>
+                            <p class="card-text">تقارير مالية يومية وشهرية وسنوية لمتابعة أداء المركز.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-hand-holding-usd text-primary me-2"></i>
+                                إدارة المصروفات
+                            </h5>
+                            <p class="card-text">تسجيل ومتابعة مصروفات المركز بمختلف أنواعها.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            
+            <a href="/auth/login" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </a>
+            
+        </div>
+    </div>
+</div>
+
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer mt-5 py-3 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">© 2025 دار الحياة - نظام إدارة مركز علاج نفسي وإدمان</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Main JS -->
+    <script src="/static/js/main.js"></script>
+    <!-- Notifications JS -->
+    <script src="/static/js/notifications.js"></script>
+    <!-- Sound Effects JS -->
+    <script src="/static/js/sound.js"></script>
+    
+    <!-- آلة حاسبة آيفون 18 -->
+    <div class="simple-calc-btn" id="simpleCalcToggle">
+        <i class="fas fa-calculator"></i>
+    </div>
+    
+    <div class="simple-calc" id="simpleCalc">
+        <div class="simple-calc-header">
+            <h5>آلة حاسبة آيفون 18</h5>
+            <button type="button" class="btn-close" id="simpleCalcClose"></button>
+        </div>
+        <div class="simple-calc-body">
+            <input type="text" id="simpleCalcDisplay" class="simple-calc-display" readonly>
+            <div class="simple-calc-buttons">
+                <button class="simple-calc-btn function">AC</button>
+                <button class="simple-calc-btn function">+/-</button>
+                <button class="simple-calc-btn function">%</button>
+                <button class="simple-calc-btn operator divide">÷</button>
+                
+                <button class="simple-calc-btn number">7</button>
+                <button class="simple-calc-btn number">8</button>
+                <button class="simple-calc-btn number">9</button>
+                <button class="simple-calc-btn operator multiply">×</button>
+                
+                <button class="simple-calc-btn number">4</button>
+                <button class="simple-calc-btn number">5</button>
+                <button class="simple-calc-btn number">6</button>
+                <button class="simple-calc-btn operator subtract">-</button>
+                
+                <button class="simple-calc-btn number">1</button>
+                <button class="simple-calc-btn number">2</button>
+                <button class="simple-calc-btn number">3</button>
+                <button class="simple-calc-btn operator add">+</button>
+                
+                <button class="simple-calc-btn number zero">0</button>
+                <button class="simple-calc-btn decimal">.</button>
+                <button class="simple-calc-btn equal">=</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* آلة حاسبة آيفون 18 */
+        .simple-calc-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .simple-calc {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 300px;
+            background-color: #000;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: none;
+            z-index: 999;
+            overflow: hidden;
+            padding: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .simple-calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .simple-calc-header h5 {
+            margin: 0;
+            color: #fff;
+            font-weight: 300;
+        }
+        
+        .simple-calc-body {
+            padding: 15px;
+        }
+        
+        .simple-calc-display {
+            width: 100%;
+            padding: 15px;
+            font-size: 2.2rem;
+            text-align: right;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 12px;
+            background-color: #111;
+            color: white;
+            font-weight: 300;
+        }
+        
+        .simple-calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        
+        .simple-calc-btn {
+            padding: 18px 0;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .simple-calc-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .simple-calc-btn.number {
+            background-color: #333;
+            color: white;
+        }
+        
+        .simple-calc-btn.operator {
+            background-color: #FF9F0A;
+            color: white;
+        }
+        
+        .simple-calc-btn.function {
+            background-color: #A5A5A5;
+            color: black;
+        }
+        
+        .simple-calc-btn.equal {
+            background-color: #FF9F0A;
+            color: white;
+        }
+        
+        .simple-calc-btn.zero {
+            width: 100%;
+            border-radius: 50px;
+            grid-column: span 2;
+            padding-left: 24px;
+            justify-content: flex-start;
+        }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // عناصر الآلة الحاسبة
+            var calcToggle = document.getElementById('simpleCalcToggle');
+            var calculator = document.getElementById('simpleCalc');
+            var calcClose = document.getElementById('simpleCalcClose');
+            var display = document.getElementById('simpleCalcDisplay');
+            
+            // المتغيرات
+            var firstOperand = null;
+            var operator = null;
+            var awaitingSecondOperand = false;
+            var lastResult = null;
+            
+            // فتح/إغلاق الآلة الحاسبة
+            calcToggle.addEventListener('click', function() {
+                calculator.style.display = calculator.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            calcClose.addEventListener('click', function() {
+                calculator.style.display = 'none';
+            });
+            
+            // الأرقام
+            document.querySelectorAll('.simple-calc-btn.number').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    inputDigit(button.textContent);
+                });
+            });
+            
+            // العمليات الحسابية
+            document.querySelector('.simple-calc-btn.add').addEventListener('click', function() {
+                handleOperator('+');
+            });
+            
+            document.querySelector('.simple-calc-btn.subtract').addEventListener('click', function() {
+                handleOperator('-');
+            });
+            
+            document.querySelector('.simple-calc-btn.multiply').addEventListener('click', function() {
+                handleOperator('*');
+            });
+            
+            document.querySelector('.simple-calc-btn.divide').addEventListener('click', function() {
+                handleOperator('/');
+            });
+            
+            // المساواة
+            document.querySelector('.simple-calc-btn.equal').addEventListener('click', function() {
+                calculate();
+            });
+            
+            // الوظائف الإضافية لآيفون 18
+            // المسح الكامل AC
+            document.querySelector('.simple-calc-btn.function:nth-child(1)').addEventListener('click', function() {
+                resetCalculator();
+            });
+            
+            // تغيير الإشارة +/-
+            document.querySelector('.simple-calc-btn.function:nth-child(2)').addEventListener('click', function() {
+                if (display.value !== '0') {
+                    display.value = display.value.startsWith('-') ? 
+                        display.value.slice(1) : 
+                        '-' + display.value;
+                }
+            });
+            
+            // النسبة المئوية %
+            document.querySelector('.simple-calc-btn.function:nth-child(3)').addEventListener('click', function() {
+                const value = parseFloat(display.value);
+                display.value = value / 100;
+            });
+            
+            // النقطة العشرية
+            document.querySelector('.simple-calc-btn.decimal').addEventListener('click', function() {
+                inputDecimal();
+            });
+            
+            // دعم لوحة المفاتيح
+            document.addEventListener('keydown', function(e) {
+                if (calculator.style.display !== 'block') {
+                    // فتح الآلة الحاسبة بـ Alt+C
+                    if (e.altKey && e.key === 'c') {
+                        calculator.style.display = 'block';
+                        e.preventDefault();
+                    }
+                    return;
+                }
+                
+                if (/^\d$/.test(e.key)) {
+                    inputDigit(e.key);
+                    e.preventDefault();
+                } else if (e.key === '.') {
+                    inputDecimal();
+                    e.preventDefault();
+                } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                    handleOperator(e.key);
+                    e.preventDefault();
+                } else if (e.key === 'Enter' || e.key === '=') {
+                    calculate();
+                    e.preventDefault();
+                } else if (e.key === 'Escape') {
+                    resetCalculator();
+                    e.preventDefault();
+                } else if (e.key === 'Backspace') {
+                    if (display.value.length > 0) {
+                        display.value = display.value.slice(0, -1);
+                        if (display.value === '') {
+                            display.value = '0';
+                        }
+                    }
+                    e.preventDefault();
+                } else if (e.key === '%') {
+                    const value = parseFloat(display.value);
+                    display.value = value / 100;
+                    e.preventDefault();
+                }
+            });
+            
+            // إدخال الأرقام
+            function inputDigit(digit) {
+                if (awaitingSecondOperand) {
+                    display.value = digit;
+                    awaitingSecondOperand = false;
+                } else {
+                    // تجنب الأصفار في البداية
+                    display.value = display.value === '0' ? digit : display.value + digit;
+                }
+            }
+            
+            // إدخال النقطة العشرية
+            function inputDecimal() {
+                // تأكد من عدم وجود نقطة عشرية سابقة
+                if (awaitingSecondOperand) {
+                    display.value = '0.';
+                    awaitingSecondOperand = false;
+                    return;
+                }
+                
+                if (!display.value.includes('.')) {
+                    display.value += '.';
+                }
+            }
+            
+            // معالجة العمليات
+            function handleOperator(nextOperator) {
+                const inputValue = parseFloat(display.value);
+                
+                if (firstOperand === null) {
+                    firstOperand = inputValue;
+                } else if (operator) {
+                    const result = performCalculation();
+                    // تنسيق النتيجة لتجنب الأرقام الطويلة جدا
+                    display.value = formatResult(result);
+                    firstOperand = result;
+                }
+                
+                awaitingSecondOperand = true;
+                operator = nextOperator;
+                lastResult = firstOperand;
+            }
+            
+            // تنسيق النتيجة (لجعل العرض يشبه آيفون 18)
+            function formatResult(number) {
+                // تحويل الرقم إلى صيغة أكثر قراءة وتجنب الأرقام العشرية الطويلة
+                if (Number.isInteger(number)) {
+                    return number.toString();
+                }
+                
+                // تقريب الأرقام إلى 10 منازل عشرية كحد أقصى
+                return parseFloat(number.toFixed(10)).toString();
+            }
+            
+            // إجراء العملية الحسابية
+            function performCalculation() {
+                const inputValue = parseFloat(display.value);
+                
+                if (operator === '+') {
+                    return firstOperand + inputValue;
+                } else if (operator === '-') {
+                    return firstOperand - inputValue;
+                } else if (operator === '*') {
+                    return firstOperand * inputValue;
+                } else if (operator === '/') {
+                    if (inputValue === 0) {
+                        alert('لا يمكن القسمة على صفر');
+                        return firstOperand;
+                    }
+                    return firstOperand / inputValue;
+                }
+                
+                return inputValue;
+            }
+            
+            // حساب النتيجة
+            function calculate() {
+                if (!operator || awaitingSecondOperand) {
+                    return;
+                }
+                
+                const result = performCalculation();
+                display.value = formatResult(result);
+                
+                // إعادة ضبط الحالة مع الاحتفاظ بالنتيجة
+                firstOperand = result;
+                lastResult = result;
+                awaitingSecondOperand = true;
+                operator = null;
+            }
+            
+            // إعادة ضبط الآلة الحاسبة
+            function resetCalculator() {
+                display.value = '0';
+                firstOperand = null;
+                operator = null;
+                awaitingSecondOperand = false;
+                lastResult = null;
+            }
+            
+            // التهيئة
+            resetCalculator();
+        });
+    </script>
+    
+    <!-- Additional JS -->
+    
+</body>
+</html>

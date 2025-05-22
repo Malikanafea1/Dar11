@@ -15,12 +15,33 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
+        print(f"محاولة تسجيل دخول: {form.username.data}")
         user = User.query.filter_by(username=form.username.data).first()
-        if user and user.check_password(form.password.data) and user.is_active:
+        
+        # تسجيل معلومات التشخيص
+        if user:
+            print(f"تم العثور على المستخدم: {user.username}, حالة النشاط: {user.is_active}")
+        else:
+            print(f"لم يتم العثور على المستخدم: {form.username.data}")
+            # محاولة البحث عن أي مستخدم في النظام للتأكد من أن قاعدة البيانات تعمل
+            all_users = User.query.all()
+            print(f"عدد المستخدمين في النظام: {len(all_users)}")
+            if all_users:
+                print(f"أسماء المستخدمين المتاحة: {[u.username for u in all_users]}")
+        
+        # تحديد نوع الخطأ بشكل أكثر دقة
+        if not user:
+            flash('اسم المستخدم غير موجود في النظام', 'danger')
+        elif not user.is_active:
+            flash('هذا الحساب معطل، يرجى التواصل مع مسؤول النظام', 'danger')
+        elif not user.check_password(form.password.data):
+            print(f"كلمة المرور غير صحيحة للمستخدم: {user.username}")
+            flash('كلمة المرور غير صحيحة', 'danger')
+        else:
+            print(f"تسجيل دخول ناجح للمستخدم: {user.username}")
             login_user(user)
             next_page = request.args.get('next')
             return redirect(next_page or url_for('main.dashboard'))
-        flash('اسم المستخدم أو كلمة المرور غير صحيحة أو الحساب معطل', 'danger')
     
     return render_template('login.html', form=form)
 

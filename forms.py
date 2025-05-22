@@ -143,6 +143,12 @@ class CollectionForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CollectionForm, self).__init__(*args, **kwargs)
         self.patient_id.choices = [(p.id, p.name) for p in Patient.query.filter_by(is_active=True).all()]
+        
+class EditCollectionForm(FlaskForm):
+    amount = FloatField('المبلغ (ج.م)', validators=[DataRequired('هذا الحقل مطلوب')])
+    date = DateField('تاريخ التحصيل', format='%Y-%m-%d', validators=[DataRequired('هذا الحقل مطلوب')])
+    notes = StringField('ملاحظات', validators=[Optional()])
+    submit = SubmitField('حفظ التغييرات')
 
 class EmployeeForm(FlaskForm):
     name = StringField('الاسم', validators=[DataRequired('هذا الحقل مطلوب')])
@@ -291,3 +297,66 @@ class DashboardNoteForm(FlaskForm):
     def validate_due_date(self, due_date):
         if self.is_task.data and not due_date.data:
             raise ValidationError('يجب تحديد تاريخ استحقاق للمهمة')
+
+# نموذج نشر منشور على فيسبوك
+class FacebookPostForm(FlaskForm):
+    content = TextAreaField('محتوى المنشور', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=1, max=5000)])
+    image_url = StringField('رابط الصورة (اختياري)', validators=[Optional()])
+    submit = SubmitField('نشر على فيسبوك')
+
+# نموذج الرد على رسائل فيسبوك
+class FacebookMessageReplyForm(FlaskForm):
+    message_id = HiddenField('معرف الرسالة', validators=[DataRequired()])
+    reply_text = TextAreaField('نص الرد', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=1, max=1000)])
+    submit = SubmitField('إرسال الرد')
+
+# نموذج الرد على تعليقات فيسبوك
+class FacebookCommentReplyForm(FlaskForm):
+    comment_id = HiddenField('معرف التعليق', validators=[DataRequired()])
+    reply_text = TextAreaField('نص الرد', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=1, max=1000)])
+    submit = SubmitField('الرد على التعليق')
+
+# نموذج طلب تحويل النص إلى فيديو
+class TextToVideoForm(FlaskForm):
+    title = StringField('عنوان الفيديو', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=3, max=200)])
+    text_content = TextAreaField('النص المراد تحويله', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=10, max=10000)])
+    voice_type = SelectField('نوع الصوت', choices=[
+        ('egyptian_male_1', 'صوت مصري ذكر 1'),
+        ('egyptian_female_1', 'صوت مصري أنثى 1'),
+        ('egyptian_male_2', 'صوت مصري ذكر 2'),
+        ('egyptian_female_2', 'صوت مصري أنثى 2')
+    ], validators=[DataRequired('هذا الحقل مطلوب')])
+    submit = SubmitField('إنشاء الفيديو')
+
+    def validate_text_content(self, text_content):
+        # التحقق من أن النص يحتوي على أحرف عربية
+        arabic_chars = sum(1 for char in text_content.data if '\u0600' <= char <= '\u06FF')
+        if arabic_chars < len(text_content.data.replace(' ', '')) * 0.3:
+            raise ValidationError('يجب أن يحتوي النص على نسبة أكبر من الأحرف العربية')
+
+# نموذج إضافة صفحة فيسبوك
+class FacebookPageForm(FlaskForm):
+    page_name = StringField('اسم الصفحة', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=3, max=200)])
+    page_id = StringField('معرف الصفحة', validators=[DataRequired('هذا الحقل مطلوب'), Length(min=5, max=100)])
+    page_access_token = TextAreaField('رمز الوصول للصفحة', validators=[DataRequired('هذا الحقل مطلوب')])
+    is_default = BooleanField('الصفحة الافتراضية')
+    submit = SubmitField('حفظ الصفحة')
+    
+    def validate_page_id(self, page_id):
+        from models import FacebookPage
+        from flask import request
+        
+        page = FacebookPage.query.filter_by(page_id=page_id.data).first()
+        if page and (request.endpoint != 'main.edit_facebook_page' or str(page.id) != request.view_args.get('page_id')):
+            raise ValidationError('يوجد صفحة مسجلة بهذا المعرف بالفعل')
+
+# نموذج اختيار صفحة فيسبوك
+class FacebookPageSelectForm(FlaskForm):
+    page_id = SelectField('اختر الصفحة', coerce=int, validators=[DataRequired('هذا الحقل مطلوب')])
+    submit = SubmitField('تحديد الصفحة')
+    
+    def __init__(self, *args, **kwargs):
+        super(FacebookPageSelectForm, self).__init__(*args, **kwargs)
+        from models import FacebookPage
+        # تحميل الصفحات من قاعدة البيانات
+        self.page_id.choices = [(page.id, page.page_name) for page in FacebookPage.query.all()]

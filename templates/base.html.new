@@ -105,22 +105,6 @@
                         </div>
                         {% endif %}
                         
-                        <!-- إدارة الفيسبوك -->
-                        {% if current_user.can_manage_patients %}
-                        <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.facebook_dashboard') }}" class="btn btn-outline-info d-flex align-items-center justify-content-center" style="min-width: 120px;">
-                                <i class="fab fa-facebook ms-1"></i> إدارة فيسبوك
-                            </a>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- تحويل النص لفيديو -->
-                        <div class="nav-button-group mx-1 mb-2 text-center">
-                            <a href="{{ url_for('main.text_to_video_dashboard') }}" class="btn btn-outline-success d-flex align-items-center justify-content-center" style="min-width: 120px;">
-                                <i class="fas fa-video ms-1"></i> إنشاء فيديو
-                            </a>
-                        </div>
-                        
                         <!-- الدردشة العامة -->
                         <div class="nav-button-group mx-1 mb-2 text-center">
                             <a href="{{ url_for('main.chat') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-width: 120px;">
@@ -207,19 +191,10 @@
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <!-- Sound Effects JS -->
     <script src="{{ url_for('static', filename='js/sound.js') }}"></script>
-    <!-- Calculator JS -->
-    <script src="{{ url_for('static', filename='js/calculator.js') }}"></script>
-    <!-- Chat Popup JS -->
-    <script src="{{ url_for('static', filename='js/chat-popup-fix.js') }}"></script>
     
     <!-- آلة حاسبة آيفون 18 -->
     <div class="simple-calc-btn" id="simpleCalcToggle">
         <i class="fas fa-calculator"></i>
-    </div>
-    
-    <!-- زر الدردشة المنبثقة -->
-    <div class="chat-popup-btn" id="chatPopupToggle">
-        <i class="fas fa-comments"></i>
     </div>
     
     <div class="simple-calc" id="simpleCalc">
@@ -257,17 +232,6 @@
         </div>
     </div>
     
-    <!-- نافذة الدردشة المنبثقة -->
-    <div class="chat-popup" id="chatPopupWindow">
-        <div class="chat-popup-header">
-            <h5><i class="fas fa-comments me-2"></i>الدردشة العامة</h5>
-            <button type="button" class="btn-close" id="chatPopupClose"></button>
-        </div>
-        <div class="chat-popup-body" id="chatPopupContent">
-            <!-- سيتم تحميل محتوى الدردشة هنا عبر JavaScript -->
-        </div>
-    </div>
-    
     <style>
         /* آلة حاسبة آيفون 18 */
         .simple-calc-btn {
@@ -278,26 +242,6 @@
             height: 55px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* زر الدردشة المنبثقة */
-        .chat-popup-btn {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #0078d4, #005ea2);
             color: white;
             display: flex;
             justify-content: center;
@@ -322,43 +266,6 @@
             overflow: hidden;
             padding: 5px;
             border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* نافذة الدردشة المنبثقة */
-        .chat-popup {
-            position: fixed;
-            bottom: 85px;
-            left: 20px;
-            width: 350px;
-            height: 500px;
-            background-color: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: none;
-            z-index: 999;
-            overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .chat-popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background-color: #0078d4;
-            color: white;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .chat-popup-header h5 {
-            margin: 0;
-            font-weight: 500;
-        }
-        
-        .chat-popup-body {
-            height: calc(100% - 50px);
-            overflow-y: auto;
-            background-color: #f8f9fa;
         }
         
         .simple-calc-header {
@@ -388,22 +295,21 @@
             margin-bottom: 15px;
             border: none;
             border-radius: 12px;
-            background-color: #1a1a1a;
+            background-color: #1c1c1e;
             color: white;
         }
         
         .simple-calc-buttons {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 12px;
         }
         
         .simple-calc-btn {
-            border: none;
-            width: 100%;
             height: 55px;
+            font-size: 1.4rem;
+            border: none;
             border-radius: 50%;
-            font-size: 1.2rem;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -411,9 +317,22 @@
             transition: all 0.2s;
         }
         
+        .simple-calc-btn.number {
+            background-color: #333333;
+            color: white;
+        }
+        
+        .simple-calc-btn.number:hover {
+            background-color: #4d4d4d;
+        }
+        
         .simple-calc-btn.function {
             background-color: #a5a5a5;
-            color: #000;
+            color: black;
+        }
+        
+        .simple-calc-btn.function:hover {
+            background-color: #d9d9d9;
         }
         
         .simple-calc-btn.operator {
@@ -421,9 +340,8 @@
             color: white;
         }
         
-        .simple-calc-btn.number, .simple-calc-btn.decimal {
-            background-color: #333;
-            color: white;
+        .simple-calc-btn.operator:hover {
+            background-color: #ffb74d;
         }
         
         .simple-calc-btn.equal {
@@ -431,38 +349,50 @@
             color: white;
         }
         
+        .simple-calc-btn.equal:hover {
+            background-color: #ffb74d;
+        }
+        
+        .simple-calc-btn.decimal {
+            background-color: #333333;
+            color: white;
+        }
+        
+        .simple-calc-btn.decimal:hover {
+            background-color: #4d4d4d;
+        }
+        
         .simple-calc-btn.zero {
             grid-column: span 2;
-            border-radius: 50px;
+            border-radius: 30px;
             justify-content: flex-start;
-            padding-left: 22px;
+            padding-left: 23px;
         }
         
-        .simple-calc-btn:active {
-            transform: scale(0.95);
+        /* زرّ إنهاء المهمة */
+        .task-done-btn {
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #28a745;
         }
         
-        /* ستايل رسائل الدردشة المنبثقة */
-        .chat-messages {
-            padding: 15px;
+        /* زرّ حذف المهمة */
+        .task-delete-btn {
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #dc3545;
         }
         
-        .message-container {
-            margin-bottom: 10px;
-        }
-        
-        .message-bubble {
-            padding: 10px 15px;
-            border-radius: 15px;
-            display: inline-block;
-            max-width: 80%;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-        
-        .chat-form {
-            padding: 10px;
-            background-color: white;
-            border-top: 1px solid #e9ecef;
+        /* Responsive changes */
+        @media (max-width: 768px) {
+            .simple-calc {
+                width: 280px;
+            }
+            
+            .simple-calc-btn {
+                height: 50px;
+                font-size: 1.2rem;
+            }
         }
     </style>
     

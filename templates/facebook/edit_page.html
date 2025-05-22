@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل صفحة فيسبوك - دار الحياة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fab fa-facebook me-2"></i>تعديل صفحة "{{ page.page_name }}"</h2>
+                <a href="{{ url_for('main.facebook_pages') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>العودة لقائمة الصفحات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">تعديل بيانات الصفحة</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            {{ form.page_name.label(class="form-label") }}
+                            {{ form.page_name(class="form-control", placeholder="ادخل اسم الصفحة") }}
+                            {% if form.page_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.page_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.page_id.label(class="form-label") }}
+                            {{ form.page_id(class="form-control", placeholder="ادخل معرف الصفحة") }}
+                            {% if form.page_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.page_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                يمكنك الحصول على معرف الصفحة من URL الخاص بالصفحة أو من إعدادات الصفحة
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.page_access_token.label(class="form-label") }}
+                            {{ form.page_access_token(class="form-control", rows=3, placeholder="ادخل رمز الوصول الخاص بالصفحة") }}
+                            {% if form.page_access_token.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.page_access_token.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                يمكنك الحصول على رمز الوصول من منصة مطوري فيسبوك (Facebook Developers)
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_default(class="form-check-input") }}
+                                {{ form.is_default.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-text">
+                                إذا كانت هذه هي الصفحة الافتراضية، سيتم استخدامها تلقائياً عند تصفح قسم الفيسبوك
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            {{ form.submit(class="btn btn-primary px-5") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

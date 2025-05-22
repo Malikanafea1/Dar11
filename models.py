@@ -304,3 +304,134 @@ class DashboardNote(db.Model):
     
     def __repr__(self):
         return f'<DashboardNote {self.title}>'
+
+
+class ChatMessage(db.Model):
+    """نموذج رسائل الدردشة العامة"""
+    
+    __tablename__ = 'chat_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
+    is_deleted = db.Column(db.Boolean, default=False)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('chat_messages', lazy='dynamic'))
+    
+    def __repr__(self):
+        return f'<ChatMessage {self.id} by {self.user_id}>'
+
+# موديل لصفحات الفيسبوك
+class FacebookPage(db.Model):
+    """نموذج صفحات الفيسبوك"""
+    
+    __tablename__ = 'facebook_pages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    page_id = db.Column(db.String(100), unique=True, nullable=False)
+    page_name = db.Column(db.String(200), nullable=False)
+    page_access_token = db.Column(db.Text, nullable=False)
+    is_default = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    creator = db.relationship('User', backref=db.backref('facebook_pages', lazy=True))
+    messages = db.relationship('FacebookMessage', backref='page', lazy=True)
+    posts = db.relationship('FacebookPost', backref='page', lazy=True)
+    
+    def __repr__(self):
+        return f'<FacebookPage {self.id}: {self.page_name}>'
+
+# موديل للرسائل الواردة من فيسبوك
+class FacebookMessage(db.Model):
+    """نموذج رسائل فيسبوك الواردة"""
+    
+    __tablename__ = 'facebook_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    fb_message_id = db.Column(db.String(100), unique=True, nullable=False)
+    page_id = db.Column(db.Integer, db.ForeignKey('facebook_pages.id'), nullable=True)
+    sender_name = db.Column(db.String(100), nullable=False)
+    sender_id = db.Column(db.String(50), nullable=False)
+    message_text = db.Column(db.Text, nullable=False)
+    received_at = db.Column(db.DateTime, default=datetime.now)
+    is_replied = db.Column(db.Boolean, default=False)
+    replied_at = db.Column(db.DateTime)
+    replied_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reply_text = db.Column(db.Text)
+    
+    replier = db.relationship('User', backref=db.backref('facebook_message_replies', lazy=True))
+    
+    def __repr__(self):
+        return f'<FacebookMessage {self.id} from {self.sender_name}>'
+
+# موديل للمنشورات المنشورة على فيسبوك
+class FacebookPost(db.Model):
+    """نموذج منشورات فيسبوك"""
+    
+    __tablename__ = 'facebook_posts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    fb_post_id = db.Column(db.String(100), unique=True)
+    page_id = db.Column(db.Integer, db.ForeignKey('facebook_pages.id'), nullable=True)
+    content = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.String(500))
+    published_at = db.Column(db.DateTime, default=datetime.now)
+    published_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    likes_count = db.Column(db.Integer, default=0)
+    comments_count = db.Column(db.Integer, default=0)
+    shares_count = db.Column(db.Integer, default=0)
+    
+    publisher = db.relationship('User', backref=db.backref('facebook_posts', lazy=True))
+    
+    def __repr__(self):
+        return f'<FacebookPost {self.id}: {self.content[:50]}...>'
+
+# موديل للتعليقات على المنشورات
+class FacebookComment(db.Model):
+    """نموذج تعليقات فيسبوك"""
+    
+    __tablename__ = 'facebook_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    fb_comment_id = db.Column(db.String(100), unique=True, nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('facebook_posts.id'), nullable=False)
+    commenter_name = db.Column(db.String(100), nullable=False)
+    commenter_id = db.Column(db.String(50), nullable=False)
+    comment_text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    is_replied = db.Column(db.Boolean, default=False)
+    replied_at = db.Column(db.DateTime)
+    replied_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reply_text = db.Column(db.Text)
+    
+    post = db.relationship('FacebookPost', backref=db.backref('comments', lazy=True))
+    replier = db.relationship('User', backref=db.backref('facebook_comment_replies', lazy=True))
+    
+    def __repr__(self):
+        return f'<FacebookComment {self.id} by {self.commenter_name}>'
+
+# موديل لطلبات تحويل النص إلى فيديو
+class TextToVideoRequest(db.Model):
+    """نموذج طلبات تحويل النص إلى فيديو"""
+    
+    __tablename__ = 'text_to_video_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    text_content = db.Column(db.Text, nullable=False)
+    audio_url = db.Column(db.String(500))
+    video_url = db.Column(db.String(500))
+    status = db.Column(db.String(50), default='pending')  # pending, processing, completed, failed
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    completed_at = db.Column(db.DateTime)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    error_message = db.Column(db.Text)
+    
+    creator = db.relationship('User', backref=db.backref('text_to_video_requests', lazy=True))
+    
+    def __repr__(self):
+        return f'<TextToVideoRequest {self.id}: {self.title}>'
