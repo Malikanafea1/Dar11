@@ -3,12 +3,12 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBkJ8h9X2fR5vL3mN1pQ8wE7tY6uI4oP2s",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: "dar1-23.firebaseapp.com",
   projectId: "dar1-23",
   storageBucket: "dar1-23.firebasestorage.app",
-  messagingSenderId: "123456789012",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789012:web:abc123def456ghi789",
+  messagingSenderId: "1015752030247",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1015752030247:web:1fa3e73cfdaa129195f602",
 };
 
 // تهيئة Firebase

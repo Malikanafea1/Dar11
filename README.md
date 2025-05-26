@@ -56,21 +56,37 @@ npm run dev
 
 ## النشر على Render
 
-### 1. ربط المستودع
+### 1. رفع الكود إلى GitHub
+```bash
+git init
+git add .
+git commit -m "Hospital Management System - Ready for deployment"
+git branch -M main
+git remote add origin YOUR_GITHUB_REPO_URL
+git push -u origin main
+```
 
-1. ادفع الكود إلى GitHub
-2. اربط المستودع مع Render
+### 2. إنشاء خدمة على Render
 
-### 2. إعداد متغيرات البيئة في Render
+1. اذهب إلى [render.com](https://render.com) وأنشئ حساب
+2. اضغط "New +" واختر "Web Service"
+3. اربط حساب GitHub واختر مستودع المشروع
+4. Render سيكتشف `render.yaml` تلقائياً
 
-في لوحة تحكم Render، أضف:
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_PROJECT_ID` 
-- `VITE_FIREBASE_APP_ID`
+### 3. إضافة مفتاح Firebase API
 
-### 3. النشر
+في Render Dashboard، أضف متغير البيئة:
+- `VITE_FIREBASE_API_KEY` = مفتاح API الخاص بمشروع Firebase
 
-Render سيقوم بالنشر تلقائياً باستخدام الإعدادات في `render.yaml`
+### 4. النشر
+
+اضغط "Deploy" وانتظر اكتمال العملية!
+
+## معلومات Firebase المُعدة:
+- **Project ID**: dar1-23
+- **Auth Domain**: dar1-23.firebaseapp.com
+- **App ID**: 1:1015752030247:web:1fa3e73cfdaa129195f602
+- **Messaging Sender ID**: 1015752030247
 
 ## البنية
 
