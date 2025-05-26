@@ -5,8 +5,48 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save, User, Bell, Shield, Database, Cog } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
+  const { toast } = useToast();
+  const [settings, setSettings] = useState({
+    username: "مسؤول النظام",
+    email: "admin@hospital.com",
+    phone: "01234567890",
+    hospitalName: "مركز دار الحياة لعلاج الإدمان",
+    patientAlerts: true,
+    paymentAlerts: true,
+    staffAlerts: true,
+    financialAlerts: true,
+    autoBackup: true,
+    dataCompression: false
+  });
+
+  const handleSaveProfile = () => {
+    toast({
+      title: "تم حفظ البيانات",
+      description: "تم حفظ بيانات الحساب بنجاح",
+    });
+  };
+
+  const handleChangePassword = () => {
+    toast({
+      title: "تم تغيير كلمة المرور",
+      description: "تم تغيير كلمة المرور بنجاح",
+    });
+  };
+
+  const handleToggleSwitch = (key: string) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: !prev[key as keyof typeof prev]
+    }));
+    toast({
+      title: "تم تحديث الإعدادات",
+      description: "تم حفظ التغييرات بنجاح",
+    });
+  };
   return (
     <div className="space-y-6">
       <div>
@@ -26,17 +66,30 @@ export default function Settings() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="username">اسم المستخدم</Label>
-              <Input id="username" defaultValue="مسؤول النظام" />
+              <Input 
+                id="username" 
+                value={settings.username}
+                onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
+              />
             </div>
             <div>
               <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" type="email" defaultValue="admin@hospital.com" />
+              <Input 
+                id="email" 
+                type="email" 
+                value={settings.email}
+                onChange={(e) => setSettings(prev => ({ ...prev, email: e.target.value }))}
+              />
             </div>
             <div>
               <Label htmlFor="phone">رقم الهاتف</Label>
-              <Input id="phone" defaultValue="01234567890" />
+              <Input 
+                id="phone" 
+                value={settings.phone}
+                onChange={(e) => setSettings(prev => ({ ...prev, phone: e.target.value }))}
+              />
             </div>
-            <Button className="w-full">
+            <Button className="w-full" onClick={handleSaveProfile}>
               <Save className="ml-2 w-4 h-4" />
               حفظ التغييرات
             </Button>
@@ -54,19 +107,35 @@ export default function Settings() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="patient-alerts">تنبيهات المرضى</Label>
-              <Switch id="patient-alerts" defaultChecked />
+              <Switch 
+                id="patient-alerts" 
+                checked={settings.patientAlerts}
+                onCheckedChange={() => handleToggleSwitch('patientAlerts')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="payment-alerts">تنبيهات المدفوعات</Label>
-              <Switch id="payment-alerts" defaultChecked />
+              <Switch 
+                id="payment-alerts" 
+                checked={settings.paymentAlerts}
+                onCheckedChange={() => handleToggleSwitch('paymentAlerts')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="staff-alerts">تنبيهات الموظفين</Label>
-              <Switch id="staff-alerts" defaultChecked />
+              <Switch 
+                id="staff-alerts" 
+                checked={settings.staffAlerts}
+                onCheckedChange={() => handleToggleSwitch('staffAlerts')}
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="financial-alerts">التنبيهات المالية</Label>
-              <Switch id="financial-alerts" defaultChecked />
+              <Switch 
+                id="financial-alerts" 
+                checked={settings.financialAlerts}
+                onCheckedChange={() => handleToggleSwitch('financialAlerts')}
+              />
             </div>
           </CardContent>
         </Card>
@@ -92,7 +161,7 @@ export default function Settings() {
               <Label htmlFor="confirm-password">تأكيد كلمة المرور</Label>
               <Input id="confirm-password" type="password" />
             </div>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={handleChangePassword}>
               تغيير كلمة المرور
             </Button>
           </CardContent>
