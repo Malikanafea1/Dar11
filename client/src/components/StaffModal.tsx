@@ -130,12 +130,16 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="طبيب">طبيب</SelectItem>
-                        <SelectItem value="ممرض">ممرض/ممرضة</SelectItem>
-                        <SelectItem value="فني">فني</SelectItem>
+                        <SelectItem value="معالج">معالج</SelectItem>
+                        <SelectItem value="مدير شيفت ريكفري">مدير شيفت ريكفري</SelectItem>
+                        <SelectItem value="مدير شيفت ديتوكس">مدير شيفت ديتوكس</SelectItem>
+                        <SelectItem value="مشرف ريكفري">مشرف ريكفري</SelectItem>
+                        <SelectItem value="مشرف ديتوكس">مشرف ديتوكس</SelectItem>
+                        <SelectItem value="عامل">عامل</SelectItem>
                         <SelectItem value="إداري">إداري</SelectItem>
-                        <SelectItem value="أمن">أمن</SelectItem>
-                        <SelectItem value="نظافة">نظافة</SelectItem>
+                        <SelectItem value="طبيب">طبيب</SelectItem>
+                        <SelectItem value="ممرض">ممرض</SelectItem>
+                        <SelectItem value="مطبخ">مطبخ</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -156,15 +160,10 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="الطوارئ">الطوارئ</SelectItem>
-                        <SelectItem value="العناية المركزة">العناية المركزة</SelectItem>
-                        <SelectItem value="الباطنة">الباطنة</SelectItem>
-                        <SelectItem value="الجراحة">الجراحة</SelectItem>
-                        <SelectItem value="النساء والولادة">النساء والولادة</SelectItem>
-                        <SelectItem value="الأطفال">الأطفال</SelectItem>
-                        <SelectItem value="المختبر">المختبر</SelectItem>
-                        <SelectItem value="الأشعة">الأشعة</SelectItem>
-                        <SelectItem value="الإدارة">الإدارة</SelectItem>
+                        <SelectItem value="ديتوكس">ديتوكس</SelectItem>
+                        <SelectItem value="ريكفري">ريكفري</SelectItem>
+                        <SelectItem value="إدارة">إدارة</SelectItem>
+                        <SelectItem value="بوفيه">بوفيه</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

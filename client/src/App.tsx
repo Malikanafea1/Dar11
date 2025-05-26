@@ -8,6 +8,8 @@ import Dashboard from "@/pages/Dashboard";
 import Patients from "@/pages/Patients";
 import Staff from "@/pages/Staff";
 import Finance from "@/pages/Finance";
+import Settings from "@/pages/Settings";
+import Reports from "@/pages/Reports";
 import NotFound from "@/pages/not-found";
 
 function Router() {
