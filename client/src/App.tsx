@@ -20,6 +20,8 @@ function Router() {
         <Route path="/patients" component={Patients} />
         <Route path="/staff" component={Staff} />
         <Route path="/finance" component={Finance} />
+        <Route path="/reports" component={Reports} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
