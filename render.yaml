@@ -8,7 +8,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: VITE_FIREBASE_API_KEY
-        sync: false
+        value: AIzaSyAcwXCNWt1bvWSbCmmJ1Fo0VEEDutnj6so
       - key: VITE_FIREBASE_PROJECT_ID
         value: dar1-23
       - key: VITE_FIREBASE_APP_ID

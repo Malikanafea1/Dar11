@@ -73,10 +73,9 @@ git push -u origin main
 3. اربط حساب GitHub واختر مستودع المشروع
 4. Render سيكتشف `render.yaml` تلقائياً
 
-### 3. إضافة مفتاح Firebase API
+### 3. النشر التلقائي
 
-في Render Dashboard، أضف متغير البيئة:
-- `VITE_FIREBASE_API_KEY` = مفتاح API الخاص بمشروع Firebase
+جميع إعدادات Firebase مُضمنة في `render.yaml` - لا حاجة لإضافة متغيرات بيئة!
 
 ### 4. النشر
 
