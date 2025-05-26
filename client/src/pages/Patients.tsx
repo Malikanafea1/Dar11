@@ -3,15 +3,18 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle } from "lucide-react";
 import { formatCurrency, formatDate, calculateDaysBetween } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Patient } from "@shared/schema";
 import PatientModal from "@/components/PatientModal";
+import ExcelImportModal from "@/components/ExcelImportModal";
 
 export default function Patients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const { toast } = useToast();
 
@@ -49,7 +52,7 @@ export default function Patients() {
   };
 
   const calculateTotalCost = (patient: Patient) => {
-    const days = calculateDaysBetween(patient.admissionDate, patient.dischargeDate);
+    const days = calculateDaysBetween(patient.admissionDate, patient.dischargeDate || new Date());
     return days * parseFloat(patient.dailyCost);
   };
 
@@ -76,10 +79,20 @@ export default function Patients() {
             <h1 className="text-2xl font-bold text-gray-800">إدارة المرضى</h1>
             <p className="text-gray-600">إدارة جميع المرضى في المستشفى</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="ml-2 w-4 h-4" />
-            إضافة مريض جديد
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setIsImportModalOpen(true)}
+              variant="outline"
+              className="border-green-600 text-green-600 hover:bg-green-50"
+            >
+              <Upload className="ml-2 w-4 h-4" />
+              استيراد من Excel
+            </Button>
+            <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="ml-2 w-4 h-4" />
+              إضافة مريض جديد
+            </Button>
+          </div>
         </div>
 
         {patients && patients.length === 0 ? (
@@ -155,14 +168,41 @@ export default function Patients() {
                     
                     <div className="flex gap-2">
                       {patient.status === "active" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDischarge(patient)}
-                          disabled={dischargeMutation.isPending}
-                        >
-                          تسجيل خروج
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-red-600 text-red-600 hover:bg-red-50"
+                              disabled={dischargeMutation.isPending}
+                            >
+                              <LogOut className="ml-2 w-4 h-4" />
+                              تسجيل خروج
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>تأكيد تسجيل الخروج</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هل أنت متأكد من تسجيل خروج المريض <strong>{patient.name}</strong>؟
+                                <br />
+                                <span className="text-sm text-gray-600 mt-2 block">
+                                  التكلفة الإجمالية: {formatCurrency(calculateTotalCost(patient))}
+                                </span>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDischarge(patient)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                <CheckCircle className="ml-2 w-4 h-4" />
+                                تأكيد الخروج
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                       <Button
                         variant="ghost"
@@ -190,6 +230,29 @@ export default function Patients() {
           setSelectedPatient(null);
         }}
         patient={selectedPatient}
+      />
+
+      <ExcelImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={async (patients) => {
+          for (const patient of patients) {
+            await apiRequest("/api/patients", {
+              method: "POST",
+              body: {
+                name: patient.name,
+                nationalId: patient.nationalId,
+                admissionDate: patient.admissionDate,
+                dailyCost: patient.dailyCost,
+                roomNumber: patient.roomNumber || null,
+                insurance: patient.insurance || null,
+                notes: patient.notes || null,
+                status: "active"
+              }
+            });
+          }
+          queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+        }}
       />
     </>
   );
