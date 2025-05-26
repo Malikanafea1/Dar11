@@ -104,7 +104,7 @@ export default function ExpenseModal({ isOpen, onClose }: ExpenseModalProps) {
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>المبلغ (ريال)</FormLabel>
+                    <FormLabel>المبلغ (جنيه مصري)</FormLabel>
                     <FormControl>
                       <Input placeholder="١٠٠٠" className="font-inter" {...field} />
                     </FormControl>

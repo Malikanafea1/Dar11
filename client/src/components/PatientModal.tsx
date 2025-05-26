@@ -176,7 +176,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                 name="dailyCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>تكلفة الإقامة اليومية (ريال)</FormLabel>
+                    <FormLabel>تكلفة الإقامة اليومية (جنيه مصري)</FormLabel>
                     <FormControl>
                       <Input placeholder="٥٠٠" className="font-inter" {...field} />
                     </FormControl>

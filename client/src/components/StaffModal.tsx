@@ -176,7 +176,7 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
                 name="monthlySalary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الراتب الشهري (ريال)</FormLabel>
+                    <FormLabel>الراتب الشهري (جنيه مصري)</FormLabel>
                     <FormControl>
                       <Input placeholder="٨٠٠٠" className="font-inter" {...field} />
                     </FormControl>
