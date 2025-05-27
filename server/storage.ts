@@ -1,5 +1,4 @@
 import { 
-  patients, staff, expenses, payments, users,
   type Patient, type InsertPatient,
   type Staff, type InsertStaff,
   type Expense, type InsertExpense,
@@ -9,35 +8,35 @@ import {
 
 export interface IStorage {
   // User methods
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Patient methods
   getPatients(): Promise<Patient[]>;
-  getPatient(id: number): Promise<Patient | undefined>;
+  getPatient(id: string): Promise<Patient | undefined>;
   createPatient(patient: InsertPatient): Promise<Patient>;
-  updatePatient(id: number, updates: Partial<Patient>): Promise<Patient>;
+  updatePatient(id: string, updates: Partial<Patient>): Promise<Patient>;
   getActivePatients(): Promise<Patient[]>;
   
   // Staff methods
   getStaff(): Promise<Staff[]>;
-  getStaffMember(id: number): Promise<Staff | undefined>;
+  getStaffMember(id: string): Promise<Staff | undefined>;
   createStaff(staff: InsertStaff): Promise<Staff>;
-  updateStaff(id: number, updates: Partial<Staff>): Promise<Staff>;
+  updateStaff(id: string, updates: Partial<Staff>): Promise<Staff>;
   getActiveStaff(): Promise<Staff[]>;
   
   // Expense methods
   getExpenses(): Promise<Expense[]>;
-  getExpense(id: number): Promise<Expense | undefined>;
+  getExpense(id: string): Promise<Expense | undefined>;
   createExpense(expense: InsertExpense): Promise<Expense>;
   getExpensesByDateRange(startDate: Date, endDate: Date): Promise<Expense[]>;
   
   // Payment methods
   getPayments(): Promise<Payment[]>;
-  getPayment(id: number): Promise<Payment | undefined>;
+  getPayment(id: string): Promise<Payment | undefined>;
   createPayment(payment: InsertPayment): Promise<Payment>;
-  getPaymentsByPatient(patientId: number): Promise<Payment[]>;
+  getPaymentsByPatient(patientId: string): Promise<Payment[]>;
   
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -53,11 +52,11 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private patients: Map<number, Patient>;
-  private staff: Map<number, Staff>;
-  private expenses: Map<number, Expense>;
-  private payments: Map<number, Payment>;
+  private users: Map<string, User>;
+  private patients: Map<string, Patient>;
+  private staff: Map<string, Staff>;
+  private expenses: Map<string, Expense>;
+  private payments: Map<string, Payment>;
   private currentUserId: number;
   private currentPatientId: number;
   private currentStaffId: number;
@@ -78,7 +77,7 @@ export class MemStorage implements IStorage {
   }
 
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
@@ -89,7 +88,8 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
+    const id = this.currentUserId.toString();
+    this.currentUserId++;
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
@@ -100,23 +100,24 @@ export class MemStorage implements IStorage {
     return Array.from(this.patients.values());
   }
 
-  async getPatient(id: number): Promise<Patient | undefined> {
+  async getPatient(id: string): Promise<Patient | undefined> {
     return this.patients.get(id);
   }
 
   async createPatient(insertPatient: InsertPatient): Promise<Patient> {
-    const id = this.currentPatientId++;
+    const id = this.currentPatientId.toString();
+    this.currentPatientId++;
     const patient: Patient = { 
       ...insertPatient, 
       id,
-      totalPaid: "0",
-      dischargeDate: null
+      totalPaid: 0,
+      dischargeDate: undefined
     };
     this.patients.set(id, patient);
     return patient;
   }
 
-  async updatePatient(id: number, updates: Partial<Patient>): Promise<Patient> {
+  async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient> {
     const patient = this.patients.get(id);
     if (!patient) {
       throw new Error("Patient not found");
@@ -135,18 +136,19 @@ export class MemStorage implements IStorage {
     return Array.from(this.staff.values());
   }
 
-  async getStaffMember(id: number): Promise<Staff | undefined> {
+  async getStaffMember(id: string): Promise<Staff | undefined> {
     return this.staff.get(id);
   }
 
   async createStaff(insertStaff: InsertStaff): Promise<Staff> {
-    const id = this.currentStaffId++;
+    const id = this.currentStaffId.toString();
+    this.currentStaffId++;
     const staff: Staff = { ...insertStaff, id };
     this.staff.set(id, staff);
     return staff;
   }
 
-  async updateStaff(id: number, updates: Partial<Staff>): Promise<Staff> {
+  async updateStaff(id: string, updates: Partial<Staff>): Promise<Staff> {
     const staff = this.staff.get(id);
     if (!staff) {
       throw new Error("Staff member not found");
@@ -165,12 +167,13 @@ export class MemStorage implements IStorage {
     return Array.from(this.expenses.values());
   }
 
-  async getExpense(id: number): Promise<Expense | undefined> {
+  async getExpense(id: string): Promise<Expense | undefined> {
     return this.expenses.get(id);
   }
 
   async createExpense(insertExpense: InsertExpense): Promise<Expense> {
-    const id = this.currentExpenseId++;
+    const id = this.currentExpenseId.toString();
+    this.currentExpenseId++;
     const expense: Expense = { ...insertExpense, id };
     this.expenses.set(id, expense);
     return expense;
@@ -188,28 +191,29 @@ export class MemStorage implements IStorage {
     return Array.from(this.payments.values());
   }
 
-  async getPayment(id: number): Promise<Payment | undefined> {
+  async getPayment(id: string): Promise<Payment | undefined> {
     return this.payments.get(id);
   }
 
   async createPayment(insertPayment: InsertPayment): Promise<Payment> {
-    const id = this.currentPaymentId++;
+    const id = this.currentPaymentId.toString();
+    this.currentPaymentId++;
     const payment: Payment = { ...insertPayment, id };
     this.payments.set(id, payment);
     
     // Update patient's total paid amount
     const patient = this.patients.get(insertPayment.patientId);
     if (patient) {
-      const currentTotal = parseFloat(patient.totalPaid || "0");
-      const newTotal = currentTotal + parseFloat(insertPayment.amount);
-      patient.totalPaid = newTotal.toString();
+      const currentTotal = patient.totalPaid || 0;
+      const newTotal = currentTotal + insertPayment.amount;
+      patient.totalPaid = newTotal;
       this.patients.set(patient.id, patient);
     }
     
     return payment;
   }
 
-  async getPaymentsByPatient(patientId: number): Promise<Payment[]> {
+  async getPaymentsByPatient(patientId: string): Promise<Payment[]> {
     return Array.from(this.payments.values()).filter(p => p.patientId === patientId);
   }
 
@@ -234,14 +238,14 @@ export class MemStorage implements IStorage {
       return paymentDate >= startOfDay && paymentDate < endOfDay;
     });
     
-    const dailyExpenses = todayExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-    const dailyIncome = todayPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    const dailyExpenses = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const dailyIncome = todayPayments.reduce((sum, p) => sum + p.amount, 0);
     
     // Calculate pending payments (estimated cost - total paid for active patients)
     const pendingPayments = activePatients.reduce((sum, patient) => {
       const daysSinceAdmission = Math.ceil((Date.now() - new Date(patient.admissionDate).getTime()) / (1000 * 60 * 60 * 24));
-      const estimatedCost = daysSinceAdmission * parseFloat(patient.dailyCost);
-      const totalPaid = parseFloat(patient.totalPaid || "0");
+      const estimatedCost = daysSinceAdmission * patient.dailyCost;
+      const totalPaid = patient.totalPaid || 0;
       return sum + Math.max(0, estimatedCost - totalPaid);
     }, 0);
 
