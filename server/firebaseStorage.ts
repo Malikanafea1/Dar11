@@ -24,9 +24,9 @@ import type {
 export class FirebaseStorage implements IStorage {
   
   // User methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     try {
-      const userDoc = await getDoc(doc(db, "users", id.toString()));
+      const userDoc = await getDoc(doc(db, "users", id));
       if (userDoc.exists()) {
         return { id, ...userDoc.data() } as User;
       }
@@ -43,7 +43,7 @@ export class FirebaseStorage implements IStorage {
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
-        return { id: parseInt(userDoc.id), ...userDoc.data() } as User;
+        return { id: userDoc.id, ...userDoc.data() } as User;
       }
       return undefined;
     } catch (error) {
@@ -58,7 +58,7 @@ export class FirebaseStorage implements IStorage {
         ...insertUser,
         createdAt: serverTimestamp()
       });
-      return { id: parseInt(userDoc.id), ...insertUser };
+      return { id: userDoc.id, ...insertUser };
     } catch (error) {
       console.error("Error creating user:", error);
       throw error;
@@ -71,7 +71,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "patients"), orderBy("name"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Patient[];
     } catch (error) {
@@ -80,9 +80,9 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
-  async getPatient(id: number): Promise<Patient | undefined> {
+  async getPatient(id: string): Promise<Patient | undefined> {
     try {
-      const patientDoc = await getDoc(doc(db, "patients", id.toString()));
+      const patientDoc = await getDoc(doc(db, "patients", id));
       if (patientDoc.exists()) {
         return { id, ...patientDoc.data() } as Patient;
       }
@@ -97,21 +97,21 @@ export class FirebaseStorage implements IStorage {
     try {
       const patientData = {
         ...insertPatient,
-        totalPaid: "0",
-        dischargeDate: null,
+        totalPaid: 0,
+        dischargeDate: undefined,
         createdAt: serverTimestamp()
       };
       const patientDoc = await addDoc(collection(db, "patients"), patientData);
-      return { id: parseInt(patientDoc.id), ...patientData } as Patient;
+      return { id: patientDoc.id, ...insertPatient, totalPaid: 0, dischargeDate: undefined } as Patient;
     } catch (error) {
       console.error("Error creating patient:", error);
       throw error;
     }
   }
 
-  async updatePatient(id: number, updates: Partial<Patient>): Promise<Patient> {
+  async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient> {
     try {
-      const patientRef = doc(db, "patients", id.toString());
+      const patientRef = doc(db, "patients", id);
       await updateDoc(patientRef, {
         ...updates,
         updatedAt: serverTimestamp()
@@ -132,7 +132,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "patients"), where("status", "==", "active"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Patient[];
     } catch (error) {
@@ -147,7 +147,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "staff"), orderBy("name"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Staff[];
     } catch (error) {
@@ -156,9 +156,9 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
-  async getStaffMember(id: number): Promise<Staff | undefined> {
+  async getStaffMember(id: string): Promise<Staff | undefined> {
     try {
-      const staffDoc = await getDoc(doc(db, "staff", id.toString()));
+      const staffDoc = await getDoc(doc(db, "staff", id));
       if (staffDoc.exists()) {
         return { id, ...staffDoc.data() } as Staff;
       }
@@ -176,16 +176,16 @@ export class FirebaseStorage implements IStorage {
         createdAt: serverTimestamp()
       };
       const staffDoc = await addDoc(collection(db, "staff"), staffData);
-      return { id: parseInt(staffDoc.id), ...staffData } as Staff;
+      return { id: staffDoc.id, ...insertStaff } as Staff;
     } catch (error) {
       console.error("Error creating staff:", error);
       throw error;
     }
   }
 
-  async updateStaff(id: number, updates: Partial<Staff>): Promise<Staff> {
+  async updateStaff(id: string, updates: Partial<Staff>): Promise<Staff> {
     try {
-      const staffRef = doc(db, "staff", id.toString());
+      const staffRef = doc(db, "staff", id);
       await updateDoc(staffRef, {
         ...updates,
         updatedAt: serverTimestamp()
@@ -206,7 +206,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "staff"), where("isActive", "==", true));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Staff[];
     } catch (error) {
@@ -221,7 +221,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "expenses"), orderBy("date", "desc"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Expense[];
     } catch (error) {
@@ -230,9 +230,9 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
-  async getExpense(id: number): Promise<Expense | undefined> {
+  async getExpense(id: string): Promise<Expense | undefined> {
     try {
-      const expenseDoc = await getDoc(doc(db, "expenses", id.toString()));
+      const expenseDoc = await getDoc(doc(db, "expenses", id));
       if (expenseDoc.exists()) {
         return { id, ...expenseDoc.data() } as Expense;
       }
@@ -250,7 +250,7 @@ export class FirebaseStorage implements IStorage {
         createdAt: serverTimestamp()
       };
       const expenseDoc = await addDoc(collection(db, "expenses"), expenseData);
-      return { id: parseInt(expenseDoc.id), ...expenseData } as Expense;
+      return { id: expenseDoc.id, ...insertExpense } as Expense;
     } catch (error) {
       console.error("Error creating expense:", error);
       throw error;
@@ -261,13 +261,13 @@ export class FirebaseStorage implements IStorage {
     try {
       const q = query(
         collection(db, "expenses"), 
-        where("date", ">=", startDate),
-        where("date", "<=", endDate),
+        where("date", ">=", startDate.toISOString()),
+        where("date", "<=", endDate.toISOString()),
         orderBy("date", "desc")
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Expense[];
     } catch (error) {
@@ -282,7 +282,7 @@ export class FirebaseStorage implements IStorage {
       const q = query(collection(db, "payments"), orderBy("paymentDate", "desc"));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Payment[];
     } catch (error) {
@@ -291,9 +291,9 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
-  async getPayment(id: number): Promise<Payment | undefined> {
+  async getPayment(id: string): Promise<Payment | undefined> {
     try {
-      const paymentDoc = await getDoc(doc(db, "payments", id.toString()));
+      const paymentDoc = await getDoc(doc(db, "payments", id));
       if (paymentDoc.exists()) {
         return { id, ...paymentDoc.data() } as Payment;
       }
@@ -315,19 +315,19 @@ export class FirebaseStorage implements IStorage {
       // تحديث المبلغ المدفوع للمريض
       const patient = await this.getPatient(insertPayment.patientId);
       if (patient) {
-        const currentTotal = parseFloat(patient.totalPaid || "0");
-        const newTotal = currentTotal + parseFloat(insertPayment.amount);
-        await this.updatePatient(patient.id, { totalPaid: newTotal.toString() });
+        const currentTotal = patient.totalPaid || 0;
+        const newTotal = currentTotal + insertPayment.amount;
+        await this.updatePatient(patient.id, { totalPaid: newTotal });
       }
       
-      return { id: parseInt(paymentDoc.id), ...paymentData } as Payment;
+      return { id: paymentDoc.id, ...insertPayment } as Payment;
     } catch (error) {
       console.error("Error creating payment:", error);
       throw error;
     }
   }
 
-  async getPaymentsByPatient(patientId: number): Promise<Payment[]> {
+  async getPaymentsByPatient(patientId: string): Promise<Payment[]> {
     try {
       const q = query(
         collection(db, "payments"), 
@@ -336,7 +336,7 @@ export class FirebaseStorage implements IStorage {
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
-        id: parseInt(doc.id),
+        id: doc.id,
         ...doc.data()
       })) as Payment[];
     } catch (error) {
@@ -369,14 +369,14 @@ export class FirebaseStorage implements IStorage {
         return paymentDate >= startOfDay && paymentDate < endOfDay;
       });
 
-      const dailyExpenses = todayExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-      const dailyIncome = todayPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      const dailyExpenses = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
+      const dailyIncome = todayPayments.reduce((sum, p) => sum + p.amount, 0);
 
       // حساب المدفوعات المعلقة
       const pendingPayments = activePatients.reduce((sum, patient) => {
         const daysSinceAdmission = Math.ceil((Date.now() - new Date(patient.admissionDate).getTime()) / (1000 * 60 * 60 * 24));
-        const estimatedCost = daysSinceAdmission * parseFloat(patient.dailyCost);
-        const totalPaid = parseFloat(patient.totalPaid || "0");
+        const estimatedCost = daysSinceAdmission * patient.dailyCost;
+        const totalPaid = patient.totalPaid || 0;
         return sum + Math.max(0, estimatedCost - totalPaid);
       }, 0);
 
