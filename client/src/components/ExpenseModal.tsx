@@ -15,7 +15,9 @@ import { z } from "zod";
 
 const formSchema = insertExpenseSchema.extend({
   date: z.string().min(1, "تاريخ المصروف مطلوب"),
-  amount: z.string().min(1, "المبلغ مطلوب"),
+  amount: z.string().min(1, "المبلغ مطلوب").refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "يجب أن يكون المبلغ رقمًا أكبر من الصفر"
+  }),
 });
 
 interface ExpenseModalProps {
@@ -42,7 +44,7 @@ export default function ExpenseModal({ isOpen, onClose }: ExpenseModalProps) {
       const payload = {
         ...data,
         date: new Date(data.date).toISOString(),
-        amount: data.amount,
+        amount: parseFloat(data.amount),
       };
       
       return apiRequest("POST", "/api/expenses", payload);
