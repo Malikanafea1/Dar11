@@ -25,6 +25,32 @@ import type {
 
 export class FirebaseStorage implements IStorage {
   
+  constructor() {
+    this.initializeDefaultAdmin();
+  }
+
+  private async initializeDefaultAdmin() {
+    try {
+      // التحقق من وجود المدير الافتراضي
+      const existingAdmin = await this.getUserByUsername("عاطف نافع");
+      
+      if (!existingAdmin) {
+        // إنشاء المدير الافتراضي
+        await this.createUser({
+          username: "عاطف نافع",
+          password: "123456",
+          fullName: "عاطف نافع",
+          role: "admin",
+          permissions: ["all"],
+          isActive: true,
+        });
+        console.log("تم إنشاء المدير الافتراضي بنجاح");
+      }
+    } catch (error) {
+      console.error("خطأ في إنشاء المدير الافتراضي:", error);
+    }
+  }
+
   // User methods
   async getUser(id: string): Promise<User | undefined> {
     try {
