@@ -60,10 +60,77 @@ export class FirebaseStorage implements IStorage {
         ...insertUser,
         createdAt: serverTimestamp()
       });
-      return { id: userDoc.id, ...insertUser };
+      return { 
+        id: userDoc.id, 
+        ...insertUser,
+        createdAt: new Date().toISOString()
+      };
     } catch (error) {
       console.error("Error creating user:", error);
       throw error;
+    }
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    try {
+      const userRef = doc(db, "users", id);
+      await updateDoc(userRef, updates);
+      
+      const updatedUser = await this.getUser(id);
+      if (!updatedUser) {
+        throw new Error("المستخدم غير موجود");
+      }
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, "users", id));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
+  }
+
+  async getUsers(): Promise<User[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, "users"));
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as User[];
+    } catch (error) {
+      console.error("Error getting users:", error);
+      return [];
+    }
+  }
+
+  async getActiveUsers(): Promise<User[]> {
+    try {
+      const q = query(collection(db, "users"), where("isActive", "==", true));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as User[];
+    } catch (error) {
+      console.error("Error getting active users:", error);
+      return [];
+    }
+  }
+
+  async updateLastLogin(userId: string): Promise<void> {
+    try {
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        lastLogin: serverTimestamp()
+      });
+    } catch (error) {
+      console.error("Error updating last login:", error);
     }
   }
 

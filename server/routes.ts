@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertStaffSchema, insertExpenseSchema, insertPaymentSchema, insertSettingsSchema } from "@shared/schema";
+import { insertPatientSchema, insertStaffSchema, insertExpenseSchema, insertPaymentSchema, insertSettingsSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -195,6 +195,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid settings data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  // User routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/users/active", async (req, res) => {
+    try {
+      const users = await storage.getActiveUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch active users" });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(validatedData);
+      res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid user data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const user = await storage.updateUser(id, req.body);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteUser(id);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "اسم المستخدم وكلمة المرور مطلوبان" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "اسم المستخدم أو كلمة المرور غير صحيحة" });
+      }
+
+      if (!user.isActive) {
+        return res.status(403).json({ message: "الحساب غير نشط" });
+      }
+
+      // تحديث آخر تسجيل دخول
+      await storage.updateLastLogin(user.id);
+
+      // إرسال بيانات المستخدم (بدون كلمة المرور)
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword });
+    } catch (error) {
+      res.status(500).json({ message: "فشل في تسجيل الدخول" });
     }
   });
 
