@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   getDoc
 } from "firebase/firestore";
-import { db } from "../client/src/lib/firebase";
+import { db } from "./firebase";
 import { IStorage } from "./storage";
 import type { 
   Patient, InsertPatient,
