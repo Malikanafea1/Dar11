@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, User, Bell, Shield, Database, Cog, Loader2 } from "lucide-react";
+import { Save, User, Bell, Shield, Database, Cog, Loader2, Download, Upload, RotateCcw, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Settings, InsertSettings } from "@shared/schema";
 
 export default function Settings() {
@@ -95,6 +96,119 @@ export default function Settings() {
 
   const handleInputChange = (key: keyof InsertSettings, value: string) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  // Database management mutations
+  const createBackupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/database/backup", {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to create backup");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Download the backup file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hospital-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "تم إنشاء النسخة الاحتياطية",
+        description: "تم تحميل ملف النسخة الاحتياطية بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في إنشاء النسخة الاحتياطية",
+        description: "حدث خطأ أثناء إنشاء النسخة الاحتياطية",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const resetDatabaseMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/database/reset", {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to reset database");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast({
+        title: "تم إعادة تعيين النظام",
+        description: "تم حذف جميع البيانات وإعادة النظام للإعدادات الافتراضية",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في إعادة التعيين",
+        description: "حدث خطأ أثناء إعادة تعيين النظام",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const importBackupMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch("/api/database/import", {
+        method: "POST",
+        body: JSON.stringify({ data }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to import backup");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast({
+        title: "تم استيراد البيانات",
+        description: "تم استيراد النسخة الاحتياطية بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في الاستيراد",
+        description: "حدث خطأ أثناء استيراد النسخة الاحتياطية",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const backupData = JSON.parse(e.target?.result as string);
+          importBackupMutation.mutate(backupData);
+        } catch (error) {
+          toast({
+            title: "خطأ في قراءة الملف",
+            description: "الملف المحدد غير صالح أو تالف",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
   if (isLoading) {

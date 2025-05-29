@@ -474,4 +474,125 @@ export class FirebaseStorage implements IStorage {
       throw error;
     }
   }
+
+  // Database management methods
+  async createBackup(): Promise<any> {
+    try {
+      const [patients, staff, expenses, payments, settings] = await Promise.all([
+        this.getPatients(),
+        this.getStaff(),
+        this.getExpenses(),
+        this.getPayments(),
+        this.getSettings()
+      ]);
+
+      return {
+        timestamp: new Date().toISOString(),
+        version: "1.0",
+        data: {
+          patients,
+          staff,
+          expenses,
+          payments,
+          settings
+        }
+      };
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      throw error;
+    }
+  }
+
+  async resetDatabase(): Promise<void> {
+    try {
+      // Delete all collections
+      const collections = ['patients', 'staff', 'expenses', 'payments'];
+      
+      for (const collectionName of collections) {
+        const snapshot = await getDocs(collection(db, collectionName));
+        const batch = [];
+        
+        for (const doc of snapshot.docs) {
+          batch.push(deleteDoc(doc.ref));
+        }
+        
+        await Promise.all(batch);
+      }
+
+      // Reset settings to default
+      const defaultSettings: InsertSettings = {
+        username: "مسؤول النظام",
+        email: "admin@hospital.com",
+        phone: "01234567890",
+        hospitalName: "مركز دار الحياة لعلاج الإدمان",
+        defaultCurrency: "ج.م",
+        patientAlerts: true,
+        paymentAlerts: true,
+        staffAlerts: true,
+        financialAlerts: true,
+        autoBackup: true,
+        dataCompression: false
+      };
+
+      await this.updateSettings(defaultSettings);
+      
+    } catch (error) {
+      console.error("Error resetting database:", error);
+      throw error;
+    }
+  }
+
+  async importBackup(backupData: any): Promise<void> {
+    try {
+      if (!backupData.data) {
+        throw new Error("Invalid backup format");
+      }
+
+      // Reset database first
+      await this.resetDatabase();
+
+      const { patients, staff, expenses, payments, settings } = backupData.data;
+
+      // Import patients
+      if (patients && Array.isArray(patients)) {
+        for (const patient of patients) {
+          const patientRef = doc(db, "patients", patient.id);
+          await setDoc(patientRef, patient);
+        }
+      }
+
+      // Import staff
+      if (staff && Array.isArray(staff)) {
+        for (const staffMember of staff) {
+          const staffRef = doc(db, "staff", staffMember.id);
+          await setDoc(staffRef, staffMember);
+        }
+      }
+
+      // Import expenses
+      if (expenses && Array.isArray(expenses)) {
+        for (const expense of expenses) {
+          const expenseRef = doc(db, "expenses", expense.id);
+          await setDoc(expenseRef, expense);
+        }
+      }
+
+      // Import payments
+      if (payments && Array.isArray(payments)) {
+        for (const payment of payments) {
+          const paymentRef = doc(db, "payments", payment.id);
+          await setDoc(paymentRef, payment);
+        }
+      }
+
+      // Import settings
+      if (settings) {
+        await this.updateSettings(settings);
+      }
+
+    } catch (error) {
+      console.error("Error importing backup:", error);
+      throw error;
+    }
+  }
 }

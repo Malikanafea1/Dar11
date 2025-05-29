@@ -7,11 +7,12 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: string | number): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return "0 ج.م";
+  
   return new Intl.NumberFormat("ar-EG", {
-    style: "currency",
-    currency: "EGP",
     minimumFractionDigits: 0,
-  }).format(num);
+    maximumFractionDigits: 2,
+  }).format(num) + " ج.م";
 }
 
 export function formatDate(date: string | Date): string {

@@ -44,6 +44,11 @@ export interface IStorage {
   getSettings(): Promise<Settings | undefined>;
   updateSettings(updates: Partial<InsertSettings>): Promise<Settings>;
   
+  // Database management methods
+  createBackup(): Promise<any>;
+  resetDatabase(): Promise<void>;
+  importBackup(data: any): Promise<void>;
+  
   // Dashboard stats
   getDashboardStats(): Promise<{
     currentPatients: number;
@@ -320,6 +325,97 @@ export class MemStorage implements IStorage {
       };
     }
     return this.settings;
+  }
+
+  // Database management methods
+  async createBackup(): Promise<any> {
+    return {
+      timestamp: new Date().toISOString(),
+      version: "1.0",
+      data: {
+        patients: Array.from(this.patients.values()),
+        staff: Array.from(this.staff.values()),
+        expenses: Array.from(this.expenses.values()),
+        payments: Array.from(this.payments.values()),
+        settings: this.settings
+      }
+    };
+  }
+
+  async resetDatabase(): Promise<void> {
+    this.patients.clear();
+    this.staff.clear();
+    this.expenses.clear();
+    this.payments.clear();
+    this.settings = {
+      id: "1",
+      username: "مسؤول النظام",
+      email: "admin@hospital.com",
+      phone: "01234567890",
+      hospitalName: "مركز دار الحياة لعلاج الإدمان",
+      defaultCurrency: "ج.م",
+      patientAlerts: true,
+      paymentAlerts: true,
+      staffAlerts: true,
+      financialAlerts: true,
+      autoBackup: true,
+      dataCompression: false,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Reset counters
+    this.currentPatientId = 1;
+    this.currentStaffId = 1;
+    this.currentExpenseId = 1;
+    this.currentPaymentId = 1;
+  }
+
+  async importBackup(backupData: any): Promise<void> {
+    if (!backupData.data) {
+      throw new Error("Invalid backup format");
+    }
+
+    // Clear existing data
+    await this.resetDatabase();
+
+    // Import data
+    const { patients, staff, expenses, payments, settings } = backupData.data;
+
+    if (patients) {
+      patients.forEach((patient: Patient) => {
+        this.patients.set(patient.id, patient);
+      });
+      // Update counter to avoid ID conflicts
+      this.currentPatientId = Math.max(...patients.map((p: Patient) => parseInt(p.id)), 0) + 1;
+    }
+
+    if (staff) {
+      staff.forEach((staffMember: Staff) => {
+        this.staff.set(staffMember.id, staffMember);
+      });
+      this.currentStaffId = Math.max(...staff.map((s: Staff) => parseInt(s.id)), 0) + 1;
+    }
+
+    if (expenses) {
+      expenses.forEach((expense: Expense) => {
+        this.expenses.set(expense.id, expense);
+      });
+      this.currentExpenseId = Math.max(...expenses.map((e: Expense) => parseInt(e.id)), 0) + 1;
+    }
+
+    if (payments) {
+      payments.forEach((payment: Payment) => {
+        this.payments.set(payment.id, payment);
+      });
+      this.currentPaymentId = Math.max(...payments.map((p: Payment) => parseInt(p.id)), 0) + 1;
+    }
+
+    if (settings) {
+      this.settings = {
+        ...settings,
+        updatedAt: new Date().toISOString()
+      };
+    }
   }
 }
 

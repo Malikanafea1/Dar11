@@ -174,6 +174,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database management routes
+  app.post("/api/database/backup", async (req, res) => {
+    try {
+      const backup = await storage.createBackup();
+      res.setHeader('Content-Disposition', 'attachment; filename="hospital-backup.json"');
+      res.setHeader('Content-Type', 'application/json');
+      res.json(backup);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create backup" });
+    }
+  });
+
+  app.post("/api/database/reset", async (req, res) => {
+    try {
+      await storage.resetDatabase();
+      res.json({ message: "Database reset successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reset database" });
+    }
+  });
+
+  app.post("/api/database/import", async (req, res) => {
+    try {
+      const { data } = req.body;
+      if (!data) {
+        return res.status(400).json({ message: "No data provided for import" });
+      }
+      await storage.importBackup(data);
+      res.json({ message: "Database imported successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to import database" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
