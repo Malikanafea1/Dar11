@@ -15,14 +15,38 @@ export function formatCurrency(amount: string | number): string {
   }).format(num) + " ج.م";
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date, dateSystem: 'gregorian' | 'hijri' = 'gregorian'): string {
   const dateObj = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("ar-SA").format(dateObj);
+  
+  if (dateSystem === 'hijri') {
+    return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(dateObj);
+  }
+  
+  return new Intl.DateTimeFormat("ar-EG", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(dateObj);
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date, dateSystem: 'gregorian' | 'hijri' = 'gregorian'): string {
   const dateObj = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("ar-SA", {
+  
+  if (dateSystem === 'hijri') {
+    return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(dateObj);
+  }
+  
+  return new Intl.DateTimeFormat("ar-EG", {
     year: "numeric",
     month: "long",
     day: "numeric",

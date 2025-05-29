@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 
 export type ThemeType = "default" | "modern" | "classic";
+export type DateSystemType = "gregorian" | "hijri";
 
 export const useTheme = () => {
   const [currentTheme, setCurrentTheme] = useState<ThemeType>("default");
+  const [dateSystem, setDateSystem] = useState<DateSystemType>("gregorian");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("hospital-theme") as ThemeType;
+    const savedDateSystem = localStorage.getItem("hospital-date-system") as DateSystemType;
+    
     if (savedTheme) {
       setCurrentTheme(savedTheme);
       applyTheme(savedTheme);
+    }
+    
+    if (savedDateSystem) {
+      setDateSystem(savedDateSystem);
     }
   }, []);
 
@@ -54,25 +62,30 @@ export const useTheme = () => {
     localStorage.setItem("hospital-theme", theme);
   };
 
+  const changeDateSystem = (system: DateSystemType) => {
+    setDateSystem(system);
+    localStorage.setItem("hospital-date-system", system);
+  };
+
   const getThemeConfig = (theme: ThemeType) => {
     const themes = {
       default: {
         name: "التصميم الافتراضي",
-        description: "تصميم عصري ونظيف باللون الأزرق",
+        description: "ألوان هادئة ومريحة للعين",
         primary: "bg-blue-600",
         secondary: "bg-green-600",
         background: "bg-slate-50"
       },
       modern: {
         name: "التصميم العصري",
-        description: "تصميم داكن وأنيق للاستخدام المسائي",
+        description: "مظهر داكن وعصري",
         primary: "bg-blue-500",
         secondary: "bg-emerald-500",
         background: "bg-slate-900"
       },
       classic: {
         name: "التصميم الكلاسيكي",
-        description: "تصميم تقليدي مريح للعين",
+        description: "مظهر تقليدي وأنيق",
         primary: "bg-indigo-600",
         secondary: "bg-amber-600",
         background: "bg-white"
@@ -84,6 +97,8 @@ export const useTheme = () => {
   return {
     currentTheme,
     changeTheme,
+    dateSystem,
+    changeDateSystem,
     getThemeConfig
   };
 };

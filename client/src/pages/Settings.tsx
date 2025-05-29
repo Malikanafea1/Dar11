@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, User, Bell, Shield, Database, Cog, Loader2, Download, Upload, RotateCcw, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Save, User, Bell, Shield, Database, Cog, Loader2, Download, Upload, RotateCcw, AlertTriangle, Palette, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Settings, InsertSettings } from "@shared/schema";
+import { useTheme, type ThemeType, type DateSystemType } from "@/hooks/useTheme";
 
 export default function Settings() {
   const { toast } = useToast();
