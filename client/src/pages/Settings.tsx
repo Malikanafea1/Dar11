@@ -16,6 +16,7 @@ import { useTheme, type ThemeType, type DateSystemType } from "@/hooks/useTheme"
 export default function Settings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentTheme, changeTheme, dateSystem, changeDateSystem, getThemeConfig } = useTheme();
   
   const { data: settings, isLoading } = useQuery<Settings>({
     queryKey: ['/api/settings'],
