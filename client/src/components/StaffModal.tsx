@@ -56,7 +56,7 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
       const payload = {
         ...data,
         hireDate: new Date(data.hireDate).toISOString(),
-        monthlySalary: data.monthlySalary,
+        monthlySalary: parseFloat(data.monthlySalary),
       };
       
       if (staff) {
