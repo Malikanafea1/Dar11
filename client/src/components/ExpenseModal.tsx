@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertExpenseSchema } from "@shared/schema";
+import { insertExpenseSchema, type Expense } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { z } from "zod";
+import { useEffect } from "react";
 
 const formSchema = insertExpenseSchema.extend({
   date: z.string().min(1, "تاريخ المصروف مطلوب"),
@@ -23,9 +24,10 @@ const formSchema = insertExpenseSchema.extend({
 interface ExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
+  expense?: Expense | null;
 }
 
-export default function ExpenseModal({ isOpen, onClose }: ExpenseModalProps) {
+export default function ExpenseModal({ isOpen, onClose, expense }: ExpenseModalProps) {
   const { toast } = useToast();
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -38,6 +40,24 @@ export default function ExpenseModal({ isOpen, onClose }: ExpenseModalProps) {
       createdBy: "النظام",
     },
   });
+
+  useEffect(() => {
+    if (expense) {
+      form.setValue("description", expense.description);
+      form.setValue("amount", expense.amount.toString());
+      form.setValue("category", expense.category);
+      form.setValue("date", expense.date.split('T')[0]);
+      form.setValue("createdBy", expense.createdBy);
+    } else {
+      form.reset({
+        description: "",
+        amount: "",
+        category: "",
+        date: new Date().toISOString().split('T')[0],
+        createdBy: "النظام",
+      });
+    }
+  }, [expense, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof formSchema>) => {

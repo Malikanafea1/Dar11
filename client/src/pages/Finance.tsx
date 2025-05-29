@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Edit, Trash2 } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import type { Expense, Payment } from "@shared/schema";
 import ExpenseModal from "@/components/ExpenseModal";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Finance() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const { toast } = useToast();
 
   const { data: expenses, isLoading: expensesLoading } = useQuery<Expense[]>({
     queryKey: ["/api/expenses"],
@@ -18,9 +22,55 @@ export default function Finance() {
     queryKey: ["/api/payments"],
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{
+    currentPatients: number;
+    activeStaff: number;
+    dailyRevenue: number;
+    occupancyRate: number;
+    dailyIncome: number;
+    dailyExpenses: number;
+    netProfit: number;
+    pendingPayments: number;
+  }>({
     queryKey: ["/api/dashboard/stats"],
   });
+
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest("DELETE", `/api/expenses/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "تم حذف المصروف",
+        description: "تم حذف المصروف بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المصروف",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsExpenseModalOpen(true);
+  };
+
+  const handleDeleteExpense = (id: string) => {
+    if (confirm("هل أنت متأكد من حذف هذا المصروف؟")) {
+      deleteExpenseMutation.mutate(id);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsExpenseModalOpen(false);
+    setSelectedExpense(null);
+  };
 
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
@@ -154,9 +204,28 @@ export default function Finance() {
                           </p>
                         </div>
                       </div>
-                      <p className="text-lg font-semibold text-red-600">
-                        -{formatCurrency(expense.amount)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-lg font-semibold text-red-600">
+                          -{formatCurrency(expense.amount)}
+                        </p>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditExpense(expense)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            disabled={deleteExpenseMutation.isPending}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -207,7 +276,8 @@ export default function Finance() {
 
       <ExpenseModal 
         isOpen={isExpenseModalOpen} 
-        onClose={() => setIsExpenseModalOpen(false)} 
+        onClose={handleCloseModal}
+        expense={selectedExpense}
       />
     </>
   );
