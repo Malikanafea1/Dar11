@@ -241,10 +241,10 @@ export default function Patients() {
               name: patient.name,
               nationalId: patient.nationalId,
               admissionDate: patient.admissionDate,
-              dailyCost: patient.dailyCost,
-              roomNumber: patient.roomNumber || null,
-              insurance: patient.insurance || null,
-              notes: patient.notes || null,
+              dailyCost: Number(patient.dailyCost) || 0,
+              roomNumber: patient.roomNumber || undefined,
+              insurance: patient.insurance || undefined,
+              notes: patient.notes || undefined,
               status: "active"
             });
           }
