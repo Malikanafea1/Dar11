@@ -239,7 +239,7 @@ export default function Patients() {
           for (const patient of patients) {
             await apiRequest("POST", "/api/patients", {
               name: patient.name,
-              nationalId: patient.nationalId,
+              nationalId: String(patient.nationalId),
               admissionDate: patient.admissionDate,
               dailyCost: Number(patient.dailyCost) || 0,
               roomNumber: patient.roomNumber || undefined,
