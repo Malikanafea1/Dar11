@@ -18,12 +18,17 @@ import {
   Printer
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import type { Patient, Staff, Expense, Payment } from "@shared/schema";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function Reports() {
   const [reportType, setReportType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { toast } = useToast();
 
   const { data: patients } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],

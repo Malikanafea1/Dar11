@@ -38,7 +38,7 @@ export default function Users() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest(`/api/users/${id}`, {
+      const response = await fetch(`/api/users/${id}`, {
         method: "DELETE",
       });
       if (!response.ok) {
@@ -64,7 +64,7 @@ export default function Users() {
 
   const toggleUserStatus = useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const response = await apiRequest(`/api/users/${id}`, {
+      const response = await fetch(`/api/users/${id}`, {
         method: "PATCH",
         body: JSON.stringify({ isActive }),
         headers: {

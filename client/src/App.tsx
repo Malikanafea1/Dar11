@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -10,11 +11,22 @@ import Staff from "@/pages/Staff";
 import Finance from "@/pages/Finance";
 import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
+import Users from "@/pages/Users";
+import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
-function Router() {
+interface User {
+  id: string;
+  username: string;
+  fullName: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+}
+
+function Router({ user }: { user: User }) {
   return (
-    <Layout>
+    <Layout user={user}>
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/patients" component={Patients} />
@@ -22,6 +34,7 @@ function Router() {
         <Route path="/finance" component={Finance} />
         <Route path="/reports" component={Reports} />
         <Route path="/settings" component={Settings} />
+        {user.role === "admin" && <Route path="/users" component={Users} />}
         <Route component={NotFound} />
       </Switch>
     </Layout>
@@ -29,11 +42,49 @@ function Router() {
 }
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // التحقق من وجود مستخدم مسجل دخوله في localStorage
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        localStorage.removeItem("currentUser");
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const handleLogin = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem("currentUser", JSON.stringify(userData));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("currentUser");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        {user ? (
+          <Router user={user} />
+        ) : (
+          <Login onLogin={handleLogin} />
+        )}
       </TooltipProvider>
     </QueryClientProvider>
   );
