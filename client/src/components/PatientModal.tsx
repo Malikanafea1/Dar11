@@ -219,7 +219,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">بدون تأمين</SelectItem>
+                        <SelectItem value="none">بدون تأمين</SelectItem>
                         <SelectItem value="government">تأمين حكومي</SelectItem>
                         <SelectItem value="private">تأمين خاص</SelectItem>
                         <SelectItem value="company">تأمين شركة</SelectItem>
