@@ -381,117 +381,57 @@ export default function Reports() {
     setIsGeneratingPDF(true);
 
     try {
+      // إنشاء عنصر HTML مخفي للتقرير
+      const reportElement = document.createElement('div');
+      reportElement.style.direction = 'rtl';
+      reportElement.style.fontFamily = 'Arial, sans-serif';
+      reportElement.style.backgroundColor = 'white';
+      reportElement.style.padding = '40px';
+      reportElement.style.width = '210mm';
+      reportElement.style.minHeight = '297mm';
+      reportElement.style.position = 'absolute';
+      reportElement.style.left = '-9999px';
+
+      // إنشاء محتوى التقرير
+      const reportHTML = createReportHTML(selectedReport);
+      reportElement.innerHTML = reportHTML;
+      
+      document.body.appendChild(reportElement);
+
+      // تحويل HTML إلى صورة
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // إنشاء PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
       
-      // إعداد الخط العربي (يحتاج خط عربي مناسب)
-      pdf.setFont('helvetica');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       
-      // العنوان الرئيسي
-      pdf.setFontSize(20);
-      pdf.text(settings?.hospitalName || 'مركز دار الحياة', 105, 20, { align: 'center' });
-      
-      pdf.setFontSize(16);
-      pdf.text(selectedReport.title, 105, 35, { align: 'center' });
-      
-      // معلومات التقرير
-      pdf.setFontSize(12);
-      pdf.text(`الفترة: ${selectedReport.period}`, 20, 50);
-      pdf.text(`تاريخ الإنشاء: ${formatDateTime(new Date())}`, 20, 60);
-      
-      // خط فاصل
-      pdf.line(20, 70, 190, 70);
-      
-      let yPosition = 80;
-      
-      // محتوى التقرير حسب النوع
-      if (selectedReport.type === 'patients') {
-        // ملخص المرضى
-        pdf.setFontSize(14);
-        pdf.text('ملخص المرضى', 20, yPosition);
-        yPosition += 15;
-        
-        pdf.setFontSize(10);
-        pdf.text(`إجمالي المرضى: ${selectedReport.summary.total}`, 20, yPosition);
-        pdf.text(`المرضى النشطين: ${selectedReport.summary.active}`, 20, yPosition + 10);
-        pdf.text(`المرضى المخرجين: ${selectedReport.summary.discharged}`, 20, yPosition + 20);
-        pdf.text(`إجمالي التكلفة اليومية: ${formatCurrency(selectedReport.summary.totalDailyCost)}`, 20, yPosition + 30);
-        
-        yPosition += 50;
-        
-        // تفاصيل المرضى
-        pdf.setFontSize(12);
-        pdf.text('تفاصيل المرضى', 20, yPosition);
-        yPosition += 15;
-        
-        selectedReport.details.forEach((patient: any, index: number) => {
-          if (yPosition > 250) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          
-          pdf.setFontSize(10);
-          pdf.text(`${index + 1}. ${patient.name}`, 20, yPosition);
-          pdf.text(`الرقم القومي: ${patient.nationalId}`, 30, yPosition + 8);
-          pdf.text(`رقم الغرفة: ${patient.roomNumber}`, 30, yPosition + 16);
-          pdf.text(`التكلفة اليومية: ${patient.dailyCost}`, 30, yPosition + 24);
-          
-          yPosition += 35;
-        });
-      }
-      
-      else if (selectedReport.type === 'financial') {
-        // الملخص المالي
-        pdf.setFontSize(14);
-        pdf.text('الملخص المالي', 20, yPosition);
-        yPosition += 15;
-        
-        pdf.setFontSize(10);
-        pdf.text(`إجمالي الإيرادات: ${formatCurrency(selectedReport.summary.totalRevenue)}`, 20, yPosition);
-        pdf.text(`إجمالي المصروفات: ${formatCurrency(selectedReport.summary.totalExpenses)}`, 20, yPosition + 10);
-        pdf.text(`صافي الربح: ${formatCurrency(selectedReport.summary.netProfit)}`, 20, yPosition + 20);
-        pdf.text(`هامش الربح: ${selectedReport.summary.profitMargin}%`, 20, yPosition + 30);
-        
-        yPosition += 50;
-        
-        // تفاصيل الإيرادات
-        if (selectedReport.revenue.payments.length > 0) {
-          pdf.setFontSize(12);
-          pdf.text('تفاصيل الإيرادات', 20, yPosition);
-          yPosition += 15;
-          
-          selectedReport.revenue.payments.forEach((payment: any, index: number) => {
-            if (yPosition > 250) {
-              pdf.addPage();
-              yPosition = 20;
-            }
-            
-            pdf.setFontSize(10);
-            pdf.text(`${index + 1}. مريض #${payment.patientId} - ${payment.amount}`, 20, yPosition);
-            pdf.text(`طريقة الدفع: ${payment.method} - التاريخ: ${payment.date}`, 30, yPosition + 8);
-            
-            yPosition += 20;
-          });
-        }
-      }
-      
-      // إضافة تذييل
-      const pageCount = pdf.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(8);
-        pdf.text(`صفحة ${i} من ${pageCount}`, 105, 285, { align: 'center' });
-        pdf.text(`تم الإنشاء بواسطة نظام إدارة ${settings?.hospitalName || 'المركز'}`, 105, 290, { align: 'center' });
-      }
-      
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+
       // حفظ الملف
-      const fileName = `${selectedReport.title}_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `${selectedReport.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
-      
+
+      // إزالة العنصر المؤقت
+      document.body.removeChild(reportElement);
+
       toast({
         title: "تم بنجاح",
         description: "تم تصدير التقرير بصيغة PDF بنجاح",
       });
-      
+
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
@@ -502,6 +442,229 @@ export default function Reports() {
     } finally {
       setIsGeneratingPDF(false);
     }
+  };
+
+  const createReportHTML = (report: any): string => {
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+
+    const currentTime = new Date().toLocaleTimeString('ar-EG', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    let contentHTML = '';
+
+    // محتوى التقرير حسب النوع
+    if (report.type === 'patients') {
+      contentHTML = `
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+          <h2 style="margin: 0; font-size: 20px;">ملخص المرضى</h2>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+          <div style="background: #dbeafe; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #1d4ed8; font-size: 24px; margin: 0;">${report.summary.total}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي المرضى</p>
+          </div>
+          <div style="background: #dcfce7; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #16a34a; font-size: 24px; margin: 0;">${report.summary.active}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">المرضى النشطين</p>
+          </div>
+          <div style="background: #fed7aa; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #ea580c; font-size: 24px; margin: 0;">${report.summary.discharged}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">المرضى المخرجين</p>
+          </div>
+          <div style="background: #e9d5ff; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #9333ea; font-size: 24px; margin: 0;">${formatCurrency(report.summary.totalDailyCost)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي التكلفة اليومية</p>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+          <h3 style="color: #1e293b; margin: 0 0 15px 0;">تفاصيل المرضى</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #e2e8f0;">
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">اسم المريض</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">رقم الغرفة</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">التكلفة اليومية</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${report.details.slice(0, 10).map((patient: any, index: number) => `
+                <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${patient.name}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${patient.roomNumber}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${patient.dailyCost}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">
+                    <span style="padding: 4px 8px; border-radius: 6px; font-size: 12px; color: white; background: ${patient.status === 'نشط' ? '#16a34a' : '#dc2626'};">
+                      ${patient.status}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${report.details.length > 10 ? `<p style="margin-top: 15px; color: #6b7280; font-style: italic;">تم عرض أول 10 مرضى من إجمالي ${report.details.length} مريض</p>` : ''}
+        </div>
+      `;
+    } 
+    
+    else if (report.type === 'financial') {
+      contentHTML = `
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+          <h2 style="margin: 0; font-size: 20px;">الملخص المالي</h2>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+          <div style="background: #dcfce7; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #16a34a; font-size: 20px; margin: 0;">${formatCurrency(report.summary.totalRevenue)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي الإيرادات</p>
+          </div>
+          <div style="background: #fee2e2; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #dc2626; font-size: 20px; margin: 0;">${formatCurrency(report.summary.totalExpenses)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي المصروفات</p>
+          </div>
+          <div style="background: #dbeafe; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #2563eb; font-size: 20px; margin: 0;">${formatCurrency(report.summary.netProfit)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">صافي الربح</p>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+          <h3 style="color: #1e293b; margin: 0 0 15px 0;">تفاصيل الإيرادات</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #e2e8f0;">
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">معرف المريض</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">المبلغ</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">طريقة الدفع</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">التاريخ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${report.revenue.payments.slice(0, 8).map((payment: any, index: number) => `
+                <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${payment.patientId}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1; color: #16a34a; font-weight: bold;">${payment.amount}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${payment.method}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${payment.date}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${report.revenue.payments.length > 8 ? `<p style="margin-top: 15px; color: #6b7280; font-style: italic;">تم عرض أول 8 مدفوعات من إجمالي ${report.revenue.payments.length} مدفوعة</p>` : ''}
+        </div>
+
+        <div style="background: #fef3c7; padding: 20px; border-radius: 10px; border-left: 4px solid #f59e0b;">
+          <h4 style="color: #92400e; margin: 0 0 10px 0;">ملخص الأداء المالي</h4>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div>
+              <p style="margin: 0; color: #78350f;"><strong>عدد المدفوعات:</strong> ${report.summary.paymentsCount}</p>
+              <p style="margin: 5px 0 0 0; color: #78350f;"><strong>عدد المصروفات:</strong> ${report.summary.expensesCount}</p>
+            </div>
+            <div>
+              <p style="margin: 0; color: #78350f;"><strong>هامش الربح:</strong> ${report.summary.profitMargin}%</p>
+              <p style="margin: 5px 0 0 0; color: #78350f;"><strong>حالة الأداء:</strong> ${parseFloat(report.summary.profitMargin) > 0 ? '✅ ربح' : '⚠️ خسارة'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } 
+    
+    else if (report.type === 'staff') {
+      contentHTML = `
+        <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+          <h2 style="margin: 0; font-size: 20px;">تقرير الموظفين</h2>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+          <div style="background: #e9d5ff; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #7c3aed; font-size: 24px; margin: 0;">${report.summary.total}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي الموظفين</p>
+          </div>
+          <div style="background: #dcfce7; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #16a34a; font-size: 24px; margin: 0;">${report.summary.active}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">الموظفين النشطين</p>
+          </div>
+          <div style="background: #fef3c7; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #d97706; font-size: 20px; margin: 0;">${formatCurrency(report.summary.totalSalaries)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">إجمالي الرواتب</p>
+          </div>
+          <div style="background: #ddd6fe; padding: 20px; border-radius: 10px; text-align: center;">
+            <h3 style="color: #7c3aed; font-size: 20px; margin: 0;">${formatCurrency(report.summary.averageSalary)}</h3>
+            <p style="margin: 5px 0 0 0; color: #374151;">متوسط الراتب</p>
+          </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 20px; border-radius: 10px;">
+          <h3 style="color: #1e293b; margin: 0 0 15px 0;">تفاصيل الموظفين</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background: #e2e8f0;">
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">اسم الموظف</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">المنصب</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">القسم</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">الراتب</th>
+                <th style="padding: 10px; text-align: right; border: 1px solid #cbd5e1;">الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${report.details.slice(0, 10).map((staff: any, index: number) => `
+                <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${staff.name}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${staff.role}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">${staff.department}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1; color: #059669; font-weight: bold;">${staff.salary}</td>
+                  <td style="padding: 10px; border: 1px solid #cbd5e1;">
+                    <span style="padding: 4px 8px; border-radius: 6px; font-size: 12px; color: white; background: ${staff.status === 'نشط' ? '#16a34a' : '#dc2626'};">
+                      ${staff.status}
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${report.details.length > 10 ? `<p style="margin-top: 15px; color: #6b7280; font-style: italic;">تم عرض أول 10 موظفين من إجمالي ${report.details.length} موظف</p>` : ''}
+        </div>
+      `;
+    }
+
+    return `
+      <div style="font-family: 'Arial', sans-serif; direction: rtl; color: #1e293b; line-height: 1.6;">
+        <!-- رأس التقرير -->
+        <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #e2e8f0; padding-bottom: 30px;">
+          <h1 style="color: #1e40af; font-size: 28px; margin: 0 0 10px 0;">${settings?.hospitalName || 'مركز دار الحياة'}</h1>
+          <h2 style="color: #374151; font-size: 22px; margin: 0 0 20px 0;">${report.title}</h2>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 15px; border-radius: 8px;">
+            <div>
+              <p style="margin: 0; color: #64748b; font-size: 14px;"><strong>الفترة:</strong> ${report.period}</p>
+            </div>
+            <div style="text-align: left;">
+              <p style="margin: 0; color: #64748b; font-size: 14px;"><strong>تاريخ الإنشاء:</strong> ${currentDate}</p>
+              <p style="margin: 0; color: #64748b; font-size: 14px;"><strong>الوقت:</strong> ${currentTime}</p>
+            </div>
+          </div>
+        </div>
+
+        ${contentHTML}
+
+        <!-- تذييل التقرير -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; text-align: center;">
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+            <p style="margin: 0; color: #64748b; font-size: 12px;">تم إنشاء هذا التقرير بواسطة نظام إدارة ${settings?.hospitalName || 'المركز'}</p>
+            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">جميع البيانات محدثة حتى تاريخ إنشاء التقرير</p>
+          </div>
+        </div>
+      </div>
+    `;
   };
 
   const filteredData = getFilteredData();
