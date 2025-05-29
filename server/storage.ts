@@ -18,6 +18,7 @@ export interface IStorage {
   getPatient(id: string): Promise<Patient | undefined>;
   createPatient(patient: InsertPatient): Promise<Patient>;
   updatePatient(id: string, updates: Partial<Patient>): Promise<Patient>;
+  deletePatient(id: string): Promise<void>;
   getActivePatients(): Promise<Patient[]>;
   
   // Staff methods
@@ -130,6 +131,13 @@ export class MemStorage implements IStorage {
     const updated = { ...patient, ...updates };
     this.patients.set(id, updated);
     return updated;
+  }
+
+  async deletePatient(id: string): Promise<void> {
+    if (!this.patients.has(id)) {
+      throw new Error("Patient not found");
+    }
+    this.patients.delete(id);
   }
 
   async getActivePatients(): Promise<Patient[]> {

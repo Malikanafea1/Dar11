@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle, Search, Filter } from "lucide-react";
+import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle, Search, Filter, Trash2 } from "lucide-react";
 import { formatCurrency, formatDate, calculateDaysBetween } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +70,26 @@ export default function Patients() {
       toast({
         title: "خطأ",
         description: "فشل في تسجيل خروج المريض",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (patientId: string) => {
+      return apiRequest("DELETE", `/api/patients/${patientId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      toast({
+        title: "تم حذف المريض بنجاح",
+        description: "تم حذف بيانات المريض نهائياً من النظام",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف المريض",
         variant: "destructive",
       });
     },
@@ -318,6 +338,43 @@ export default function Patients() {
                           </AlertDialogContent>
                         </AlertDialog>
                       )}
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="ml-2 w-4 h-4" />
+                            حذف
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>تأكيد حذف المريض</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              هل أنت متأكد من حذف المريض <strong>{patient.name}</strong> نهائياً؟
+                              <br />
+                              <span className="text-sm text-red-600 mt-2 block font-semibold">
+                                تحذير: هذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع البيانات المرتبطة بهذا المريض.
+                              </span>
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate(patient.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <Trash2 className="ml-2 w-4 h-4" />
+                              حذف نهائي
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                       <Button
                         variant="ghost"
                         size="sm"

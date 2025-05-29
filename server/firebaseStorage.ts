@@ -132,6 +132,16 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
+  async deletePatient(id: string): Promise<void> {
+    try {
+      const patientRef = doc(db, "patients", id);
+      await deleteDoc(patientRef);
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      throw new Error("Failed to delete patient");
+    }
+  }
+
   async getActivePatients(): Promise<Patient[]> {
     try {
       const q = query(collection(db, "patients"), where("status", "==", "active"));
