@@ -23,7 +23,7 @@ export default function Patients() {
   });
 
   const dischargeMutation = useMutation({
-    mutationFn: async (patientId: number) => {
+    mutationFn: async (patientId: string) => {
       return apiRequest("PATCH", `/api/patients/${patientId}`, {
         status: "discharged",
         dischargeDate: new Date().toISOString(),
