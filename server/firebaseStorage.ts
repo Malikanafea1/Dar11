@@ -274,6 +274,31 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
+  async updateExpense(id: string, updates: Partial<Expense>): Promise<Expense> {
+    try {
+      const expenseRef = doc(db, "expenses", id);
+      await updateDoc(expenseRef, updates);
+      const updatedExpense = await this.getExpense(id);
+      if (!updatedExpense) {
+        throw new Error("Expense not found after update");
+      }
+      return updatedExpense;
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      throw error;
+    }
+  }
+
+  async deleteExpense(id: string): Promise<void> {
+    try {
+      const expenseRef = doc(db, "expenses", id);
+      await deleteDoc(expenseRef);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      throw error;
+    }
+  }
+
   async getExpensesByDateRange(startDate: Date, endDate: Date): Promise<Expense[]> {
     try {
       const q = query(

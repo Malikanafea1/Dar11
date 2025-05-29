@@ -67,14 +67,18 @@ export default function ExpenseModal({ isOpen, onClose, expense }: ExpenseModalP
         amount: parseFloat(data.amount),
       };
       
-      return apiRequest("POST", "/api/expenses", payload);
+      if (expense) {
+        return apiRequest("PUT", `/api/expenses/${expense.id}`, payload);
+      } else {
+        return apiRequest("POST", "/api/expenses", payload);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
-        title: "تم إضافة المصروف بنجاح",
-        description: "تم تسجيل المصروف الجديد في النظام",
+        title: expense ? "تم تحديث المصروف بنجاح" : "تم إضافة المصروف بنجاح",
+        description: expense ? "تم تحديث بيانات المصروف" : "تم تسجيل المصروف الجديد في النظام",
       });
       onClose();
       form.reset();
@@ -101,7 +105,7 @@ export default function ExpenseModal({ isOpen, onClose, expense }: ExpenseModalP
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>إضافة مصروف جديد</DialogTitle>
+          <DialogTitle>{expense ? "تعديل المصروف" : "إضافة مصروف جديد"}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>

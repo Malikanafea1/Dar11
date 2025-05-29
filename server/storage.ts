@@ -32,6 +32,8 @@ export interface IStorage {
   getExpenses(): Promise<Expense[]>;
   getExpense(id: string): Promise<Expense | undefined>;
   createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: string, updates: Partial<Expense>): Promise<Expense>;
+  deleteExpense(id: string): Promise<void>;
   getExpensesByDateRange(startDate: Date, endDate: Date): Promise<Expense[]>;
   
   // Payment methods
@@ -211,6 +213,23 @@ export class MemStorage implements IStorage {
     const expense: Expense = { ...insertExpense, id };
     this.expenses.set(id, expense);
     return expense;
+  }
+
+  async updateExpense(id: string, updates: Partial<Expense>): Promise<Expense> {
+    const expense = this.expenses.get(id);
+    if (!expense) {
+      throw new Error("Expense not found");
+    }
+    const updated = { ...expense, ...updates };
+    this.expenses.set(id, updated);
+    return updated;
+  }
+
+  async deleteExpense(id: string): Promise<void> {
+    if (!this.expenses.has(id)) {
+      throw new Error("Expense not found");
+    }
+    this.expenses.delete(id);
   }
 
   async getExpensesByDateRange(startDate: Date, endDate: Date): Promise<Expense[]> {

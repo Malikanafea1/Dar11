@@ -108,6 +108,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/expenses/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const validatedData = insertExpenseSchema.parse(req.body);
+      const expense = await storage.updateExpense(id, validatedData);
+      res.json(expense);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid expense data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update expense" });
+    }
+  });
+
+  app.delete("/api/expenses/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteExpense(id);
+      res.status(200).json({ message: "Expense deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete expense" });
+    }
+  });
+
   // Payment routes
   app.get("/api/payments", async (req, res) => {
     try {

@@ -46,8 +46,199 @@ export default function Reports() {
   });
 
   const generateReport = () => {
-    // هنا يمكن إضافة منطق إنشاء التقرير
-    console.log("Generating report:", { reportType, startDate, endDate });
+    if (!reportType) {
+      alert("يرجى اختيار نوع التقرير");
+      return;
+    }
+
+    const data = getFilteredData();
+    
+    switch (reportType) {
+      case "patients":
+        generatePatientsReport(data.patients);
+        break;
+      case "financial":
+        generateFinancialReport(data.expenses, data.payments);
+        break;
+      case "staff":
+        generateStaffReport(staff || []);
+        break;
+      case "daily":
+        generateDailyReport(data);
+        break;
+      case "monthly":
+        generateMonthlyReport(data);
+        break;
+      default:
+        alert("نوع تقرير غير مدعوم");
+    }
+  };
+
+  const generatePatientsReport = (patients: Patient[]) => {
+    const reportContent = `
+تقرير المرضى
+============
+
+الفترة: ${startDate || "غير محدد"} إلى ${endDate || "غير محدد"}
+عدد المرضى: ${patients.length}
+
+تفاصيل المرضى:
+${patients.map((p, index) => `
+${index + 1}. ${p.name}
+   - الرقم القومي: ${p.nationalId}
+   - تاريخ الدخول: ${formatDate(p.admissionDate)}
+   - رقم الغرفة: ${p.roomNumber || "غير محدد"}
+   - التكلفة اليومية: ${formatCurrency(p.dailyCost)}
+   - الحالة: ${p.status === "active" ? "نشط" : "خرج"}
+   - إجمالي المدفوع: ${formatCurrency(p.totalPaid)}
+`).join("\n")}
+
+إجمالي التكلفة اليومية: ${formatCurrency(patients.reduce((sum, p) => sum + p.dailyCost, 0))}
+إجمالي المبالغ المدفوعة: ${formatCurrency(patients.reduce((sum, p) => sum + p.totalPaid, 0))}
+    `;
+    
+    downloadReport(reportContent, `تقرير_المرضى_${new Date().toISOString().split('T')[0]}.txt`);
+  };
+
+  const generateFinancialReport = (expenses: Expense[], payments: Payment[]) => {
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+    
+    const reportContent = `
+التقرير المالي
+=============
+
+الفترة: ${startDate || "غير محدد"} إلى ${endDate || "غير محدد"}
+
+الإيرادات:
+----------
+عدد المدفوعات: ${payments.length}
+إجمالي الإيرادات: ${formatCurrency(totalPayments)}
+
+تفاصيل المدفوعات:
+${payments.map((p, index) => `
+${index + 1}. مريض #${p.patientId} - ${formatCurrency(p.amount)} - ${p.paymentMethod} - ${formatDate(p.paymentDate)}
+`).join("")}
+
+المصروفات:
+----------
+عدد المصروفات: ${expenses.length}
+إجمالي المصروفات: ${formatCurrency(totalExpenses)}
+
+تفاصيل المصروفات:
+${expenses.map((e, index) => `
+${index + 1}. ${e.description} - ${formatCurrency(e.amount)} - ${e.category} - ${formatDate(e.date)}
+`).join("")}
+
+الملخص المالي:
+--------------
+إجمالي الإيرادات: ${formatCurrency(totalPayments)}
+إجمالي المصروفات: ${formatCurrency(totalExpenses)}
+صافي الربح: ${formatCurrency(totalPayments - totalExpenses)}
+    `;
+    
+    downloadReport(reportContent, `التقرير_المالي_${new Date().toISOString().split('T')[0]}.txt`);
+  };
+
+  const generateStaffReport = (staffList: Staff[]) => {
+    const totalSalaries = staffList.reduce((sum, s) => sum + s.monthlySalary, 0);
+    
+    const reportContent = `
+تقرير الموظفين
+==============
+
+إجمالي عدد الموظفين: ${staffList.length}
+الموظفين النشطين: ${staffList.filter(s => s.isActive).length}
+إجمالي الرواتب الشهرية: ${formatCurrency(totalSalaries)}
+
+تفاصيل الموظفين:
+${staffList.map((s, index) => `
+${index + 1}. ${s.name}
+   - المنصب: ${s.role}
+   - القسم: ${s.department}
+   - الراتب الشهري: ${formatCurrency(s.monthlySalary)}
+   - تاريخ التوظيف: ${formatDate(s.hireDate)}
+   - الحالة: ${s.isActive ? "نشط" : "غير نشط"}
+   - الهاتف: ${s.phoneNumber || "غير محدد"}
+   - البريد الإلكتروني: ${s.email || "غير محدد"}
+`).join("\n")}
+    `;
+    
+    downloadReport(reportContent, `تقرير_الموظفين_${new Date().toISOString().split('T')[0]}.txt`);
+  };
+
+  const generateDailyReport = (data: any) => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayExpenses = data.expenses.filter((e: Expense) => e.date.split('T')[0] === today);
+    const todayPayments = data.payments.filter((p: Payment) => p.paymentDate.split('T')[0] === today);
+    
+    const reportContent = `
+التقرير اليومي
+=============
+
+التاريخ: ${formatDate(new Date())}
+
+المرضى النشطين: ${data.patients.filter((p: Patient) => p.status === "active").length}
+إجمالي المرضى: ${data.patients.length}
+
+الأنشطة المالية اليوم:
+--------------------
+المدفوعات: ${todayPayments.length} - ${formatCurrency(todayPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0))}
+المصروفات: ${todayExpenses.length} - ${formatCurrency(todayExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+
+صافي الدخل اليومي: ${formatCurrency(todayPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0) - todayExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+    `;
+    
+    downloadReport(reportContent, `التقرير_اليومي_${today}.txt`);
+  };
+
+  const generateMonthlyReport = (data: any) => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthlyExpenses = data.expenses.filter((e: Expense) => {
+      const date = new Date(e.date);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    const monthlyPayments = data.payments.filter((p: Payment) => {
+      const date = new Date(p.paymentDate);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    const reportContent = `
+التقرير الشهري
+=============
+
+الشهر: ${currentMonth + 1}/${currentYear}
+
+ملخص الشهر:
+-----------
+إجمالي المرضى: ${data.patients.length}
+المرضى النشطين: ${data.patients.filter((p: Patient) => p.status === "active").length}
+
+الأنشطة المالية الشهرية:
+-----------------------
+إجمالي الإيرادات: ${formatCurrency(monthlyPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0))}
+إجمالي المصروفات: ${formatCurrency(monthlyExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+صافي الربح: ${formatCurrency(monthlyPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0) - monthlyExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+
+عدد المعاملات:
+المدفوعات: ${monthlyPayments.length}
+المصروفات: ${monthlyExpenses.length}
+    `;
+    
+    downloadReport(reportContent, `التقرير_الشهري_${currentMonth + 1}_${currentYear}.txt`);
+  };
+
+  const downloadReport = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const getFilteredData = () => {
