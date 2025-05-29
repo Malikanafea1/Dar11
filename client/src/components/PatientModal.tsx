@@ -14,10 +14,19 @@ import { Save } from "lucide-react";
 import type { Patient } from "@shared/schema";
 import { z } from "zod";
 
-const formSchema = insertPatientSchema.extend({
+// نموذج النموذج مع تحويل التكلفة اليومية إلى رقم
+const formSchema = z.object({
+  name: z.string().min(1, "اسم المريض مطلوب"),
+  nationalId: z.string().min(1, "رقم الهوية مطلوب"),
   admissionDate: z.string().min(1, "تاريخ الدخول مطلوب"),
+  roomNumber: z.string().optional(),
   dailyCost: z.string().min(1, "التكلفة اليومية مطلوبة"),
+  insurance: z.string().optional(),
+  status: z.enum(["active", "discharged"]).default("active"),
+  notes: z.string().optional(),
 });
+
+type FormData = z.infer<typeof formSchema>;
 
 interface PatientModalProps {
   isOpen: boolean;
@@ -28,14 +37,14 @@ interface PatientModalProps {
 export default function PatientModal({ isOpen, onClose, patient }: PatientModalProps) {
   const { toast } = useToast();
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: patient ? {
       name: patient.name,
       nationalId: patient.nationalId,
-      admissionDate: new Date(patient.admissionDate).toISOString().split('T')[0],
+      admissionDate: patient.admissionDate,
       roomNumber: patient.roomNumber || "",
-      dailyCost: patient.dailyCost,
+      dailyCost: patient.dailyCost.toString(),
       insurance: patient.insurance || "",
       status: patient.status,
       notes: patient.notes || "",
@@ -52,11 +61,16 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: FormData) => {
       const payload = {
-        ...data,
-        admissionDate: new Date(data.admissionDate).toISOString(),
-        dailyCost: data.dailyCost,
+        name: data.name,
+        nationalId: data.nationalId,
+        admissionDate: data.admissionDate,
+        roomNumber: data.roomNumber || "",
+        dailyCost: parseFloat(data.dailyCost),
+        insurance: data.insurance || "",
+        status: data.status,
+        notes: data.notes || "",
       };
       
       if (patient) {
@@ -76,15 +90,16 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
       form.reset();
     },
     onError: (error: any) => {
+      console.error("Error saving patient:", error);
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في حفظ بيانات المريض",
+        title: "خطأ في حفظ البيانات",
+        description: error.message || "فشل في حفظ بيانات المريض. تأكد من صحة البيانات المدخلة.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: FormData) => {
     mutation.mutate(data);
   };
 
@@ -95,112 +110,119 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{patient ? "تعديل بيانات المريض" : "إضافة مريض جديد"}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {patient ? "تعديل بيانات المريض" : "إضافة مريض جديد"}
+          </DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* اسم المريض الكامل */}
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>اسم المريض الكامل</FormLabel>
+                    <FormLabel className="text-right">اسم المريض الكامل</FormLabel>
                     <FormControl>
-                      <Input placeholder="أدخل اسم المريض" {...field} />
+                      <Input placeholder="يحي السيد" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* رقم الهوية الوطنية */}
               <FormField
                 control={form.control}
                 name="nationalId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>رقم الهوية</FormLabel>
+                    <FormLabel className="text-right">رقم الهوية الوطنية</FormLabel>
                     <FormControl>
-                      <Input placeholder="١٢٣٤٥٦٧٨٩٠" className="font-inter" {...field} />
+                      <Input placeholder="4352" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* تاريخ الدخول */}
               <FormField
                 control={form.control}
                 name="admissionDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>تاريخ الدخول</FormLabel>
+                    <FormLabel className="text-right">تاريخ الدخول</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        {...field}
+                        max={new Date().toISOString().split('T')[0]}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={form.control}
-                name="roomNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>رقم الغرفة</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر الغرفة" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="101">١٠١</SelectItem>
-                        <SelectItem value="102">١٠٢</SelectItem>
-                        <SelectItem value="201">٢٠١</SelectItem>
-                        <SelectItem value="202">٢٠٢</SelectItem>
-                        <SelectItem value="301">٣٠١</SelectItem>
-                        <SelectItem value="302">٣٠٢</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+
+              {/* تكلفة الإقامة اليومية */}
               <FormField
                 control={form.control}
                 name="dailyCost"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>تكلفة الإقامة اليومية (جنيه مصري)</FormLabel>
+                    <FormLabel className="text-right">تكلفة الإقامة اليومية (ريال سعودي)</FormLabel>
                     <FormControl>
-                      <Input placeholder="٥٠٠" className="font-inter" {...field} />
+                      <Input 
+                        type="number" 
+                        placeholder="150" 
+                        min="0"
+                        step="0.01"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* رقم الغرفة */}
+              <FormField
+                control={form.control}
+                name="roomNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-right">رقم الغرفة</FormLabel>
+                    <FormControl>
+                      <Input placeholder="101" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* نوع التأمين */}
               <FormField
                 control={form.control}
                 name="insurance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>نوع التأمين</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-right">نوع التأمين</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر نوع التأمين" />
+                          <SelectValue placeholder="بدون تأمين" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="government">حكومي</SelectItem>
-                        <SelectItem value="private">خاص</SelectItem>
-                        <SelectItem value="none">بدون تأمين</SelectItem>
+                        <SelectItem value="">بدون تأمين</SelectItem>
+                        <SelectItem value="government">تأمين حكومي</SelectItem>
+                        <SelectItem value="private">تأمين خاص</SelectItem>
+                        <SelectItem value="company">تأمين شركة</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -208,17 +230,18 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                 )}
               />
             </div>
-            
+
+            {/* ملاحظات إضافية */}
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ملاحظات إضافية</FormLabel>
+                  <FormLabel className="text-right">ملاحظات إضافية</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="أضف أي ملاحظات خاصة بالمريض"
-                      rows={3}
+                      placeholder="أي ملاحظات أو معلومات إضافية عن المريض..."
+                      className="min-h-[100px]"
                       {...field} 
                     />
                   </FormControl>
@@ -226,14 +249,23 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                 </FormItem>
               )}
             />
-            
-            <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                إلغاء
+
+            <div className="flex gap-3 pt-6">
+              <Button 
+                type="submit" 
+                disabled={mutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4 ml-2" />
+                {mutation.isPending ? "جاري الحفظ..." : (patient ? "تحديث البيانات" : "حفظ المريض")}
               </Button>
-              <Button type="submit" disabled={mutation.isPending} className="bg-blue-600 hover:bg-blue-700">
-                <Save className="ml-2 w-4 h-4" />
-                {mutation.isPending ? "جاري الحفظ..." : (patient ? "تحديث المريض" : "حفظ المريض")}
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+                className="flex-1"
+              >
+                إلغاء
               </Button>
             </div>
           </form>
