@@ -16,7 +16,16 @@ export function formatCurrency(amount: string | number): string {
 }
 
 export function formatDate(date: string | Date, dateSystem: 'gregorian' | 'hijri' = 'gregorian'): string {
+  if (!date) {
+    return "تاريخ غير محدد";
+  }
+  
   const dateObj = typeof date === "string" ? new Date(date) : date;
+  
+  // Check if the date is valid
+  if (!dateObj || typeof dateObj.getTime !== 'function' || isNaN(dateObj.getTime())) {
+    return "تاريخ غير صحيح";
+  }
   
   if (dateSystem === 'hijri') {
     return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
@@ -34,7 +43,16 @@ export function formatDate(date: string | Date, dateSystem: 'gregorian' | 'hijri
 }
 
 export function formatDateTime(date: string | Date, dateSystem: 'gregorian' | 'hijri' = 'gregorian'): string {
+  if (!date) {
+    return "تاريخ غير محدد";
+  }
+  
   const dateObj = typeof date === "string" ? new Date(date) : date;
+  
+  // Check if the date is valid
+  if (!dateObj || typeof dateObj.getTime !== 'function' || isNaN(dateObj.getTime())) {
+    return "تاريخ غير صحيح";
+  }
   
   if (dateSystem === 'hijri') {
     return new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {

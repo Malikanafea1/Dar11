@@ -58,27 +58,19 @@ export default function Sidebar({ user }: SidebarProps) {
           const Icon = item.icon;
           
           return (
-            <div
-              key={item.name}
-              className={cn(
-                "rounded-lg transition-colors",
-                isActive 
-                  ? "bg-blue-50 border-r-4 border-blue-600" 
-                  : "hover:bg-gray-50"
-              )}
-            >
-              <Link href={item.href}>
-                <a className={cn(
-                  "flex items-center p-3 font-medium",
+            <Link key={item.name} href={item.href}>
+              <div
+                className={cn(
+                  "rounded-lg transition-colors flex items-center p-3 font-medium",
                   isActive 
-                    ? "text-blue-600" 
-                    : "text-gray-700 hover:text-blue-600"
-                )}>
-                  <Icon className="ml-3 w-5 h-5" />
-                  <span>{item.name}</span>
-                </a>
-              </Link>
-            </div>
+                    ? "bg-blue-50 border-r-4 border-blue-600 text-blue-600" 
+                    : "hover:bg-gray-50 text-gray-700 hover:text-blue-600"
+                )}
+              >
+                <Icon className="ml-3 w-5 h-5" />
+                <span>{item.name}</span>
+              </div>
+            </Link>
           );
         })}
       </nav>

@@ -56,7 +56,13 @@ export class FirebaseStorage implements IStorage {
     try {
       const userDoc = await getDoc(doc(db, "users", id));
       if (userDoc.exists()) {
-        return { id, ...userDoc.data() } as User;
+        const data = userDoc.data();
+        return { 
+          id, 
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          lastLogin: data.lastLogin?.toDate?.()?.toISOString() || data.lastLogin
+        } as User;
       }
       return undefined;
     } catch (error) {
