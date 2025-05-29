@@ -53,7 +53,7 @@ export default function Patients() {
 
   const calculateTotalCost = (patient: Patient) => {
     const days = calculateDaysBetween(patient.admissionDate, patient.dischargeDate || new Date());
-    return days * parseFloat(patient.dailyCost);
+    return days * patient.dailyCost;
   };
 
   const getStatusBadge = (status: string) => {
@@ -237,18 +237,15 @@ export default function Patients() {
         onClose={() => setIsImportModalOpen(false)}
         onImport={async (patients) => {
           for (const patient of patients) {
-            await apiRequest("/api/patients", {
-              method: "POST",
-              body: {
-                name: patient.name,
-                nationalId: patient.nationalId,
-                admissionDate: patient.admissionDate,
-                dailyCost: patient.dailyCost,
-                roomNumber: patient.roomNumber || null,
-                insurance: patient.insurance || null,
-                notes: patient.notes || null,
-                status: "active"
-              }
+            await apiRequest("POST", "/api/patients", {
+              name: patient.name,
+              nationalId: patient.nationalId,
+              admissionDate: patient.admissionDate,
+              dailyCost: patient.dailyCost,
+              roomNumber: patient.roomNumber || null,
+              insurance: patient.insurance || null,
+              notes: patient.notes || null,
+              status: "active"
             });
           }
           queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
