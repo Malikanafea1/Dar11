@@ -8,7 +8,6 @@ import { Save, User, Bell, Shield, Database, Cog, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import type { Settings, InsertSettings } from "@shared/schema";
 
 export default function Settings() {
@@ -97,6 +96,7 @@ export default function Settings() {
   const handleInputChange = (key: keyof InsertSettings, value: string) => {
     setLocalSettings(prev => ({ ...prev, [key]: value }));
   };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -129,8 +129,8 @@ export default function Settings() {
               <Label htmlFor="username">اسم المستخدم</Label>
               <Input 
                 id="username" 
-                value={settings.username}
-                onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
+                value={localSettings.username || ''}
+                onChange={(e) => handleInputChange('username', e.target.value)}
               />
             </div>
             <div>
@@ -138,75 +138,39 @@ export default function Settings() {
               <Input 
                 id="email" 
                 type="email" 
-                value={settings.email}
-                onChange={(e) => setSettings(prev => ({ ...prev, email: e.target.value }))}
+                value={localSettings.email || ''}
+                onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
             <div>
               <Label htmlFor="phone">رقم الهاتف</Label>
               <Input 
                 id="phone" 
-                value={settings.phone}
-                onChange={(e) => setSettings(prev => ({ ...prev, phone: e.target.value }))}
+                value={localSettings.phone || ''}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
               />
             </div>
-            <Button className="w-full" onClick={handleSaveProfile}>
-              <Save className="ml-2 w-4 h-4" />
-              حفظ التغييرات
+            <Button 
+              className="w-full" 
+              onClick={handleSaveProfile}
+              disabled={updateSettingsMutation.isPending}
+            >
+              {updateSettingsMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              حفظ البيانات
             </Button>
           </CardContent>
         </Card>
 
-        {/* إعدادات التنبيهات */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              إعدادات التنبيهات
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="patient-alerts">تنبيهات المرضى</Label>
-              <Switch 
-                id="patient-alerts" 
-                checked={settings.patientAlerts}
-                onCheckedChange={() => handleToggleSwitch('patientAlerts')}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="payment-alerts">تنبيهات المدفوعات</Label>
-              <Switch 
-                id="payment-alerts" 
-                checked={settings.paymentAlerts}
-                onCheckedChange={() => handleToggleSwitch('paymentAlerts')}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="staff-alerts">تنبيهات الموظفين</Label>
-              <Switch 
-                id="staff-alerts" 
-                checked={settings.staffAlerts}
-                onCheckedChange={() => handleToggleSwitch('staffAlerts')}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="financial-alerts">التنبيهات المالية</Label>
-              <Switch 
-                id="financial-alerts" 
-                checked={settings.financialAlerts}
-                onCheckedChange={() => handleToggleSwitch('financialAlerts')}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* إعدادات الأمان */}
+        {/* تغيير كلمة المرور */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              إعدادات الأمان
+              تغيير كلمة المرور
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -239,46 +203,113 @@ export default function Settings() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="hospital-name">اسم المركز</Label>
-              <Input id="hospital-name" defaultValue="مركز دار الحياة لعلاج الإدمان" />
+              <Input 
+                id="hospital-name" 
+                value={localSettings.hospitalName || ''}
+                onChange={(e) => handleInputChange('hospitalName', e.target.value)}
+              />
             </div>
             <div>
               <Label htmlFor="default-currency">العملة الافتراضية</Label>
-              <Input id="default-currency" defaultValue="جنيه مصري (ج.م)" readOnly />
+              <Input 
+                id="default-currency" 
+                value={localSettings.defaultCurrency || ''}
+                onChange={(e) => handleInputChange('defaultCurrency', e.target.value)}
+              />
             </div>
+            <Separator />
             <div className="flex items-center justify-between">
               <Label htmlFor="auto-backup">النسخ الاحتياطي التلقائي</Label>
-              <Switch id="auto-backup" defaultChecked />
+              <Switch 
+                id="auto-backup"
+                checked={localSettings.autoBackup ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('autoBackup', checked)}
+              />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="data-compression">ضغط البيانات</Label>
-              <Switch id="data-compression" />
+              <Switch 
+                id="data-compression"
+                checked={localSettings.dataCompression ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('dataCompression', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* إعدادات التنبيهات */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              إعدادات التنبيهات
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="patient-alerts">تنبيهات المرضى</Label>
+              <Switch 
+                id="patient-alerts" 
+                checked={localSettings.patientAlerts ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('patientAlerts', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="payment-alerts">تنبيهات المدفوعات</Label>
+              <Switch 
+                id="payment-alerts"
+                checked={localSettings.paymentAlerts ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('paymentAlerts', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="staff-alerts">تنبيهات الموظفين</Label>
+              <Switch 
+                id="staff-alerts"
+                checked={localSettings.staffAlerts ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('staffAlerts', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="financial-alerts">التنبيهات المالية</Label>
+              <Switch 
+                id="financial-alerts"
+                checked={localSettings.financialAlerts ?? false}
+                onCheckedChange={(checked) => handleToggleSwitch('financialAlerts', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* إعدادات المظهر */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cog className="w-5 h-5" />
+              إعدادات المظهر والتصميم
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="w-full h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded mb-2"></div>
+                <p className="text-sm font-medium">التصميم الافتراضي</p>
+                <p className="text-xs text-gray-500">ألوان هادئة ومريحة للعين</p>
+              </div>
+              <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="w-full h-20 bg-gradient-to-r from-gray-800 to-gray-900 rounded mb-2"></div>
+                <p className="text-sm font-medium">التصميم العصري</p>
+                <p className="text-xs text-gray-500">مظهر داكن وعصري</p>
+              </div>
+              <div className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="w-full h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded mb-2"></div>
+                <p className="text-sm font-medium">التصميم الكلاسيكي</p>
+                <p className="text-xs text-gray-500">مظهر تقليدي وأنيق</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* إعدادات متقدمة */}
-      <Card>
-        <CardHeader>
-          <CardTitle>الإعدادات المتقدمة</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col">
-              <Database className="w-6 h-6 mb-2" />
-              تصدير البيانات
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <Cog className="w-6 h-6 mb-2" />
-              استعادة النظام
-            </Button>
-            <Button variant="destructive" className="h-20 flex flex-col">
-              <Shield className="w-6 h-6 mb-2" />
-              إعادة تعيين النظام
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
