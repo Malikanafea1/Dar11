@@ -20,7 +20,9 @@ const formSchema = z.object({
   nationalId: z.string().min(1, "رقم الهوية مطلوب"),
   admissionDate: z.string().min(1, "تاريخ الدخول مطلوب"),
   roomNumber: z.string().optional(),
-  dailyCost: z.string().min(1, "التكلفة اليومية مطلوبة"),
+  dailyCost: z.string().min(1, "التكلفة اليومية مطلوبة").refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "التكلفة اليومية يجب أن تكون رقماً أكبر من الصفر"
+  }),
   insurance: z.string().optional(),
   status: z.enum(["active", "discharged"]).default("active"),
   notes: z.string().optional(),
