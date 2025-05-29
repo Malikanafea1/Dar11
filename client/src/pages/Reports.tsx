@@ -241,6 +241,80 @@ ${index + 1}. ${s.name}
     URL.revokeObjectURL(url);
   };
 
+  const exportToCSV = () => {
+    const data = getFilteredData();
+    
+    // تصدير بيانات المرضى
+    const patientsCSV = [
+      'الاسم,الرقم القومي,تاريخ الدخول,رقم الغرفة,التكلفة اليومية,الحالة,إجمالي المدفوع',
+      ...data.patients.map(p => 
+        `${p.name},${p.nationalId},${formatDate(p.admissionDate)},${p.roomNumber || ''},${p.dailyCost},${p.status === 'active' ? 'نشط' : 'خرج'},${p.totalPaid}`
+      )
+    ].join('\n');
+    
+    downloadReport(patientsCSV, `بيانات_المرضى_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const exportAllData = () => {
+    const data = getFilteredData();
+    
+    const allDataReport = `
+تقرير شامل لجميع البيانات
+========================
+
+تاريخ الإنشاء: ${formatDate(new Date())}
+الفترة: ${startDate || "غير محدد"} إلى ${endDate || "غير محدد"}
+
+المرضى (${data.patients.length}):
+${data.patients.map((p, i) => `${i+1}. ${p.name} - ${p.nationalId} - ${p.status === 'active' ? 'نشط' : 'خرج'}`).join('\n')}
+
+المصروفات (${data.expenses.length}):
+${data.expenses.map((e, i) => `${i+1}. ${e.description} - ${formatCurrency(e.amount)} - ${e.category}`).join('\n')}
+
+المدفوعات (${data.payments.length}):
+${data.payments.map((p, i) => `${i+1}. مريض #${p.patientId} - ${formatCurrency(p.amount)} - ${p.paymentMethod}`).join('\n')}
+
+الموظفون (${staff?.length || 0}):
+${staff?.map((s, i) => `${i+1}. ${s.name} - ${s.role} - ${s.department}`).join('\n') || 'لا يوجد موظفون'}
+    `;
+    
+    downloadReport(allDataReport, `تقرير_شامل_${new Date().toISOString().split('T')[0]}.txt`);
+  };
+
+  const exportSummary = () => {
+    const data = getFilteredData();
+    const totalRevenue = data.payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalExpenses = data.expenses.reduce((sum, e) => sum + e.amount, 0);
+    
+    const summaryReport = `
+ملخص الإحصائيات
+==============
+
+تاريخ الإنشاء: ${formatDate(new Date())}
+الفترة: ${startDate || "غير محدد"} إلى ${endDate || "غير محدد"}
+
+الملخص العام:
+-------------
+• إجمالي المرضى: ${data.patients.length}
+• المرضى النشطين: ${data.patients.filter(p => p.status === 'active').length}
+• إجمالي الموظفين: ${staff?.length || 0}
+
+الملخص المالي:
+--------------
+• إجمالي الإيرادات: ${formatCurrency(totalRevenue)}
+• إجمالي المصروفات: ${formatCurrency(totalExpenses)}
+• صافي الربح: ${formatCurrency(totalRevenue - totalExpenses)}
+
+إحصائيات التشغيل:
+-----------------
+• عدد المعاملات المالية: ${data.payments.length + data.expenses.length}
+• متوسط الإيراد اليومي: ${formatCurrency(data.payments.length > 0 ? totalRevenue / data.payments.length : 0)}
+• متوسط المصروف اليومي: ${formatCurrency(data.expenses.length > 0 ? totalExpenses / data.expenses.length : 0)}
+    `;
+    
+    downloadReport(summaryReport, `ملخص_الإحصائيات_${new Date().toISOString().split('T')[0]}.txt`);
+  };
+
   const getFilteredData = () => {
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
@@ -347,7 +421,7 @@ ${index + 1}. ${s.name}
               <div>
                 <p className="text-gray-500 text-sm font-medium">إجمالي الإيرادات</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(filteredData.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0))}
+                  {formatCurrency(filteredData.payments.reduce((sum, p) => sum + p.amount, 0))}
                 </p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
@@ -363,7 +437,7 @@ ${index + 1}. ${s.name}
               <div>
                 <p className="text-gray-500 text-sm font-medium">إجمالي المصروفات</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {formatCurrency(filteredData.expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0))}
+                  {formatCurrency(filteredData.expenses.reduce((sum, e) => sum + e.amount, 0))}
                 </p>
               </div>
               <div className="bg-red-100 p-3 rounded-full">
@@ -467,17 +541,29 @@ ${index + 1}. ${s.name}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col"
+              onClick={() => exportToCSV()}
+            >
               <FileSpreadsheet className="w-6 h-6 mb-2 text-green-600" />
-              تصدير Excel
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <FileText className="w-6 h-6 mb-2 text-blue-600" />
-              تصدير PDF
-            </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <PieChart className="w-6 h-6 mb-2 text-purple-600" />
               تصدير CSV
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col"
+              onClick={() => exportAllData()}
+            >
+              <FileText className="w-6 h-6 mb-2 text-blue-600" />
+              تصدير جميع البيانات
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col"
+              onClick={() => exportSummary()}
+            >
+              <PieChart className="w-6 h-6 mb-2 text-purple-600" />
+              تصدير ملخص
             </Button>
           </div>
         </CardContent>
