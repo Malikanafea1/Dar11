@@ -95,17 +95,28 @@ export class FirebaseStorage implements IStorage {
 
   async createPatient(insertPatient: InsertPatient): Promise<Patient> {
     try {
+      // Remove undefined values to avoid Firebase validation errors
       const patientData = {
         ...insertPatient,
         totalPaid: 0,
-        dischargeDate: undefined,
         createdAt: serverTimestamp()
       };
+      
+      // Only add dischargeDate if it has a value
+      if (insertPatient.status === 'discharged' && insertPatient.dischargeDate) {
+        patientData.dischargeDate = insertPatient.dischargeDate;
+      }
+      
       const patientDoc = await addDoc(collection(db, "patients"), patientData);
-      return { id: patientDoc.id, ...insertPatient, totalPaid: 0, dischargeDate: undefined } as Patient;
+      return { 
+        id: patientDoc.id, 
+        ...insertPatient, 
+        totalPaid: 0,
+        ...(insertPatient.dischargeDate && { dischargeDate: insertPatient.dischargeDate })
+      } as Patient;
     } catch (error) {
       console.error("Error creating patient:", error);
-      throw error;
+      throw new Error("Failed to create patient");
     }
   }
 
