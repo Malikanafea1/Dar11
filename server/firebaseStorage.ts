@@ -419,4 +419,57 @@ export class FirebaseStorage implements IStorage {
       };
     }
   }
+
+  // Settings methods
+  async getSettings(): Promise<Settings | undefined> {
+    try {
+      const settingsDoc = await getDoc(doc(db, "settings", "main"));
+      if (settingsDoc.exists()) {
+        return {
+          id: settingsDoc.id,
+          ...settingsDoc.data()
+        } as Settings;
+      }
+      // إنشاء إعدادات افتراضية إذا لم توجد
+      const defaultSettings: InsertSettings = {
+        username: "مسؤول النظام",
+        email: "admin@hospital.com",
+        phone: "01234567890",
+        hospitalName: "مركز دار الحياة لعلاج الإدمان",
+        defaultCurrency: "ج.م",
+        patientAlerts: true,
+        paymentAlerts: true,
+        staffAlerts: true,
+        financialAlerts: true,
+        autoBackup: true,
+        dataCompression: false
+      };
+      const newSettings = await this.updateSettings(defaultSettings);
+      return newSettings;
+    } catch (error) {
+      console.error("Error getting settings:", error);
+      return undefined;
+    }
+  }
+
+  async updateSettings(updates: Partial<InsertSettings>): Promise<Settings> {
+    try {
+      const settingsRef = doc(db, "settings", "main");
+      const updatedData = {
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+      
+      await setDoc(settingsRef, updatedData, { merge: true });
+      
+      const updatedSettings = await this.getSettings();
+      if (!updatedSettings) {
+        throw new Error("Settings not found after update");
+      }
+      return updatedSettings;
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      throw error;
+    }
+  }
 }

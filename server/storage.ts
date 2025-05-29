@@ -63,6 +63,7 @@ export class MemStorage implements IStorage {
   private staff: Map<string, Staff>;
   private expenses: Map<string, Expense>;
   private payments: Map<string, Payment>;
+  private settings: Settings | undefined;
   private currentUserId: number;
   private currentPatientId: number;
   private currentStaffId: number;
@@ -75,6 +76,21 @@ export class MemStorage implements IStorage {
     this.staff = new Map();
     this.expenses = new Map();
     this.payments = new Map();
+    this.settings = {
+      id: "1",
+      username: "مسؤول النظام",
+      email: "admin@hospital.com",
+      phone: "01234567890",
+      hospitalName: "مركز دار الحياة لعلاج الإدمان",
+      defaultCurrency: "ج.م",
+      patientAlerts: true,
+      paymentAlerts: true,
+      staffAlerts: true,
+      financialAlerts: true,
+      autoBackup: true,
+      dataCompression: false,
+      updatedAt: new Date().toISOString()
+    };
     this.currentUserId = 1;
     this.currentPatientId = 1;
     this.currentStaffId = 1;
@@ -272,6 +288,38 @@ export class MemStorage implements IStorage {
       netProfit: dailyIncome - dailyExpenses,
       pendingPayments
     };
+  }
+
+  // Settings methods
+  async getSettings(): Promise<Settings | undefined> {
+    return this.settings;
+  }
+
+  async updateSettings(updates: Partial<InsertSettings>): Promise<Settings> {
+    if (!this.settings) {
+      this.settings = {
+        id: "1",
+        username: updates.username || "مسؤول النظام",
+        email: updates.email || "admin@hospital.com",
+        phone: updates.phone || "01234567890",
+        hospitalName: updates.hospitalName || "مركز دار الحياة لعلاج الإدمان",
+        defaultCurrency: updates.defaultCurrency || "ج.م",
+        patientAlerts: updates.patientAlerts ?? true,
+        paymentAlerts: updates.paymentAlerts ?? true,
+        staffAlerts: updates.staffAlerts ?? true,
+        financialAlerts: updates.financialAlerts ?? true,
+        autoBackup: updates.autoBackup ?? true,
+        dataCompression: updates.dataCompression ?? false,
+        updatedAt: new Date().toISOString()
+      };
+    } else {
+      this.settings = {
+        ...this.settings,
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    return this.settings;
   }
 }
 
