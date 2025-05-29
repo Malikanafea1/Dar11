@@ -395,6 +395,134 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* إدارة البيانات */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              إدارة البيانات والنسخ الاحتياطي
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* إنشاء نسخة احتياطية */}
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Download className="w-5 h-5 text-green-600" />
+                  <h4 className="font-medium">إنشاء نسخة احتياطية</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">حفظ جميع بيانات النظام في ملف آمن</p>
+                <Button 
+                  onClick={() => createBackupMutation.mutate()}
+                  disabled={createBackupMutation.isPending}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {createBackupMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="w-4 h-4 mr-2" />
+                  )}
+                  تحميل النسخة الاحتياطية
+                </Button>
+              </div>
+
+              {/* استيراد نسخة احتياطية */}
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Upload className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-medium">استيراد البيانات</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">استرداد البيانات من ملف نسخة احتياطية</p>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileImport}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={importBackupMutation.isPending}
+                  />
+                  <Button 
+                    disabled={importBackupMutation.isPending}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    {importBackupMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    اختيار ملف للاستيراد
+                  </Button>
+                </div>
+              </div>
+
+              {/* إعادة تعيين النظام */}
+              <div className="p-4 border rounded-lg border-red-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <h4 className="font-medium text-red-700">إعادة تعيين النظام</h4>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">حذف جميع البيانات وإعادة النظام للحالة الافتراضية</p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                      disabled={resetDatabaseMutation.isPending}
+                    >
+                      {resetDatabaseMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                      )}
+                      إعادة تعيين النظام
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>تأكيد إعادة تعيين النظام</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        هذا الإجراء سيحذف جميع البيانات نهائياً بما في ذلك:
+                        <br />• جميع بيانات المرضى
+                        <br />• بيانات الموظفين
+                        <br />• السجلات المالية
+                        <br />• المصروفات والمدفوعات
+                        <br /><br />
+                        هل أنت متأكد من رغبتك في المتابعة؟
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => resetDatabaseMutation.mutate()}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        نعم، إعادة تعيين النظام
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-600" />
+                نصائح هامة لإدارة البيانات
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• قم بإنشاء نسخة احتياطية بانتظام لضمان أمان البيانات</li>
+                <li>• احتفظ بالنسخ الاحتياطية في مكان آمن ومنفصل</li>
+                <li>• تأكد من صحة ملف النسخة الاحتياطية قبل الاستيراد</li>
+                <li>• إعادة تعيين النظام إجراء نهائي ولا يمكن التراجع عنه</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* إعدادات المظهر */}
         <Card className="lg:col-span-2">
           <CardHeader>
