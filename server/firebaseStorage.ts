@@ -102,17 +102,11 @@ export class FirebaseStorage implements IStorage {
         createdAt: serverTimestamp()
       };
       
-      // Only add dischargeDate if it has a value
-      if (insertPatient.status === 'discharged' && insertPatient.dischargeDate) {
-        patientData.dischargeDate = insertPatient.dischargeDate;
-      }
-      
       const patientDoc = await addDoc(collection(db, "patients"), patientData);
       return { 
         id: patientDoc.id, 
         ...insertPatient, 
-        totalPaid: 0,
-        ...(insertPatient.dischargeDate && { dischargeDate: insertPatient.dischargeDate })
+        totalPaid: 0
       } as Patient;
     } catch (error) {
       console.error("Error creating patient:", error);

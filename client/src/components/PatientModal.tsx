@@ -62,16 +62,25 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const payload = {
+      // تنظيف البيانات وإزالة القيم الفارغة
+      const payload: any = {
         name: data.name,
         nationalId: data.nationalId,
         admissionDate: data.admissionDate,
-        roomNumber: data.roomNumber || "",
         dailyCost: parseFloat(data.dailyCost),
-        insurance: data.insurance || "",
         status: data.status,
-        notes: data.notes || "",
       };
+
+      // إضافة الحقول الاختيارية فقط إذا كانت لها قيم
+      if (data.roomNumber && data.roomNumber.trim()) {
+        payload.roomNumber = data.roomNumber.trim();
+      }
+      if (data.insurance && data.insurance.trim()) {
+        payload.insurance = data.insurance.trim();
+      }
+      if (data.notes && data.notes.trim()) {
+        payload.notes = data.notes.trim();
+      }
       
       if (patient) {
         return apiRequest("PATCH", `/api/patients/${patient.id}`, payload);
