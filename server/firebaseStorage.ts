@@ -77,7 +77,13 @@ export class FirebaseStorage implements IStorage {
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
-        return { id: userDoc.id, ...userDoc.data() } as User;
+        const data = userDoc.data();
+        return { 
+          id: userDoc.id, 
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          lastLogin: data.lastLogin?.toDate?.()?.toISOString() || data.lastLogin
+        } as User;
       }
       return undefined;
     } catch (error) {
@@ -131,10 +137,15 @@ export class FirebaseStorage implements IStorage {
   async getUsers(): Promise<User[]> {
     try {
       const querySnapshot = await getDocs(collection(db, "users"));
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as User[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          lastLogin: data.lastLogin?.toDate?.()?.toISOString() || data.lastLogin
+        };
+      }) as User[];
     } catch (error) {
       console.error("Error getting users:", error);
       return [];
@@ -145,10 +156,15 @@ export class FirebaseStorage implements IStorage {
     try {
       const q = query(collection(db, "users"), where("isActive", "==", true));
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as User[];
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          lastLogin: data.lastLogin?.toDate?.()?.toISOString() || data.lastLogin
+        };
+      }) as User[];
     } catch (error) {
       console.error("Error getting active users:", error);
       return [];
