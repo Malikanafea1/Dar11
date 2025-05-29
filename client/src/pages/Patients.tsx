@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle } from "lucide-react";
+import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle, Search, Filter } from "lucide-react";
 import { formatCurrency, formatDate, calculateDaysBetween } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -16,11 +18,39 @@ export default function Patients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
   const { data: patients, isLoading } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
   });
+
+  // ترتيب وفلترة المرضى
+  const filteredAndSortedPatients = useMemo(() => {
+    if (!patients) return [];
+
+    let filtered = patients;
+
+    // فلترة حسب النص المدخل
+    if (searchTerm) {
+      filtered = filtered.filter(patient => 
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.nationalId.includes(searchTerm) ||
+        (patient.roomNumber && patient.roomNumber.includes(searchTerm))
+      );
+    }
+
+    // فلترة حسب الحالة
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(patient => patient.status === statusFilter);
+    }
+
+    // ترتيب حسب تاريخ الدخول (الأقدم أولاً)
+    return filtered.sort((a, b) => 
+      new Date(a.admissionDate).getTime() - new Date(b.admissionDate).getTime()
+    );
+  }, [patients, searchTerm, statusFilter]);
 
   const dischargeMutation = useMutation({
     mutationFn: async (patientId: string) => {
@@ -95,7 +125,91 @@ export default function Patients() {
           </div>
         </div>
 
-        {patients && patients.length === 0 ? (
+        {/* شريط البحث والفلترة */}
+        <div className="flex gap-4 items-center">
+          <div className="flex-1 relative">
+            <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="البحث بالاسم أو رقم الهوية أو رقم الغرفة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="فلترة حسب الحالة" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المرضى</SelectItem>
+                <SelectItem value="active">المرضى النشطون</SelectItem>
+                <SelectItem value="discharged">المرضى المُخرجون</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* عرض إحصائيات سريعة */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">إجمالي المرضى</p>
+                  <p className="text-2xl font-bold text-blue-600">{filteredAndSortedPatients.length}</p>
+                </div>
+                <UserRound className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">المرضى النشطون</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {filteredAndSortedPatients.filter(p => p.status === 'active').length}
+                  </p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">المرضى المُخرجون</p>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {filteredAndSortedPatients.filter(p => p.status === 'discharged').length}
+                  </p>
+                </div>
+                <LogOut className="h-8 w-8 text-gray-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {filteredAndSortedPatients.length === 0 && patients && patients.length > 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-800 mb-2">لا توجد نتائج</h3>
+              <p className="text-gray-600 mb-4">لم يتم العثور على مرضى مطابقين لمعايير البحث</p>
+              <Button 
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                }}
+                variant="outline"
+              >
+                مسح الفلاتر
+              </Button>
+            </CardContent>
+          </Card>
+        ) : patients && patients.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <UserRound className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -109,7 +223,7 @@ export default function Patients() {
           </Card>
         ) : (
           <div className="grid gap-6">
-            {patients?.map((patient) => (
+            {filteredAndSortedPatients?.map((patient) => (
               <Card key={patient.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
