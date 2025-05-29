@@ -12,6 +12,11 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
+  deleteUser(id: string): Promise<void>;
+  getUsers(): Promise<User[]>;
+  getActiveUsers(): Promise<User[]>;
+  updateLastLogin(userId: string): Promise<void>;
 
   // Patient methods
   getPatients(): Promise<Patient[]>;
@@ -103,6 +108,23 @@ export class MemStorage implements IStorage {
     this.currentStaffId = 1;
     this.currentExpenseId = 1;
     this.currentPaymentId = 1;
+    
+    // إنشاء المدير الافتراضي
+    this.createDefaultAdmin();
+  }
+
+  private createDefaultAdmin() {
+    const defaultAdmin: User = {
+      id: "1",
+      username: "عاطف نافع",
+      password: "123456",
+      fullName: "عاطف نافع",
+      role: "admin",
+      permissions: ["all"],
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    this.users.set("1", defaultAdmin);
   }
 
   // User methods
@@ -119,9 +141,43 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId.toString();
     this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      createdAt: new Date().toISOString()
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error("المستخدم غير موجود");
+    }
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    this.users.delete(id);
+  }
+
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getActiveUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).filter(user => user.isActive);
+  }
+
+  async updateLastLogin(userId: string): Promise<void> {
+    const user = this.users.get(userId);
+    if (user) {
+      user.lastLogin = new Date().toISOString();
+      this.users.set(userId, user);
+    }
   }
 
   // Patient methods

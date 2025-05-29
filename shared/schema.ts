@@ -99,11 +99,25 @@ export interface User {
   id: string;
   username: string;
   password: string;
+  fullName: string;
+  role: "admin" | "doctor" | "nurse" | "receptionist" | "accountant";
+  permissions: string[];
+  isActive: boolean;
+  createdAt: string;
+  lastLogin?: string;
+  createdBy?: string;
 }
 
 export const insertUserSchema = z.object({
-  username: z.string().min(1, "اسم المستخدم مطلوب"),
+  username: z.string().min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
+  fullName: z.string().min(2, "الاسم الكامل مطلوب"),
+  role: z.enum(["admin", "doctor", "nurse", "receptionist", "accountant"], {
+    errorMap: () => ({ message: "يرجى اختيار دور صحيح" })
+  }),
+  permissions: z.array(z.string()).default([]),
+  isActive: z.boolean().default(true),
+  createdBy: z.string().optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
