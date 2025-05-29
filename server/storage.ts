@@ -3,7 +3,8 @@ import {
   type Staff, type InsertStaff,
   type Expense, type InsertExpense,
   type Payment, type InsertPayment,
-  type User, type InsertUser 
+  type User, type InsertUser,
+  type Settings, type InsertSettings
 } from "@shared/schema";
 
 export interface IStorage {
@@ -37,6 +38,10 @@ export interface IStorage {
   getPayment(id: string): Promise<Payment | undefined>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPaymentsByPatient(patientId: string): Promise<Payment[]>;
+  
+  // Settings methods
+  getSettings(): Promise<Settings | undefined>;
+  updateSettings(updates: Partial<InsertSettings>): Promise<Settings>;
   
   // Dashboard stats
   getDashboardStats(): Promise<{

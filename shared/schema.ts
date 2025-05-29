@@ -107,3 +107,36 @@ export const insertUserSchema = z.object({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+// Settings types and schemas
+export interface Settings {
+  id: string;
+  username: string;
+  email: string;
+  phone: string;
+  hospitalName: string;
+  defaultCurrency: string;
+  patientAlerts: boolean;
+  paymentAlerts: boolean;
+  staffAlerts: boolean;
+  financialAlerts: boolean;
+  autoBackup: boolean;
+  dataCompression: boolean;
+  updatedAt: string;
+}
+
+export const insertSettingsSchema = z.object({
+  username: z.string().min(1, "اسم المستخدم مطلوب"),
+  email: z.string().email("البريد الإلكتروني غير صحيح"),
+  phone: z.string().min(1, "رقم الهاتف مطلوب"),
+  hospitalName: z.string().min(1, "اسم المركز مطلوب"),
+  defaultCurrency: z.string().default("ج.م"),
+  patientAlerts: z.boolean().default(true),
+  paymentAlerts: z.boolean().default(true),
+  staffAlerts: z.boolean().default(true),
+  financialAlerts: z.boolean().default(true),
+  autoBackup: z.boolean().default(true),
+  dataCompression: z.boolean().default(false),
+});
+
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;

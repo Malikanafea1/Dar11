@@ -18,7 +18,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/patients/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const patient = await storage.getPatient(id);
       if (!patient) {
         return res.status(404).json({ message: "Patient not found" });
@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/patients/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const patient = await storage.updatePatient(id, req.body);
       res.json(patient);
     } catch (error) {
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/payments/patient/:patientId", async (req, res) => {
     try {
-      const patientId = parseInt(req.params.patientId);
+      const patientId = req.params.patientId;
       const payments = await storage.getPaymentsByPatient(patientId);
       res.json(payments);
     } catch (error) {
