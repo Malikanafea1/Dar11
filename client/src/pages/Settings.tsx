@@ -4,49 +4,110 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Save, User, Bell, Shield, Database, Cog } from "lucide-react";
-import { useState } from "react";
+import { Save, User, Bell, Shield, Database, Cog, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import type { Settings, InsertSettings } from "@shared/schema";
 
 export default function Settings() {
   const { toast } = useToast();
-  const [settings, setSettings] = useState({
-    username: "مسؤول النظام",
-    email: "admin@hospital.com",
-    phone: "01234567890",
-    hospitalName: "مركز دار الحياة لعلاج الإدمان",
-    patientAlerts: true,
-    paymentAlerts: true,
-    staffAlerts: true,
-    financialAlerts: true,
-    autoBackup: true,
+  const queryClient = useQueryClient();
+  
+  const { data: settings, isLoading } = useQuery<Settings>({
+    queryKey: ['/api/settings'],
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
+
+  const [localSettings, setLocalSettings] = useState<Partial<InsertSettings>>({
+    username: "",
+    email: "",
+    phone: "",
+    hospitalName: "",
+    defaultCurrency: "",
+    patientAlerts: false,
+    paymentAlerts: false,
+    staffAlerts: false,
+    financialAlerts: false,
+    autoBackup: false,
     dataCompression: false
   });
 
+  useEffect(() => {
+    if (settings) {
+      setLocalSettings(settings);
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: Partial<InsertSettings>) => {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update settings");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/settings'] });
+      toast({
+        title: "تم حفظ الإعدادات",
+        description: "تم حفظ جميع التغييرات بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الإعدادات، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSaveProfile = () => {
-    toast({
-      title: "تم حفظ البيانات",
-      description: "تم حفظ بيانات الحساب بنجاح",
-    });
+    const profileData = {
+      username: localSettings.username,
+      email: localSettings.email,
+      phone: localSettings.phone,
+      hospitalName: localSettings.hospitalName,
+      defaultCurrency: localSettings.defaultCurrency
+    };
+    updateSettingsMutation.mutate(profileData);
   };
 
   const handleChangePassword = () => {
     toast({
-      title: "تم تغيير كلمة المرور",
-      description: "تم تغيير كلمة المرور بنجاح",
+      title: "تنبيه",
+      description: "وظيفة تغيير كلمة المرور ستكون متاحة قريباً",
     });
   };
 
-  const handleToggleSwitch = (key: string) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: !prev[key as keyof typeof prev]
-    }));
-    toast({
-      title: "تم تحديث الإعدادات",
-      description: "تم حفظ التغييرات بنجاح",
-    });
+  const handleToggleSwitch = (key: keyof InsertSettings, value: boolean) => {
+    const newSettings = { ...localSettings, [key]: value };
+    setLocalSettings(newSettings);
+    updateSettingsMutation.mutate({ [key]: value });
   };
+
+  const handleInputChange = (key: keyof InsertSettings, value: string) => {
+    setLocalSettings(prev => ({ ...prev, [key]: value }));
+  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>جارٍ تحميل الإعدادات...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>

@@ -9,7 +9,8 @@ import {
   where, 
   orderBy,
   serverTimestamp,
-  getDoc
+  getDoc,
+  setDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { IStorage } from "./storage";
@@ -18,7 +19,8 @@ import type {
   Staff, InsertStaff,
   Expense, InsertExpense,
   Payment, InsertPayment,
-  User, InsertUser 
+  User, InsertUser,
+  Settings, InsertSettings
 } from "@shared/schema";
 
 export class FirebaseStorage implements IStorage {
