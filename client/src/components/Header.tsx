@@ -1,10 +1,25 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Bell, Plus, Home, Users, UserCheck, DollarSign, FileText, Settings, Menu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Plus, Home, Users, UserCheck, DollarSign, FileText, Settings, Menu, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import PatientModal from "./PatientModal";
 
-export default function Header() {
+interface User {
+  id: string;
+  username: string;
+  fullName: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+}
+
+interface HeaderProps {
+  user: User;
+  onLogout: () => void;
+}
+
+export default function Header({ user, onLogout }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [location] = useLocation();
@@ -16,8 +31,20 @@ export default function Header() {
     { path: "/staff", label: "الموظفين", icon: UserCheck },
     { path: "/finance", label: "المالية", icon: DollarSign },
     { path: "/reports", label: "التقارير", icon: FileText },
+    ...(user.role === "admin" ? [{ path: "/users", label: "المستخدمين", icon: User }] : []),
     { path: "/settings", label: "الإعدادات", icon: Settings },
   ];
+
+  const getRoleLabel = (role: string) => {
+    const roleMap = {
+      admin: "مدير النظام",
+      doctor: "طبيب", 
+      nurse: "ممرض",
+      receptionist: "موظف استقبال",
+      accountant: "محاسب",
+    };
+    return roleMap[role as keyof typeof roleMap] || role;
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -101,6 +128,28 @@ export default function Header() {
                 </Button>
               </div>
 
+              {/* User Info */}
+              <div className="hidden md:flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-800">{user.fullName}</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {getRoleLabel(user.role)}
+                  </Badge>
+                </div>
+                <User className="w-6 h-6 text-gray-600" />
+              </div>
+
+              {/* Logout Button */}
+              <Button
+                onClick={onLogout}
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-600 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4 sm:ml-2" />
+                <span className="hidden sm:inline">تسجيل خروج</span>
+              </Button>
+
               {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
@@ -112,7 +161,7 @@ export default function Header() {
               </Button>
 
               {/* Current Date & Time */}
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden lg:block">
                 <p className="text-sm font-medium text-gray-800">{formatDate(currentTime)}</p>
                 <p className="text-xs text-gray-500">{formatTime(currentTime)}</p>
               </div>

@@ -7,19 +7,33 @@ import {
   Users, 
   Banknote, 
   BarChart3, 
-  Settings 
+  Settings,
+  User
 } from "lucide-react";
 
-const navigation = [
-  { name: "لوحة التحكم", href: "/", icon: LayoutDashboard },
-  { name: "إدارة المرضى", href: "/patients", icon: UserRound },
-  { name: "إدارة الموظفين", href: "/staff", icon: Users },
-  { name: "الإدارة المالية", href: "/finance", icon: Banknote },
-  { name: "التقارير", href: "/reports", icon: BarChart3 },
-  { name: "الإعدادات", href: "/settings", icon: Settings },
-];
+interface UserType {
+  id: string;
+  username: string;
+  fullName: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+}
 
-export default function Sidebar() {
+interface SidebarProps {
+  user: UserType;
+}
+
+export default function Sidebar({ user }: SidebarProps) {
+  const navigation = [
+    { name: "لوحة التحكم", href: "/", icon: LayoutDashboard },
+    { name: "إدارة المرضى", href: "/patients", icon: UserRound },
+    { name: "إدارة الموظفين", href: "/staff", icon: Users },
+    { name: "الإدارة المالية", href: "/finance", icon: Banknote },
+    { name: "التقارير", href: "/reports", icon: BarChart3 },
+    ...(user.role === "admin" ? [{ name: "إدارة المستخدمين", href: "/users", icon: User }] : []),
+    { name: "الإعدادات", href: "/settings", icon: Settings },
+  ];
   const [location] = useLocation();
 
   return (
@@ -73,11 +87,17 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center p-3 rounded-lg bg-gray-50">
           <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center ml-3">
-            <Users className="w-5 h-5" />
+            <User className="w-5 h-5" />
           </div>
           <div>
-            <p className="font-medium text-gray-800">د. أحمد محمد</p>
-            <p className="text-sm text-gray-500">مدير النظام</p>
+            <p className="font-medium text-gray-800">{user.fullName}</p>
+            <p className="text-sm text-gray-500">
+              {user.role === "admin" ? "مدير النظام" : 
+               user.role === "doctor" ? "طبيب" : 
+               user.role === "nurse" ? "ممرض" : 
+               user.role === "receptionist" ? "موظف استقبال" : 
+               user.role === "accountant" ? "محاسب" : user.role}
+            </p>
           </div>
         </div>
       </div>
