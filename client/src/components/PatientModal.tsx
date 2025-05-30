@@ -121,7 +121,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
             {patient ? "تعديل بيانات المريض" : "إضافة مريض جديد"}
@@ -130,7 +130,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* اسم المريض الكامل */}
               <FormField
                 control={form.control}
@@ -261,11 +261,11 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
               )}
             />
 
-            <div className="flex gap-3 pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 pt-6">
               <Button 
                 type="submit" 
                 disabled={mutation.isPending}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto order-1 sm:order-none"
               >
                 <Save className="w-4 h-4 ml-2" />
                 {mutation.isPending ? "جاري الحفظ..." : (patient ? "تحديث البيانات" : "حفظ المريض")}
@@ -274,7 +274,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                 type="button" 
                 variant="outline" 
                 onClick={handleClose}
-                className="flex-1"
+                className="flex-1 w-full sm:w-auto order-2 sm:order-none"
               >
                 إلغاء
               </Button>

@@ -99,7 +99,7 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Receipt className="h-6 w-6 text-green-600" />
@@ -111,7 +111,7 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
           {/* معلومات المريض */}
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-blue-600" />
@@ -142,7 +142,7 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
 
           {/* نموذج الدفع */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* مبلغ الدفعة */}
               <div className="space-y-2">
                 <Label htmlFor="amount">مبلغ الدفعة *</Label>
@@ -155,12 +155,13 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
                   onChange={(e) => setAmount(e.target.value)}
                   required
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => setAmount(remainingAmount.toString())}
+                    className="w-full sm:w-auto"
                   >
                     المبلغ كاملاً
                   </Button>
@@ -169,6 +170,7 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
                     variant="outline"
                     size="sm"
                     onClick={() => setAmount((remainingAmount / 2).toString())}
+                    className="w-full sm:w-auto"
                   >
                     نصف المبلغ
                   </Button>
@@ -216,15 +218,20 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
               />
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <Button 
                 type="submit" 
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-green-700 w-full sm:w-auto order-1 sm:order-none"
                 disabled={createPaymentMutation.isPending}
               >
                 {createPaymentMutation.isPending ? "جاري التسجيل..." : "تسجيل الدفعة"}
               </Button>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                className="w-full sm:w-auto order-2 sm:order-none"
+              >
                 إلغاء
               </Button>
             </div>

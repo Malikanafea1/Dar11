@@ -95,14 +95,14 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle>{staff ? "تعديل بيانات الموظف" : "إضافة موظف جديد"}</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -231,7 +231,7 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
                 control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 sm:col-span-2">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -248,13 +248,22 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
               />
             </div>
             
-            <div className="flex justify-end gap-4 pt-4">
-              <Button type="button" variant="outline" onClick={handleClose}>
-                إلغاء
-              </Button>
-              <Button type="submit" disabled={mutation.isPending} className="bg-green-600 hover:bg-green-700">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+              <Button 
+                type="submit" 
+                disabled={mutation.isPending} 
+                className="bg-green-600 hover:bg-green-700 w-full sm:w-auto order-1 sm:order-2"
+              >
                 <Save className="ml-2 w-4 h-4" />
                 {mutation.isPending ? "جاري الحفظ..." : (staff ? "تحديث الموظف" : "حفظ الموظف")}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+                className="w-full sm:w-auto order-2 sm:order-1"
+              >
+                إلغاء
               </Button>
             </div>
           </form>
