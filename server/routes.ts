@@ -14,11 +14,18 @@ import {
   insertDeductionSchema
 } from "@shared/schema";
 import { z } from "zod";
+import { 
+  requireAuth, 
+  requirePermission, 
+  requireRole,
+  requireSelfOrPermission,
+  PERMISSIONS 
+} from "./middleware/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Patient routes
-  app.get("/api/patients", async (req, res) => {
+  // Patient routes - محمية بالصلاحيات
+  app.get("/api/patients", requireAuth, requirePermission(PERMISSIONS.VIEW_PATIENTS), async (req, res) => {
     try {
       const patients = await storage.getPatients();
       res.json(patients);
@@ -27,7 +34,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/patients/:id", async (req, res) => {
+  app.get("/api/patients/:id", requireAuth, requirePermission(PERMISSIONS.VIEW_PATIENTS), async (req, res) => {
     try {
       const id = req.params.id;
       const patient = await storage.getPatient(id);
@@ -40,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/patients", async (req, res) => {
+  app.post("/api/patients", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
     try {
       const validatedData = insertPatientSchema.parse(req.body);
       const patient = await storage.createPatient(validatedData);
@@ -53,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/patients/:id", async (req, res) => {
+  app.patch("/api/patients/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
     try {
       const id = req.params.id;
       const patient = await storage.updatePatient(id, req.body);
@@ -63,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/patients/:id", async (req, res) => {
+  app.delete("/api/patients/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
     try {
       const id = req.params.id;
       await storage.deletePatient(id);
@@ -73,8 +80,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Staff routes
-  app.get("/api/staff", async (req, res) => {
+  // Staff routes - محمية بالصلاحيات
+  app.get("/api/staff", requireAuth, requirePermission(PERMISSIONS.VIEW_STAFF), async (req, res) => {
     try {
       const staff = await storage.getStaff();
       res.json(staff);
@@ -83,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/staff", async (req, res) => {
+  app.post("/api/staff", requireAuth, requirePermission(PERMISSIONS.MANAGE_STAFF), async (req, res) => {
     try {
       const validatedData = insertStaffSchema.parse(req.body);
       const staff = await storage.createStaff(validatedData);
