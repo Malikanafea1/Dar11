@@ -20,7 +20,11 @@ import type {
   Expense, InsertExpense,
   Payment, InsertPayment,
   User, InsertUser,
-  Settings, InsertSettings
+  Settings, InsertSettings,
+  Payroll, InsertPayroll,
+  Bonus, InsertBonus,
+  Advance, InsertAdvance,
+  Deduction, InsertDeduction
 } from "@shared/schema";
 
 export class FirebaseStorage implements IStorage {
@@ -733,6 +737,342 @@ export class FirebaseStorage implements IStorage {
     } catch (error) {
       console.error("Error importing backup:", error);
       throw error;
+    }
+  }
+
+  // Payroll methods
+  async getPayrolls(): Promise<Payroll[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "payrolls"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Payroll[];
+    } catch (error) {
+      console.error("Error getting payrolls:", error);
+      return [];
+    }
+  }
+
+  async getPayroll(id: string): Promise<Payroll | undefined> {
+    try {
+      const payrollDoc = await getDoc(doc(db, "payrolls", id));
+      if (payrollDoc.exists()) {
+        return {
+          id: payrollDoc.id,
+          ...payrollDoc.data()
+        } as Payroll;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting payroll:", error);
+      return undefined;
+    }
+  }
+
+  async createPayroll(insertPayroll: InsertPayroll): Promise<Payroll> {
+    try {
+      const payrollData = {
+        ...insertPayroll,
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "payrolls"), payrollData);
+      
+      return {
+        id: docRef.id,
+        ...payrollData
+      } as Payroll;
+    } catch (error) {
+      console.error("Error creating payroll:", error);
+      throw error;
+    }
+  }
+
+  async updatePayroll(id: string, updates: Partial<Payroll>): Promise<Payroll> {
+    try {
+      const payrollRef = doc(db, "payrolls", id);
+      await updateDoc(payrollRef, updates);
+      
+      const updatedPayroll = await this.getPayroll(id);
+      if (!updatedPayroll) {
+        throw new Error("Payroll not found after update");
+      }
+      return updatedPayroll;
+    } catch (error) {
+      console.error("Error updating payroll:", error);
+      throw error;
+    }
+  }
+
+  async getPayrollsByStaff(staffId: string): Promise<Payroll[]> {
+    try {
+      const q = query(collection(db, "payrolls"), where("staffId", "==", staffId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Payroll[];
+    } catch (error) {
+      console.error("Error getting payrolls by staff:", error);
+      return [];
+    }
+  }
+
+  async getPayrollsByMonth(month: string): Promise<Payroll[]> {
+    try {
+      const q = query(collection(db, "payrolls"), where("month", "==", month));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Payroll[];
+    } catch (error) {
+      console.error("Error getting payrolls by month:", error);
+      return [];
+    }
+  }
+
+  // Bonus methods
+  async getBonuses(): Promise<Bonus[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "bonuses"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Bonus[];
+    } catch (error) {
+      console.error("Error getting bonuses:", error);
+      return [];
+    }
+  }
+
+  async getBonus(id: string): Promise<Bonus | undefined> {
+    try {
+      const bonusDoc = await getDoc(doc(db, "bonuses", id));
+      if (bonusDoc.exists()) {
+        return {
+          id: bonusDoc.id,
+          ...bonusDoc.data()
+        } as Bonus;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting bonus:", error);
+      return undefined;
+    }
+  }
+
+  async createBonus(insertBonus: InsertBonus): Promise<Bonus> {
+    try {
+      const bonusData = {
+        ...insertBonus,
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "bonuses"), bonusData);
+      
+      return {
+        id: docRef.id,
+        ...bonusData
+      } as Bonus;
+    } catch (error) {
+      console.error("Error creating bonus:", error);
+      throw error;
+    }
+  }
+
+  async updateBonus(id: string, updates: Partial<Bonus>): Promise<Bonus> {
+    try {
+      const bonusRef = doc(db, "bonuses", id);
+      await updateDoc(bonusRef, updates);
+      
+      const updatedBonus = await this.getBonus(id);
+      if (!updatedBonus) {
+        throw new Error("Bonus not found after update");
+      }
+      return updatedBonus;
+    } catch (error) {
+      console.error("Error updating bonus:", error);
+      throw error;
+    }
+  }
+
+  async getBonusesByStaff(staffId: string): Promise<Bonus[]> {
+    try {
+      const q = query(collection(db, "bonuses"), where("staffId", "==", staffId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Bonus[];
+    } catch (error) {
+      console.error("Error getting bonuses by staff:", error);
+      return [];
+    }
+  }
+
+  // Advance methods
+  async getAdvances(): Promise<Advance[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "advances"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Advance[];
+    } catch (error) {
+      console.error("Error getting advances:", error);
+      return [];
+    }
+  }
+
+  async getAdvance(id: string): Promise<Advance | undefined> {
+    try {
+      const advanceDoc = await getDoc(doc(db, "advances", id));
+      if (advanceDoc.exists()) {
+        return {
+          id: advanceDoc.id,
+          ...advanceDoc.data()
+        } as Advance;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting advance:", error);
+      return undefined;
+    }
+  }
+
+  async createAdvance(insertAdvance: InsertAdvance): Promise<Advance> {
+    try {
+      const monthlyDeduction = insertAdvance.amount / insertAdvance.repaymentMonths;
+      
+      const advanceData = {
+        ...insertAdvance,
+        requestDate: new Date().toISOString(),
+        status: "pending" as const,
+        monthlyDeduction,
+        remainingAmount: insertAdvance.amount,
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "advances"), advanceData);
+      
+      return {
+        id: docRef.id,
+        ...advanceData
+      } as Advance;
+    } catch (error) {
+      console.error("Error creating advance:", error);
+      throw error;
+    }
+  }
+
+  async updateAdvance(id: string, updates: Partial<Advance>): Promise<Advance> {
+    try {
+      const advanceRef = doc(db, "advances", id);
+      await updateDoc(advanceRef, updates);
+      
+      const updatedAdvance = await this.getAdvance(id);
+      if (!updatedAdvance) {
+        throw new Error("Advance not found after update");
+      }
+      return updatedAdvance;
+    } catch (error) {
+      console.error("Error updating advance:", error);
+      throw error;
+    }
+  }
+
+  async getAdvancesByStaff(staffId: string): Promise<Advance[]> {
+    try {
+      const q = query(collection(db, "advances"), where("staffId", "==", staffId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Advance[];
+    } catch (error) {
+      console.error("Error getting advances by staff:", error);
+      return [];
+    }
+  }
+
+  // Deduction methods
+  async getDeductions(): Promise<Deduction[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "deductions"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Deduction[];
+    } catch (error) {
+      console.error("Error getting deductions:", error);
+      return [];
+    }
+  }
+
+  async getDeduction(id: string): Promise<Deduction | undefined> {
+    try {
+      const deductionDoc = await getDoc(doc(db, "deductions", id));
+      if (deductionDoc.exists()) {
+        return {
+          id: deductionDoc.id,
+          ...deductionDoc.data()
+        } as Deduction;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting deduction:", error);
+      return undefined;
+    }
+  }
+
+  async createDeduction(insertDeduction: InsertDeduction): Promise<Deduction> {
+    try {
+      const deductionData = {
+        ...insertDeduction,
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "deductions"), deductionData);
+      
+      return {
+        id: docRef.id,
+        ...deductionData
+      } as Deduction;
+    } catch (error) {
+      console.error("Error creating deduction:", error);
+      throw error;
+    }
+  }
+
+  async updateDeduction(id: string, updates: Partial<Deduction>): Promise<Deduction> {
+    try {
+      const deductionRef = doc(db, "deductions", id);
+      await updateDoc(deductionRef, updates);
+      
+      const updatedDeduction = await this.getDeduction(id);
+      if (!updatedDeduction) {
+        throw new Error("Deduction not found after update");
+      }
+      return updatedDeduction;
+    } catch (error) {
+      console.error("Error updating deduction:", error);
+      throw error;
+    }
+  }
+
+  async getDeductionsByStaff(staffId: string): Promise<Deduction[]> {
+    try {
+      const q = query(collection(db, "deductions"), where("staffId", "==", staffId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Deduction[];
+    } catch (error) {
+      console.error("Error getting deductions by staff:", error);
+      return [];
     }
   }
 }

@@ -1,7 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertStaffSchema, insertExpenseSchema, insertPaymentSchema, insertSettingsSchema, insertUserSchema } from "@shared/schema";
+import { 
+  insertPatientSchema, 
+  insertStaffSchema, 
+  insertExpenseSchema, 
+  insertPaymentSchema, 
+  insertSettingsSchema, 
+  insertUserSchema,
+  insertPayrollSchema,
+  insertBonusSchema,
+  insertAdvanceSchema,
+  insertDeductionSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -310,6 +321,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Database imported successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to import database" });
+    }
+  });
+
+  // Payroll routes
+  app.get("/api/payrolls", async (req, res) => {
+    try {
+      const payrolls = await storage.getPayrolls();
+      res.json(payrolls);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payrolls" });
+    }
+  });
+
+  app.get("/api/payrolls/:id", async (req, res) => {
+    try {
+      const payroll = await storage.getPayroll(req.params.id);
+      if (!payroll) {
+        return res.status(404).json({ message: "Payroll not found" });
+      }
+      res.json(payroll);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payroll" });
+    }
+  });
+
+  app.post("/api/payrolls", async (req, res) => {
+    try {
+      const validatedData = insertPayrollSchema.parse(req.body);
+      const payroll = await storage.createPayroll(validatedData);
+      res.status(201).json(payroll);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid payroll data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create payroll" });
+    }
+  });
+
+  app.patch("/api/payrolls/:id", async (req, res) => {
+    try {
+      const payroll = await storage.updatePayroll(req.params.id, req.body);
+      res.json(payroll);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update payroll" });
+    }
+  });
+
+  app.get("/api/payrolls/staff/:staffId", async (req, res) => {
+    try {
+      const payrolls = await storage.getPayrollsByStaff(req.params.staffId);
+      res.json(payrolls);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payrolls for staff" });
+    }
+  });
+
+  app.get("/api/payrolls/month/:month", async (req, res) => {
+    try {
+      const payrolls = await storage.getPayrollsByMonth(req.params.month);
+      res.json(payrolls);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payrolls for month" });
+    }
+  });
+
+  // Bonus routes
+  app.get("/api/bonuses", async (req, res) => {
+    try {
+      const bonuses = await storage.getBonuses();
+      res.json(bonuses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bonuses" });
+    }
+  });
+
+  app.post("/api/bonuses", async (req, res) => {
+    try {
+      const validatedData = insertBonusSchema.parse(req.body);
+      const bonus = await storage.createBonus(validatedData);
+      res.status(201).json(bonus);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid bonus data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create bonus" });
+    }
+  });
+
+  app.get("/api/bonuses/staff/:staffId", async (req, res) => {
+    try {
+      const bonuses = await storage.getBonusesByStaff(req.params.staffId);
+      res.json(bonuses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bonuses for staff" });
+    }
+  });
+
+  // Advance routes
+  app.get("/api/advances", async (req, res) => {
+    try {
+      const advances = await storage.getAdvances();
+      res.json(advances);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch advances" });
+    }
+  });
+
+  app.post("/api/advances", async (req, res) => {
+    try {
+      const validatedData = insertAdvanceSchema.parse(req.body);
+      const advance = await storage.createAdvance(validatedData);
+      res.status(201).json(advance);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid advance data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create advance" });
+    }
+  });
+
+  app.patch("/api/advances/:id", async (req, res) => {
+    try {
+      const advance = await storage.updateAdvance(req.params.id, req.body);
+      res.json(advance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update advance" });
+    }
+  });
+
+  app.get("/api/advances/staff/:staffId", async (req, res) => {
+    try {
+      const advances = await storage.getAdvancesByStaff(req.params.staffId);
+      res.json(advances);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch advances for staff" });
+    }
+  });
+
+  // Deduction routes
+  app.get("/api/deductions", async (req, res) => {
+    try {
+      const deductions = await storage.getDeductions();
+      res.json(deductions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch deductions" });
+    }
+  });
+
+  app.post("/api/deductions", async (req, res) => {
+    try {
+      const validatedData = insertDeductionSchema.parse(req.body);
+      const deduction = await storage.createDeduction(validatedData);
+      res.status(201).json(deduction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid deduction data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create deduction" });
+    }
+  });
+
+  app.get("/api/deductions/staff/:staffId", async (req, res) => {
+    try {
+      const deductions = await storage.getDeductionsByStaff(req.params.staffId);
+      res.json(deductions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch deductions for staff" });
     }
   });
 
