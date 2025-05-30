@@ -124,42 +124,47 @@ export default function Patients() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">إدارة المرضى</h1>
-            <p className="text-gray-600">إدارة جميع المرضى في المستشفى</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">إدارة المرضى</h1>
+            <p className="text-sm sm:text-base text-gray-600">إدارة جميع المرضى في المستشفى</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <Button
               onClick={() => setIsImportModalOpen(true)}
               variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50"
+              size="sm"
+              className="border-green-600 text-green-600 hover:bg-green-50 text-xs sm:text-sm w-full sm:w-auto"
             >
-              <Upload className="ml-2 w-4 h-4" />
+              <Upload className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
               استيراد من Excel
             </Button>
-            <Button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="ml-2 w-4 h-4" />
+            <Button 
+              onClick={() => setIsModalOpen(true)} 
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm w-full sm:w-auto"
+            >
+              <Plus className="ml-2 w-3 h-3 sm:w-4 sm:h-4" />
               إضافة مريض جديد
             </Button>
           </div>
         </div>
 
         {/* شريط البحث والفلترة */}
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
           <div className="flex-1 relative">
-            <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute right-3 top-2.5 sm:top-3 h-4 w-4 text-gray-400" />
             <Input
               placeholder="البحث بالاسم أو رقم الهوية أو رقم الغرفة..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10"
+              className="pr-10 text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-gray-500" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-full sm:w-40 text-sm sm:text-base h-9 sm:h-10">
                 <SelectValue placeholder="فلترة حسب الحالة" />
               </SelectTrigger>
               <SelectContent>
@@ -257,25 +262,25 @@ export default function Patients() {
                           {getStatusBadge(patient.status)}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
                           <div className="flex items-center text-gray-600">
-                            <Calendar className="w-4 h-4 ml-2" />
-                            <span className="text-sm">دخول: {formatDate(patient.admissionDate)}</span>
+                            <Calendar className="w-4 h-4 ml-2 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">دخول: {formatDate(patient.admissionDate)}</span>
                           </div>
                           
                           <div className="flex items-center text-gray-600">
-                            <MapPin className="w-4 h-4 ml-2" />
-                            <span className="text-sm">غرفة: {patient.roomNumber || "غير محدد"}</span>
+                            <MapPin className="w-4 h-4 ml-2 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">غرفة: {patient.roomNumber || "غير محدد"}</span>
                           </div>
                           
                           <div className="flex items-center text-gray-600">
-                            <DollarSign className="w-4 h-4 ml-2" />
-                            <span className="text-sm">تكلفة يومية: {formatCurrency(patient.dailyCost)}</span>
+                            <DollarSign className="w-4 h-4 ml-2 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">تكلفة يومية: {formatCurrency(patient.dailyCost)}</span>
                           </div>
                           
                           <div className="flex items-center text-gray-600">
-                            <CreditCard className="w-4 h-4 ml-2" />
-                            <span className="text-sm">مدفوع: {formatCurrency(patient.totalPaid || 0)}</span>
+                            <CreditCard className="w-4 h-4 ml-2 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">مدفوع: {formatCurrency(patient.totalPaid || 0)}</span>
                           </div>
                         </div>
 
@@ -300,7 +305,7 @@ export default function Patients() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
                       {patient.status === "active" && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
