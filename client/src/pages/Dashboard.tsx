@@ -479,7 +479,7 @@ export default function Dashboard() {
         </div>
 
         {/* الإجراءات السريعة والتنبيهات */}
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mb-8">
           {/* الإجراءات السريعة */}
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader>
