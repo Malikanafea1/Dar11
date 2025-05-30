@@ -88,19 +88,19 @@ export default function Collections() {
   };
 
   const selectedPatient = patients.find((p: Patient) => p.id === selectedPatientId);
-  const filteredPatients = patients.filter((patient: Patient) =>
+  const filteredPatients = patients.filter((patient) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.nationalId.includes(searchTerm)
   );
 
   const patientPayments = selectedPatientId 
-    ? payments.filter((payment: Payment) => payment.patientId === selectedPatientId)
+    ? payments.filter((payment) => payment.patientId === selectedPatientId)
     : [];
 
   const getTotalPaid = (patientId: string) => {
     return payments
-      .filter((payment: Payment) => payment.patientId === patientId)
-      .reduce((total: number, payment: Payment) => total + payment.amount, 0);
+      .filter((payment) => payment.patientId === patientId)
+      .reduce((total, payment) => total + payment.amount, 0);
   };
 
   const calculateDaysBetween = (startDate: string) => {
@@ -154,7 +154,7 @@ export default function Collections() {
                       <SelectValue placeholder="اختر المريض" />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredPatients.map((patient: Patient) => (
+                      {filteredPatients.map((patient) => (
                         <SelectItem key={patient.id} value={patient.id}>
                           <div className="flex items-center justify-between w-full">
                             <span>{patient.name}</span>
@@ -289,7 +289,7 @@ export default function Collections() {
 
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {patientPayments.length > 0 ? (
-                    patientPayments.map((payment: Payment) => (
+                    patientPayments.map((payment) => (
                       <div key={payment.id} className="border rounded-lg p-3">
                         <div className="flex justify-between items-start">
                           <div>
@@ -343,8 +343,8 @@ export default function Collections() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {payments.slice(0, 6).map((payment: Payment) => {
-              const patient = patients.find((p: Patient) => p.id === payment.patientId);
+            {payments.slice(0, 6).map((payment) => {
+              const patient = patients.find((p) => p.id === payment.patientId);
               return (
                 <div key={payment.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">

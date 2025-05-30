@@ -134,16 +134,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 </Button>
               </div>
 
-              {/* User Info */}
-              <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-800">{user.fullName}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {getRoleLabel(user.role)}
-                  </Badge>
-                </div>
-                <User className="w-5 h-5 text-gray-600" />
-              </div>
+
 
               {/* Current Date & Time */}
               <div className="text-right hidden xl:block px-2">
@@ -200,16 +191,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 })}
               </div>
               
-              {/* Mobile User Info */}
-              <div className="lg:hidden flex items-center gap-3 px-3 py-2 bg-white rounded-lg border">
-                <User className="w-6 h-6 text-gray-600" />
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-800">{user.fullName}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {getRoleLabel(user.role)}
-                  </Badge>
-                </div>
-              </div>
+
               
               {/* Mobile Date & Time */}
               <div className="xl:hidden text-center mt-3 p-2 bg-white rounded-lg border">
