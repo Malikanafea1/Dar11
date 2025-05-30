@@ -48,14 +48,8 @@ export default function AdminPanel({ user }: AdminPanelProps) {
 
   const toggleUserStatusMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ isActive }),
-      });
-      if (!response.ok) throw new Error("فشل في تحديث حالة المستخدم");
+      const { apiRequest } = await import("@/lib/queryClient");
+      const response = await apiRequest("PATCH", `/api/users/${userId}`, { isActive });
       return response.json();
     },
     onSuccess: () => {
