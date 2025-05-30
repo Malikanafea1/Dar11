@@ -262,29 +262,12 @@ export default function AdminPanel({ user }: AdminPanelProps) {
         </TabsContent>
       </Tabs>
 
-      {/* User Registration Form would go here */}
-      {showUserForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>إضافة مستخدم جديد</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-gray-600 py-8">
-                سيتم إضافة نموذج تسجيل المستخدم هنا
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowUserForm(false)}>
-                  إلغاء
-                </Button>
-                <Button>
-                  حفظ
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* User Registration Modal */}
+      <UserRegistrationModal
+        isOpen={showUserForm}
+        onClose={() => setShowUserForm(false)}
+        currentUser={user}
+      />
     </div>
   );
 }
