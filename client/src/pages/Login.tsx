@@ -148,14 +148,7 @@ export default function Login({ onLogin }: LoginProps) {
               </Button>
             </form>
 
-            {/* معلومات تسجيل الدخول الافتراضية */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-medium text-blue-900 mb-2">معلومات تسجيل الدخول:</h3>
-              <div className="text-sm text-blue-800 space-y-1">
-                <p><strong>اسم المستخدم:</strong> عاطف نافع</p>
-                <p><strong>كلمة المرور:</strong> 123456</p>
-              </div>
-            </div>
+
           </CardContent>
         </Card>
 

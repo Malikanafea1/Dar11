@@ -89,6 +89,40 @@ export default function Dashboard() {
     return sum;
   }, 0) || 0;
 
+  // حساب المرضى الذين موعدهم اليوم للتحصيل
+  const getTodayCollectionPatients = () => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    return activePatients.filter((patient: any) => {
+      const admissionDate = new Date(patient.admissionDate);
+      const daysSinceAdmission = calculateDaysBetween(patient.admissionDate, today);
+      
+      // المرضى الذين أكملوا أسبوع أو أكثر ولم يدفعوا اليوم
+      if (daysSinceAdmission >= 7) {
+        const recentPayments = payments?.filter((payment: any) => 
+          payment.patientId === patient.id && 
+          payment.paymentDate === todayStr
+        ) || [];
+        
+        return recentPayments.length === 0;
+      }
+      
+      return false;
+    });
+  };
+
+  const todayCollectionPatients = getTodayCollectionPatients();
+
+  // حساب المبلغ المتوقع تحصيله اليوم
+  const expectedTodayCollection = todayCollectionPatients.reduce((sum, patient: any) => {
+    const days = calculateDaysBetween(patient.admissionDate, new Date());
+    const totalCost = days * patient.dailyCost;
+    const totalPaid = payments?.filter((p: any) => p.patientId === patient.id)
+      .reduce((total: number, payment: any) => total + payment.amount, 0) || 0;
+    return sum + Math.max(0, totalCost - totalPaid);
+  }, 0);
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
@@ -198,6 +232,120 @@ export default function Dashboard() {
             description="مستحقات لم تُحصل بعد"
             percentage="15.2"
           />
+        </div>
+
+        {/* قسم التحصيلات اليومية */}
+        <div className="mb-8">
+          <Card className="shadow-lg border-0 bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-6 w-6 text-green-600" />
+                  <span className="text-xl">مواعيد التحصيل اليوم</span>
+                </div>
+                <Badge variant="outline" className="text-green-700 border-green-700">
+                  {todayCollectionPatients.length} مريض
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Users className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">المرضى المطلوب تحصيلهم</p>
+                      <p className="text-2xl font-bold text-green-600">{todayCollectionPatients.length}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">المبلغ المتوقع</p>
+                      <p className="text-2xl font-bold text-blue-600">{formatCurrency(expectedTodayCollection)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-100 rounded-lg">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">متوسط الفترة</p>
+                      <p className="text-2xl font-bold text-amber-600">
+                        {todayCollectionPatients.length > 0 
+                          ? Math.round(todayCollectionPatients.reduce((sum, p) => sum + calculateDaysBetween(p.admissionDate, new Date()), 0) / todayCollectionPatients.length)
+                          : 0} يوم
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {todayCollectionPatients.length > 0 ? (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-800 mb-3">قائمة المرضى:</h3>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {todayCollectionPatients.slice(0, 6).map((patient) => {
+                      const days = calculateDaysBetween(patient.admissionDate, new Date());
+                      const totalCost = days * patient.dailyCost;
+                      const totalPaid = payments?.filter(p => p.patientId === patient.id)
+                        .reduce((total, payment) => total + payment.amount, 0) || 0;
+                      const remainingAmount = totalCost - totalPaid;
+
+                      return (
+                        <div key={patient.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-medium text-gray-900">{patient.name}</h4>
+                              <p className="text-sm text-gray-600">غرفة: {patient.roomNumber || "غير محدد"}</p>
+                              <p className="text-sm text-gray-600">{days} يوم إقامة</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-gray-600">المبلغ المطلوب:</p>
+                              <p className="font-bold text-green-600">{formatCurrency(remainingAmount)}</p>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center mt-3">
+                            <Badge variant="outline" className="text-xs">
+                              تكلفة يومية: {formatCurrency(patient.dailyCost)}
+                            </Badge>
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                              <CreditCard className="h-3 w-3 mr-1" />
+                              تحصيل
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {todayCollectionPatients.length > 6 && (
+                    <div className="text-center pt-4">
+                      <Button variant="outline" className="text-green-600 border-green-600">
+                        عرض جميع المرضى ({todayCollectionPatients.length})
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <p className="text-gray-600">لا توجد مواعيد تحصيل لليوم</p>
+                  <p className="text-sm text-gray-500">جميع المدفوعات محدثة</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* المحتوى الرئيسي */}
