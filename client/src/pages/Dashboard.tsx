@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
   const [selectedPatientForCollection, setSelectedPatientForCollection] = useState<Patient | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<string | null>(null);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],

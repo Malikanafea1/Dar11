@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, LogIn, User, Lock, Hospital } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
 const loginSchema = z.object({
@@ -148,7 +149,14 @@ export default function Login({ onLogin }: LoginProps) {
               </Button>
             </form>
 
-
+            <div className="text-center pt-4 border-t">
+              <p className="text-sm text-gray-600">
+                لا تملك حساب؟{" "}
+                <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
+                  إنشاء حساب جديد
+                </Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
 

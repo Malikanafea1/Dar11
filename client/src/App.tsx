@@ -13,6 +13,7 @@ import Collections from "@/pages/Collections";
 import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
 
 interface User {
@@ -83,7 +84,12 @@ function App() {
         {user ? (
           <Router user={user} />
         ) : (
-          <Login onLogin={handleLogin} />
+          <Switch>
+            <Route path="/register" component={Register} />
+            <Route>
+              <Login onLogin={handleLogin} />
+            </Route>
+          </Switch>
         )}
       </TooltipProvider>
     </QueryClientProvider>
