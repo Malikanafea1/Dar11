@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Plus, Home, Users, UserCheck, DollarSign, FileText, Settings, Menu, LogOut, User, Receipt } from "lucide-react";
+import { Bell, Plus, Home, Users, UserCheck, DollarSign, FileText, Settings, Menu, LogOut, User, Receipt, Calculator, Shield } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import PatientModal from "./PatientModal";
 
@@ -31,9 +31,10 @@ export default function Header({ user, onLogout }: HeaderProps) {
     { path: "/staff", label: "الموظفين", icon: UserCheck },
     { path: "/finance", label: "المالية", icon: DollarSign },
     { path: "/collections", label: "التحصيلات", icon: Receipt },
+    { path: "/payroll", label: "الرواتب", icon: Calculator },
     { path: "/reports", label: "التقارير", icon: FileText },
-
     { path: "/settings", label: "الإعدادات", icon: Settings },
+    ...(user.role === "admin" ? [{ path: "/admin", label: "لوحة المدير", icon: Shield }] : []),
   ];
 
   const getRoleLabel = (role: string) => {

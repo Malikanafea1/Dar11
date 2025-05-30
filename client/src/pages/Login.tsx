@@ -151,10 +151,7 @@ export default function Login({ onLogin }: LoginProps) {
 
             <div className="text-center pt-4 border-t">
               <p className="text-sm text-gray-600">
-                لا تملك حساب؟{" "}
-                <Link href="/register" className="text-blue-600 hover:text-blue-800 font-medium">
-                  إنشاء حساب جديد
-                </Link>
+                للحصول على حساب جديد، يرجى التواصل مع مسؤول النظام
               </p>
             </div>
           </CardContent>
