@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Edit, Trash2 } from "lucide-react";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import type { Expense, Payment } from "@shared/schema";
+import type { Expense, Payment, Patient } from "@shared/schema";
 import ExpenseModal from "@/components/ExpenseModal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,10 @@ export default function Finance() {
 
   const { data: payments, isLoading: paymentsLoading } = useQuery<Payment[]>({
     queryKey: ["/api/payments"],
+  });
+
+  const { data: patients } = useQuery<Patient[]>({
+    queryKey: ["/api/patients"],
   });
 
   const { data: stats } = useQuery<{
@@ -249,24 +253,29 @@ export default function Finance() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {payments?.slice(0, 5).map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center">
-                        <div className="bg-green-100 p-2 rounded-full ml-3">
-                          <DollarSign className="w-4 h-4 text-green-600" />
+                  {payments?.slice(0, 5).map((payment) => {
+                    const patient = patients?.find(p => p.id === payment.patientId);
+                    return (
+                      <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <div className="bg-green-100 p-2 rounded-full ml-3">
+                            <DollarSign className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">
+                              دفعة من {patient?.name || "مريض غير معروف"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {payment.paymentMethod} • {formatDateTime(payment.paymentDate)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-800">دفعة من مريض #{payment.patientId}</p>
-                          <p className="text-sm text-gray-500">
-                            {payment.paymentMethod} • {formatDateTime(payment.paymentDate)}
-                          </p>
-                        </div>
+                        <p className="text-lg font-semibold text-green-600">
+                          +{formatCurrency(payment.amount)}
+                        </p>
                       </div>
-                      <p className="text-lg font-semibold text-green-600">
-                        +{formatCurrency(payment.amount)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
