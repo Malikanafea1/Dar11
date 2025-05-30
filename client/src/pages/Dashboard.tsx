@@ -33,7 +33,6 @@ import PatientModal from "@/components/PatientModal";
 import StaffModal from "@/components/StaffModal";
 import ExpenseModal from "@/components/ExpenseModal";
 import CollectionModal from "@/components/CollectionModal";
-import UserModal from "@/components/UserModal";
 import { Link } from "wouter";
 
 export default function Dashboard() {
@@ -42,7 +41,6 @@ export default function Dashboard() {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
   const [selectedPatientForCollection, setSelectedPatientForCollection] = useState<Patient | null>(null);
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -515,14 +513,7 @@ export default function Dashboard() {
                 <CreditCard className="ml-3 w-5 h-5" />
                 تسجيل مصروف جديد
               </Button>
-              <Button 
-                onClick={() => setIsUserModalOpen(true)}
-                className="w-full justify-start h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg"
-                size="lg"
-              >
-                <Users className="ml-3 w-5 h-5" />
-                إضافة مستخدم جديد
-              </Button>
+
               <Button 
                 className="w-full justify-start h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg"
                 size="lg"
@@ -611,12 +602,6 @@ export default function Dashboard() {
         onClose={handleCloseCollectionModal}
         patient={selectedPatientForCollection}
         payments={payments || []}
-      />
-
-      <UserModal
-        isOpen={isUserModalOpen}
-        onClose={() => setIsUserModalOpen(false)}
-        user={null}
       />
     </>
   );

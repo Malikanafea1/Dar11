@@ -32,7 +32,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
     { path: "/finance", label: "المالية", icon: DollarSign },
     { path: "/collections", label: "التحصيلات", icon: Receipt },
     { path: "/reports", label: "التقارير", icon: FileText },
-    ...(user.role === "admin" ? [{ path: "/users", label: "المستخدمين", icon: User }] : []),
+
     { path: "/settings", label: "الإعدادات", icon: Settings },
   ];
 

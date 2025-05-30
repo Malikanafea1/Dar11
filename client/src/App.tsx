@@ -12,7 +12,6 @@ import Finance from "@/pages/Finance";
 import Collections from "@/pages/Collections";
 import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
-import Users from "@/pages/Users";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
@@ -36,7 +35,6 @@ function Router({ user }: { user: User }) {
         <Route path="/collections" component={Collections} />
         <Route path="/reports" component={Reports} />
         <Route path="/settings" component={Settings} />
-        {user.role === "admin" && <Route path="/users" component={Users} />}
         <Route component={NotFound} />
       </Switch>
     </Layout>
