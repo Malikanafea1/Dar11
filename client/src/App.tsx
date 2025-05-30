@@ -12,8 +12,9 @@ import Finance from "@/pages/Finance";
 import Collections from "@/pages/Collections";
 import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
+import Payroll from "@/pages/Payroll";
+import AdminPanel from "@/pages/AdminPanel";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import NotFound from "@/pages/not-found";
 
 interface User {
@@ -34,6 +35,8 @@ function Router({ user }: { user: User }) {
         <Route path="/staff" component={Staff} />
         <Route path="/finance" component={Finance} />
         <Route path="/collections" component={Collections} />
+        <Route path="/payroll" component={() => <Payroll user={user} />} />
+        <Route path="/admin" component={() => <AdminPanel user={user} />} />
         <Route path="/reports" component={Reports} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
@@ -84,12 +87,7 @@ function App() {
         {user ? (
           <Router user={user} />
         ) : (
-          <Switch>
-            <Route path="/register" component={Register} />
-            <Route>
-              <Login onLogin={handleLogin} />
-            </Route>
-          </Switch>
+          <Login onLogin={handleLogin} />
         )}
       </TooltipProvider>
     </QueryClientProvider>

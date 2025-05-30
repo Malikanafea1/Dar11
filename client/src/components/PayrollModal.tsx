@@ -62,10 +62,15 @@ export default function PayrollModal({ isOpen, onClose, payroll, user }: Payroll
 
   const createMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("/api/payrolls", {
+      const response = await fetch("/api/payrolls", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error("Failed to create payroll");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payrolls"] });
@@ -80,13 +85,18 @@ export default function PayrollModal({ isOpen, onClose, payroll, user }: Payroll
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest(`/api/payrolls/${payroll?.id}`, {
+      const response = await fetch(`/api/payrolls/${payroll?.id}`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
+      if (!response.ok) throw new Error("Failed to update payroll");
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidQueries({ queryKey: ["/api/payrolls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/payrolls"] });
       toast({
         title: "تم تحديث الراتب",
         description: "تم تحديث سجل الراتب بنجاح",
