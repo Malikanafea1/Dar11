@@ -4,7 +4,11 @@ import {
   type Expense, type InsertExpense,
   type Payment, type InsertPayment,
   type User, type InsertUser,
-  type Settings, type InsertSettings
+  type Settings, type InsertSettings,
+  type Payroll, type InsertPayroll,
+  type Bonus, type InsertBonus,
+  type Advance, type InsertAdvance,
+  type Deduction, type InsertDeduction
 } from "@shared/schema";
 
 export interface IStorage {
@@ -47,6 +51,35 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPaymentsByPatient(patientId: string): Promise<Payment[]>;
   
+  // Payroll methods
+  getPayrolls(): Promise<Payroll[]>;
+  getPayroll(id: string): Promise<Payroll | undefined>;
+  createPayroll(payroll: InsertPayroll): Promise<Payroll>;
+  updatePayroll(id: string, updates: Partial<Payroll>): Promise<Payroll>;
+  getPayrollsByStaff(staffId: string): Promise<Payroll[]>;
+  getPayrollsByMonth(month: string): Promise<Payroll[]>;
+  
+  // Bonus methods
+  getBonuses(): Promise<Bonus[]>;
+  getBonus(id: string): Promise<Bonus | undefined>;
+  createBonus(bonus: InsertBonus): Promise<Bonus>;
+  updateBonus(id: string, updates: Partial<Bonus>): Promise<Bonus>;
+  getBonusesByStaff(staffId: string): Promise<Bonus[]>;
+  
+  // Advance methods
+  getAdvances(): Promise<Advance[]>;
+  getAdvance(id: string): Promise<Advance | undefined>;
+  createAdvance(advance: InsertAdvance): Promise<Advance>;
+  updateAdvance(id: string, updates: Partial<Advance>): Promise<Advance>;
+  getAdvancesByStaff(staffId: string): Promise<Advance[]>;
+  
+  // Deduction methods
+  getDeductions(): Promise<Deduction[]>;
+  getDeduction(id: string): Promise<Deduction | undefined>;
+  createDeduction(deduction: InsertDeduction): Promise<Deduction>;
+  updateDeduction(id: string, updates: Partial<Deduction>): Promise<Deduction>;
+  getDeductionsByStaff(staffId: string): Promise<Deduction[]>;
+  
   // Settings methods
   getSettings(): Promise<Settings | undefined>;
   updateSettings(updates: Partial<InsertSettings>): Promise<Settings>;
@@ -75,12 +108,20 @@ export class MemStorage implements IStorage {
   private staff: Map<string, Staff>;
   private expenses: Map<string, Expense>;
   private payments: Map<string, Payment>;
+  private payrolls: Map<string, Payroll>;
+  private bonuses: Map<string, Bonus>;
+  private advances: Map<string, Advance>;
+  private deductions: Map<string, Deduction>;
   private settings: Settings | undefined;
   private currentUserId: number;
   private currentPatientId: number;
   private currentStaffId: number;
   private currentExpenseId: number;
   private currentPaymentId: number;
+  private currentPayrollId: number;
+  private currentBonusId: number;
+  private currentAdvanceId: number;
+  private currentDeductionId: number;
 
   constructor() {
     this.users = new Map();
@@ -88,6 +129,10 @@ export class MemStorage implements IStorage {
     this.staff = new Map();
     this.expenses = new Map();
     this.payments = new Map();
+    this.payrolls = new Map();
+    this.bonuses = new Map();
+    this.advances = new Map();
+    this.deductions = new Map();
     this.settings = {
       id: "1",
       username: "مسؤول النظام",
@@ -108,6 +153,10 @@ export class MemStorage implements IStorage {
     this.currentStaffId = 1;
     this.currentExpenseId = 1;
     this.currentPaymentId = 1;
+    this.currentPayrollId = 1;
+    this.currentBonusId = 1;
+    this.currentAdvanceId = 1;
+    this.currentDeductionId = 1;
     
     // إنشاء المدير الافتراضي
     this.createDefaultAdmin();
@@ -491,6 +540,156 @@ export class MemStorage implements IStorage {
         updatedAt: new Date().toISOString()
       };
     }
+  }
+
+  // Payroll methods
+  async getPayrolls(): Promise<Payroll[]> {
+    return Array.from(this.payrolls.values());
+  }
+
+  async getPayroll(id: string): Promise<Payroll | undefined> {
+    return this.payrolls.get(id);
+  }
+
+  async createPayroll(insertPayroll: InsertPayroll): Promise<Payroll> {
+    const id = this.currentPayrollId.toString();
+    this.currentPayrollId++;
+    
+    const payroll: Payroll = { 
+      ...insertPayroll, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.payrolls.set(id, payroll);
+    return payroll;
+  }
+
+  async updatePayroll(id: string, updates: Partial<Payroll>): Promise<Payroll> {
+    const existing = this.payrolls.get(id);
+    if (!existing) throw new Error("Payroll not found");
+    
+    const updated = { ...existing, ...updates };
+    this.payrolls.set(id, updated);
+    return updated;
+  }
+
+  async getPayrollsByStaff(staffId: string): Promise<Payroll[]> {
+    return Array.from(this.payrolls.values()).filter(p => p.staffId === staffId);
+  }
+
+  async getPayrollsByMonth(month: string): Promise<Payroll[]> {
+    return Array.from(this.payrolls.values()).filter(p => p.month === month);
+  }
+
+  // Bonus methods
+  async getBonuses(): Promise<Bonus[]> {
+    return Array.from(this.bonuses.values());
+  }
+
+  async getBonus(id: string): Promise<Bonus | undefined> {
+    return this.bonuses.get(id);
+  }
+
+  async createBonus(insertBonus: InsertBonus): Promise<Bonus> {
+    const id = this.currentBonusId.toString();
+    this.currentBonusId++;
+    
+    const bonus: Bonus = { 
+      ...insertBonus, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.bonuses.set(id, bonus);
+    return bonus;
+  }
+
+  async updateBonus(id: string, updates: Partial<Bonus>): Promise<Bonus> {
+    const existing = this.bonuses.get(id);
+    if (!existing) throw new Error("Bonus not found");
+    
+    const updated = { ...existing, ...updates };
+    this.bonuses.set(id, updated);
+    return updated;
+  }
+
+  async getBonusesByStaff(staffId: string): Promise<Bonus[]> {
+    return Array.from(this.bonuses.values()).filter(b => b.staffId === staffId);
+  }
+
+  // Advance methods
+  async getAdvances(): Promise<Advance[]> {
+    return Array.from(this.advances.values());
+  }
+
+  async getAdvance(id: string): Promise<Advance | undefined> {
+    return this.advances.get(id);
+  }
+
+  async createAdvance(insertAdvance: InsertAdvance): Promise<Advance> {
+    const id = this.currentAdvanceId.toString();
+    this.currentAdvanceId++;
+    
+    const monthlyDeduction = insertAdvance.amount / insertAdvance.repaymentMonths;
+    
+    const advance: Advance = { 
+      ...insertAdvance, 
+      id,
+      requestDate: new Date().toISOString(),
+      status: "pending",
+      monthlyDeduction,
+      remainingAmount: insertAdvance.amount,
+      createdAt: new Date().toISOString()
+    };
+    this.advances.set(id, advance);
+    return advance;
+  }
+
+  async updateAdvance(id: string, updates: Partial<Advance>): Promise<Advance> {
+    const existing = this.advances.get(id);
+    if (!existing) throw new Error("Advance not found");
+    
+    const updated = { ...existing, ...updates };
+    this.advances.set(id, updated);
+    return updated;
+  }
+
+  async getAdvancesByStaff(staffId: string): Promise<Advance[]> {
+    return Array.from(this.advances.values()).filter(a => a.staffId === staffId);
+  }
+
+  // Deduction methods
+  async getDeductions(): Promise<Deduction[]> {
+    return Array.from(this.deductions.values());
+  }
+
+  async getDeduction(id: string): Promise<Deduction | undefined> {
+    return this.deductions.get(id);
+  }
+
+  async createDeduction(insertDeduction: InsertDeduction): Promise<Deduction> {
+    const id = this.currentDeductionId.toString();
+    this.currentDeductionId++;
+    
+    const deduction: Deduction = { 
+      ...insertDeduction, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.deductions.set(id, deduction);
+    return deduction;
+  }
+
+  async updateDeduction(id: string, updates: Partial<Deduction>): Promise<Deduction> {
+    const existing = this.deductions.get(id);
+    if (!existing) throw new Error("Deduction not found");
+    
+    const updated = { ...existing, ...updates };
+    this.deductions.set(id, updated);
+    return updated;
+  }
+
+  async getDeductionsByStaff(staffId: string): Promise<Deduction[]> {
+    return Array.from(this.deductions.values()).filter(d => d.staffId === staffId);
   }
 }
 

@@ -154,3 +154,110 @@ export const insertSettingsSchema = z.object({
 });
 
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+
+// Payroll types and schemas
+export interface Payroll {
+  id: string;
+  staffId: string;
+  month: string; // YYYY-MM format
+  baseSalary: number;
+  bonuses: number;
+  advances: number;
+  deductions: number;
+  netSalary: number;
+  status: "pending" | "paid" | "cancelled";
+  paidDate?: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export const insertPayrollSchema = z.object({
+  staffId: z.string().min(1, "معرف الموظف مطلوب"),
+  month: z.string().min(1, "الشهر مطلوب"),
+  baseSalary: z.number().min(0, "الراتب الأساسي يجب أن يكون أكبر من الصفر"),
+  bonuses: z.number().min(0, "المكافآت يجب أن تكون أكبر من أو تساوي الصفر").default(0),
+  advances: z.number().min(0, "السلف يجب أن تكون أكبر من أو تساوي الصفر").default(0),
+  deductions: z.number().min(0, "الخصومات يجب أن تكون أكبر من أو تساوي الصفر").default(0),
+  netSalary: z.number(),
+  status: z.enum(["pending", "paid", "cancelled"]).default("pending"),
+  notes: z.string().optional(),
+  createdBy: z.string().min(1, "المنشئ مطلوب"),
+});
+
+export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
+
+// Bonus types and schemas
+export interface Bonus {
+  id: string;
+  staffId: string;
+  amount: number;
+  reason: string;
+  date: string;
+  type: "performance" | "holiday" | "overtime" | "special" | "other";
+  approvedBy: string;
+  createdAt: string;
+}
+
+export const insertBonusSchema = z.object({
+  staffId: z.string().min(1, "معرف الموظف مطلوب"),
+  amount: z.number().min(0, "مبلغ المكافأة يجب أن يكون أكبر من الصفر"),
+  reason: z.string().min(1, "سبب المكافأة مطلوب"),
+  date: z.string(),
+  type: z.enum(["performance", "holiday", "overtime", "special", "other"]),
+  approvedBy: z.string().min(1, "المعتمد مطلوب"),
+});
+
+export type InsertBonus = z.infer<typeof insertBonusSchema>;
+
+// Advance types and schemas
+export interface Advance {
+  id: string;
+  staffId: string;
+  amount: number;
+  requestDate: string;
+  approvedDate?: string;
+  reason: string;
+  status: "pending" | "approved" | "paid" | "rejected";
+  repaymentMonths: number;
+  monthlyDeduction: number;
+  remainingAmount: number;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export const insertAdvanceSchema = z.object({
+  staffId: z.string().min(1, "معرف الموظف مطلوب"),
+  amount: z.number().min(0, "مبلغ السلفة يجب أن يكون أكبر من الصفر"),
+  reason: z.string().min(1, "سبب السلفة مطلوب"),
+  repaymentMonths: z.number().min(1, "عدد أشهر السداد يجب أن يكون أكبر من الصفر"),
+  notes: z.string().optional(),
+});
+
+export type InsertAdvance = z.infer<typeof insertAdvanceSchema>;
+
+// Deduction types and schemas
+export interface Deduction {
+  id: string;
+  staffId: string;
+  amount: number;
+  reason: string;
+  date: string;
+  type: "absence" | "late" | "penalty" | "insurance" | "tax" | "loan_repayment" | "other";
+  approvedBy: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export const insertDeductionSchema = z.object({
+  staffId: z.string().min(1, "معرف الموظف مطلوب"),
+  amount: z.number().min(0, "مبلغ الخصم يجب أن يكون أكبر من الصفر"),
+  reason: z.string().min(1, "سبب الخصم مطلوب"),
+  date: z.string(),
+  type: z.enum(["absence", "late", "penalty", "insurance", "tax", "loan_repayment", "other"]),
+  approvedBy: z.string().min(1, "المعتمد مطلوب"),
+  notes: z.string().optional(),
+});
+
+export type InsertDeduction = z.infer<typeof insertDeductionSchema>;
