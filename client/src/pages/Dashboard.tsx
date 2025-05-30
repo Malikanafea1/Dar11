@@ -32,12 +32,17 @@ import type { Patient } from "@shared/schema";
 import PatientModal from "@/components/PatientModal";
 import StaffModal from "@/components/StaffModal";
 import ExpenseModal from "@/components/ExpenseModal";
+import CollectionModal from "@/components/CollectionModal";
+import UserModal from "@/components/UserModal";
 import { Link } from "wouter";
 
 export default function Dashboard() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [selectedPatientForCollection, setSelectedPatientForCollection] = useState<Patient | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
@@ -123,6 +128,16 @@ export default function Dashboard() {
       .reduce((total: number, payment: any) => total + payment.amount, 0) || 0;
     return sum + Math.max(0, totalCost - totalPaid);
   }, 0);
+
+  const handleOpenCollectionModal = (patient: Patient) => {
+    setSelectedPatientForCollection(patient);
+    setIsCollectionModalOpen(true);
+  };
+
+  const handleCloseCollectionModal = () => {
+    setSelectedPatientForCollection(null);
+    setIsCollectionModalOpen(false);
+  };
 
   return (
     <>
@@ -320,7 +335,11 @@ export default function Dashboard() {
                             <Badge variant="outline" className="text-xs">
                               تكلفة يومية: {formatCurrency(patient.dailyCost)}
                             </Badge>
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                            <Button 
+                              size="sm" 
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              onClick={() => handleOpenCollectionModal(patient)}
+                            >
                               <CreditCard className="h-3 w-3 mr-1" />
                               تحصيل
                             </Button>
@@ -577,6 +596,13 @@ export default function Dashboard() {
       <ExpenseModal 
         isOpen={isExpenseModalOpen} 
         onClose={() => setIsExpenseModalOpen(false)} 
+      />
+
+      <CollectionModal
+        isOpen={isCollectionModalOpen}
+        onClose={handleCloseCollectionModal}
+        patient={selectedPatientForCollection}
+        payments={payments || []}
       />
     </>
   );
