@@ -32,6 +32,7 @@ import type { Patient } from "@shared/schema";
 import PatientModal from "@/components/PatientModal";
 import StaffModal from "@/components/StaffModal";
 import ExpenseModal from "@/components/ExpenseModal";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
@@ -331,9 +332,11 @@ export default function Dashboard() {
                   
                   {todayCollectionPatients.length > 6 && (
                     <div className="text-center pt-4">
-                      <Button variant="outline" className="text-green-600 border-green-600">
-                        عرض جميع المرضى ({todayCollectionPatients.length})
-                      </Button>
+                      <Link href="/collections">
+                        <Button variant="outline" className="text-green-600 border-green-600">
+                          عرض جميع المرضى ({todayCollectionPatients.length})
+                        </Button>
+                      </Link>
                     </div>
                   )}
                 </div>
