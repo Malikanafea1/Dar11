@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import { 
   Users, 
@@ -535,7 +536,10 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {criticalPatients.length > 0 && (
-                <div className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200">
+                <div 
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedNotification('critical-patients')}
+                >
                   <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
                   <div>
                     <p className="font-semibold text-amber-800">مرضى يحتاجون متابعة</p>
@@ -547,7 +551,10 @@ export default function Dashboard() {
               )}
               
               {(stats?.pendingPayments || 0) > 5000 && (
-                <div className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200">
+                <div 
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedNotification('pending-payments')}
+                >
                   <DollarSign className="h-5 w-5 text-red-600 mt-0.5" />
                   <div>
                     <p className="font-semibold text-red-800">مدفوعات معلقة عالية</p>
@@ -559,7 +566,10 @@ export default function Dashboard() {
               )}
 
               {(stats?.occupancyRate || 0) > 85 && (
-                <div className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
+                <div 
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedNotification('high-occupancy')}
+                >
                   <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
                     <p className="font-semibold text-blue-800">معدل إشغال عالي</p>
