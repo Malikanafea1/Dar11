@@ -103,8 +103,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Expense routes
-  app.get("/api/expenses", async (req, res) => {
+  // Expense routes - محمية بالصلاحيات
+  app.get("/api/expenses", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
     try {
       const expenses = await storage.getExpenses();
       res.json(expenses);
@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/expenses", async (req, res) => {
+  app.post("/api/expenses", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
     try {
       const validatedData = insertExpenseSchema.parse(req.body);
       const expense = await storage.createExpense(validatedData);
@@ -126,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/expenses/:id", async (req, res) => {
+  app.put("/api/expenses/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
     try {
       const id = req.params.id;
       const validatedData = insertExpenseSchema.parse(req.body);
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/expenses/:id", async (req, res) => {
+  app.delete("/api/expenses/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
     try {
       const id = req.params.id;
       await storage.deleteExpense(id);
@@ -150,8 +150,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment routes
-  app.get("/api/payments", async (req, res) => {
+  // Payment routes - محمية بالصلاحيات
+  app.get("/api/payments", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
     try {
       const payments = await storage.getPayments();
       res.json(payments);
@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/payments/patient/:patientId", async (req, res) => {
+  app.get("/api/payments/patient/:patientId", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
     try {
       const patientId = req.params.patientId;
       const payments = await storage.getPaymentsByPatient(patientId);
@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments", async (req, res) => {
+  app.post("/api/payments", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
     try {
       const validatedData = insertPaymentSchema.parse(req.body);
       const payment = await storage.createPayment(validatedData);
@@ -183,8 +183,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats
-  app.get("/api/dashboard/stats", async (req, res) => {
+  // Dashboard stats - محمي بالصلاحيات
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -193,8 +193,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Settings routes
-  app.get("/api/settings", async (req, res) => {
+  // Settings routes - محمية بالصلاحيات الإدارية
+  app.get("/api/settings", requireAuth, requirePermission(PERMISSIONS.MANAGE_SETTINGS), async (req, res) => {
     try {
       const settings = await storage.getSettings();
       res.json(settings);
@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/settings", async (req, res) => {
+  app.patch("/api/settings", requireAuth, requirePermission(PERMISSIONS.MANAGE_SETTINGS), async (req, res) => {
     try {
       const validatedData = insertSettingsSchema.partial().parse(req.body);
       const settings = await storage.updateSettings(validatedData);
@@ -216,8 +216,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User routes
-  app.get("/api/users", async (req, res) => {
+  // User routes - محمية بصلاحيات إدارة المستخدمين
+  app.get("/api/users", requireAuth, requirePermission(PERMISSIONS.VIEW_USERS), async (req, res) => {
     try {
       const users = await storage.getUsers();
       res.json(users);
@@ -226,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/active", async (req, res) => {
+  app.get("/api/users/active", requireAuth, requirePermission(PERMISSIONS.VIEW_USERS), async (req, res) => {
     try {
       const users = await storage.getActiveUsers();
       res.json(users);
@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  app.post("/api/users", requireAuth, requirePermission(PERMISSIONS.MANAGE_USERS), async (req, res) => {
     try {
       const validatedData = insertUserSchema.parse(req.body);
       const user = await storage.createUser(validatedData);
@@ -248,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/users/:id", async (req, res) => {
+  app.patch("/api/users/:id", requireAuth, requireSelfOrPermission(PERMISSIONS.MANAGE_USERS), async (req, res) => {
     try {
       const id = req.params.id;
       const user = await storage.updateUser(id, req.body);
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/users/:id", async (req, res) => {
+  app.delete("/api/users/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_USERS), async (req, res) => {
     try {
       const id = req.params.id;
       await storage.deleteUser(id);
@@ -297,8 +297,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Database management routes
-  app.post("/api/database/backup", async (req, res) => {
+  // Database management routes - محمية بصلاحيات إدارة قاعدة البيانات
+  app.post("/api/database/backup", requireAuth, requirePermission(PERMISSIONS.MANAGE_DATABASE), async (req, res) => {
     try {
       const backup = await storage.createBackup();
       res.setHeader('Content-Disposition', 'attachment; filename="hospital-backup.json"');
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/reset", async (req, res) => {
+  app.post("/api/database/reset", requireAuth, requireRole('admin'), async (req, res) => {
     try {
       await storage.resetDatabase();
       res.json({ message: "Database reset successfully" });
@@ -318,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/import", async (req, res) => {
+  app.post("/api/database/import", requireAuth, requirePermission(PERMISSIONS.MANAGE_DATABASE), async (req, res) => {
     try {
       const { data } = req.body;
       if (!data) {
@@ -331,8 +331,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payroll routes
-  app.get("/api/payrolls", async (req, res) => {
+  // Payroll routes - محمية بصلاحيات إدارة الرواتب
+  app.get("/api/payrolls", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const payrolls = await storage.getPayrolls();
       res.json(payrolls);
@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/payrolls/:id", async (req, res) => {
+  app.get("/api/payrolls/:id", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const payroll = await storage.getPayroll(req.params.id);
       if (!payroll) {
@@ -353,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payrolls", async (req, res) => {
+  app.post("/api/payrolls", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const validatedData = insertPayrollSchema.parse(req.body);
       const payroll = await storage.createPayroll(validatedData);
@@ -366,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/payrolls/:id", async (req, res) => {
+  app.patch("/api/payrolls/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const payroll = await storage.updatePayroll(req.params.id, req.body);
       res.json(payroll);
@@ -375,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/payrolls/staff/:staffId", async (req, res) => {
+  app.get("/api/payrolls/staff/:staffId", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const payrolls = await storage.getPayrollsByStaff(req.params.staffId);
       res.json(payrolls);
@@ -384,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/payrolls/month/:month", async (req, res) => {
+  app.get("/api/payrolls/month/:month", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const payrolls = await storage.getPayrollsByMonth(req.params.month);
       res.json(payrolls);
@@ -393,8 +393,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Bonus routes
-  app.get("/api/bonuses", async (req, res) => {
+  // Bonus routes - محمية بصلاحيات إدارة الرواتب
+  app.get("/api/bonuses", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const bonuses = await storage.getBonuses();
       res.json(bonuses);
@@ -403,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/bonuses", async (req, res) => {
+  app.post("/api/bonuses", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const validatedData = insertBonusSchema.parse(req.body);
       const bonus = await storage.createBonus(validatedData);
@@ -416,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/bonuses/staff/:staffId", async (req, res) => {
+  app.get("/api/bonuses/staff/:staffId", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const bonuses = await storage.getBonusesByStaff(req.params.staffId);
       res.json(bonuses);
@@ -425,8 +425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Advance routes
-  app.get("/api/advances", async (req, res) => {
+  // Advance routes - محمية بصلاحيات إدارة الرواتب
+  app.get("/api/advances", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const advances = await storage.getAdvances();
       res.json(advances);
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/advances", async (req, res) => {
+  app.post("/api/advances", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const validatedData = insertAdvanceSchema.parse(req.body);
       const advance = await storage.createAdvance(validatedData);
@@ -448,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/advances/:id", async (req, res) => {
+  app.patch("/api/advances/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const advance = await storage.updateAdvance(req.params.id, req.body);
       res.json(advance);
@@ -457,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/advances/staff/:staffId", async (req, res) => {
+  app.get("/api/advances/staff/:staffId", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const advances = await storage.getAdvancesByStaff(req.params.staffId);
       res.json(advances);
@@ -466,8 +466,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Deduction routes
-  app.get("/api/deductions", async (req, res) => {
+  // Deduction routes - محمية بصلاحيات إدارة الرواتب
+  app.get("/api/deductions", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const deductions = await storage.getDeductions();
       res.json(deductions);
@@ -476,7 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/deductions", async (req, res) => {
+  app.post("/api/deductions", requireAuth, requirePermission(PERMISSIONS.MANAGE_PAYROLL), async (req, res) => {
     try {
       const validatedData = insertDeductionSchema.parse(req.body);
       const deduction = await storage.createDeduction(validatedData);
@@ -489,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/deductions/staff/:staffId", async (req, res) => {
+  app.get("/api/deductions/staff/:staffId", requireAuth, requirePermission(PERMISSIONS.VIEW_PAYROLL), async (req, res) => {
     try {
       const deductions = await storage.getDeductionsByStaff(req.params.staffId);
       res.json(deductions);
