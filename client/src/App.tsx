@@ -9,6 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import Patients from "@/pages/Patients";
 import Staff from "@/pages/Staff";
 import Finance from "@/pages/Finance";
+import Collections from "@/pages/Collections";
 import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
 import Users from "@/pages/Users";
@@ -32,6 +33,7 @@ function Router({ user }: { user: User }) {
         <Route path="/patients" component={Patients} />
         <Route path="/staff" component={Staff} />
         <Route path="/finance" component={Finance} />
+        <Route path="/collections" component={Collections} />
         <Route path="/reports" component={Reports} />
         <Route path="/settings" component={Settings} />
         {user.role === "admin" && <Route path="/users" component={Users} />}
