@@ -516,6 +516,14 @@ export default function Dashboard() {
                 تسجيل مصروف جديد
               </Button>
               <Button 
+                onClick={() => setIsUserModalOpen(true)}
+                className="w-full justify-start h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg"
+                size="lg"
+              >
+                <Users className="ml-3 w-5 h-5" />
+                إضافة مستخدم جديد
+              </Button>
+              <Button 
                 className="w-full justify-start h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg"
                 size="lg"
               >
@@ -603,6 +611,12 @@ export default function Dashboard() {
         onClose={handleCloseCollectionModal}
         patient={selectedPatientForCollection}
         payments={payments || []}
+      />
+
+      <UserModal
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+        user={null}
       />
     </>
   );
