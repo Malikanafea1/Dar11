@@ -15,6 +15,7 @@ import Reports from "@/pages/Reports";
 import Payroll from "@/pages/Payroll";
 import AdminPanel from "@/pages/AdminPanel";
 import CigaretteManagement from "@/pages/CigaretteManagement";
+import Graduates from "@/pages/Graduates";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
@@ -34,6 +35,7 @@ function Router({ user }: { user: User }) {
         <Route path="/" component={Dashboard} />
         <Route path="/patients" component={Patients} />
         <Route path="/staff" component={Staff} />
+        <Route path="/graduates" component={Graduates} />
         <Route path="/finance" component={Finance} />
         <Route path="/collections" component={Collections} />
         <Route path="/payroll" component={() => <Payroll user={user} />} />

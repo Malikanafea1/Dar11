@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,18 +45,7 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: patient ? {
-      name: patient.name,
-      nationalId: patient.nationalId,
-      admissionDate: patient.admissionDate,
-      roomNumber: patient.roomNumber || "",
-      dailyCost: patient.dailyCost.toString(),
-      insurance: patient.insurance || "",
-      status: patient.status,
-      notes: patient.notes || "",
-      patientType: patient.patientType || "detox",
-      dailyCigaretteType: patient.dailyCigaretteType || "none",
-    } : {
+    defaultValues: {
       name: "",
       nationalId: "",
       admissionDate: new Date().toISOString().split('T')[0],
@@ -68,6 +58,37 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
       dailyCigaretteType: "none",
     },
   });
+
+  // Reset form with patient data when modal opens
+  useEffect(() => {
+    if (patient) {
+      form.reset({
+        name: patient.name,
+        nationalId: patient.nationalId,
+        admissionDate: patient.admissionDate,
+        roomNumber: patient.roomNumber || "",
+        dailyCost: patient.dailyCost.toString(),
+        insurance: patient.insurance || "",
+        status: patient.status,
+        notes: patient.notes || "",
+        patientType: patient.patientType || "detox",
+        dailyCigaretteType: patient.dailyCigaretteType || "none",
+      });
+    } else {
+      form.reset({
+        name: "",
+        nationalId: "",
+        admissionDate: new Date().toISOString().split('T')[0],
+        roomNumber: "",
+        dailyCost: "",
+        insurance: "",
+        status: "active",
+        notes: "",
+        patientType: "detox",
+        dailyCigaretteType: "none",
+      });
+    }
+  }, [patient, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
