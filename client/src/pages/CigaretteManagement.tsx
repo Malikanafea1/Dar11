@@ -171,28 +171,16 @@ export default function CigaretteManagement() {
     }
   };
 
-  // Filter active patients and separate by type - only show those with cigarettes
+  // Show all active patients (including those without cigarettes)
   const activePatients = patients.filter(p => p.status === "active");
-  const detoxPatients = activePatients.filter(p => 
-    p.patientType === "detox" && 
-    (p.dailyCigaretteType && p.dailyCigaretteType !== "none")
-  );
-  const recoveryPatients = activePatients.filter(p => 
-    p.patientType === "recovery" && 
-    (p.dailyCigaretteType && p.dailyCigaretteType !== "none")
-  );
+  const detoxPatients = activePatients.filter(p => p.patientType === "detox");
+  const recoveryPatients = activePatients.filter(p => p.patientType === "recovery");
   
-  // Filter staff and graduates to only show those with cigarettes
-  const activeStaff = staff.filter(s => 
-    s.isActive && 
-    (s.dailyCigaretteType && s.dailyCigaretteType !== "none")
-  );
+  // Show all active staff (including those without cigarettes)
+  const activeStaff = staff.filter(s => s.isActive);
   
-  // Filter graduates to only show active ones with cigarettes
-  const activeGraduatesWithCigarettes = graduates.filter(g => 
-    g.isActive && 
-    (g.dailyCigaretteType && g.dailyCigaretteType !== "none")
-  );
+  // Show all active graduates (including those without cigarettes)
+  const activeGraduatesAll = graduates.filter(g => g.isActive);
 
   // Calculate totals for each section
   const calculateSectionTotals = (items: any[]) => {
@@ -205,18 +193,54 @@ export default function CigaretteManagement() {
       (item.dailyCigaretteType || "none") !== "none"
     ).length;
 
-    return { totalDaily, totalCount };
+    // حساب عدد علب السجائر
+    const fullPacks = items.filter(item => 
+      (item.dailyCigaretteType || "none") === "full_pack"
+    ).length;
+    
+    const halfPacks = items.filter(item => 
+      (item.dailyCigaretteType || "none") === "half_pack"
+    ).length;
+
+    // إجمالي عدد العلب (نصف علبة = 0.5)
+    const totalPacks = fullPacks + (halfPacks * 0.5);
+
+    // عدد الأشخاص النشطين (الذين يحصلون على سجائر)
+    const activeCount = items.filter(item => 
+      (item.dailyCigaretteType || "none") !== "none"
+    ).length;
+
+    // عدد الأشخاص المتوقفين (الذين لا يحصلون على سجائر)
+    const inactiveCount = items.filter(item => 
+      (item.dailyCigaretteType || "none") === "none"
+    ).length;
+
+    return { 
+      totalDaily, 
+      totalCount, 
+      fullPacks, 
+      halfPacks, 
+      totalPacks, 
+      activeCount, 
+      inactiveCount 
+    };
   };
 
   const detoxTotals = calculateSectionTotals(detoxPatients);
   const recoveryTotals = calculateSectionTotals(recoveryPatients);
-  const graduatesTotals = calculateSectionTotals(activeGraduatesWithCigarettes);
+  const graduatesTotals = calculateSectionTotals(activeGraduatesAll);
   const staffTotals = calculateSectionTotals(activeStaff);
 
   const grandTotal = detoxTotals.totalDaily + recoveryTotals.totalDaily + 
                     graduatesTotals.totalDaily + staffTotals.totalDaily;
   const grandTotalCount = detoxTotals.totalCount + recoveryTotals.totalCount + 
                          graduatesTotals.totalCount + staffTotals.totalCount;
+  const grandTotalPacks = detoxTotals.totalPacks + recoveryTotals.totalPacks + 
+                         graduatesTotals.totalPacks + staffTotals.totalPacks;
+  const grandTotalFullPacks = detoxTotals.fullPacks + recoveryTotals.fullPacks + 
+                             graduatesTotals.fullPacks + staffTotals.fullPacks;
+  const grandTotalHalfPacks = detoxTotals.halfPacks + recoveryTotals.halfPacks + 
+                             graduatesTotals.halfPacks + staffTotals.halfPacks;
 
   const handlePrintSection = (sectionName: string) => {
     // Print functionality will be implemented
@@ -278,9 +302,20 @@ export default function CigaretteManagement() {
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">{title}</CardTitle>
-                <p className="text-sm text-gray-600">
-                  {totals.totalCount} شخص يحصل على سجائر - {formatCurrency(totals.totalDaily)} يومياً
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">
+                    {totals.totalPacks} علبة مطلوبة ({totals.fullPacks} كاملة + {totals.halfPacks} نصف)
+                  </p>
+                  <p className="text-sm text-green-600">
+                    ✓ {totals.activeCount} نشط
+                  </p>
+                  <p className="text-sm text-red-600">
+                    ✗ {totals.inactiveCount} متوقف
+                  </p>
+                  <p className="text-sm font-medium text-blue-600">
+                    {formatCurrency(totals.totalDaily)} يومياً
+                  </p>
+                </div>
               </div>
             </div>
             <Button
@@ -305,6 +340,7 @@ export default function CigaretteManagement() {
                     <tr className="border-b">
                       <th className="text-right p-3 font-semibold">الاسم</th>
                       <th className="text-right p-3 font-semibold">النوع/القسم</th>
+                      <th className="text-right p-3 font-semibold">حالة السجائر</th>
                       <th className="text-right p-3 font-semibold">نوع السجائر</th>
                       <th className="text-right p-3 font-semibold">التكلفة اليومية</th>
                       <th className="text-right p-3 font-semibold">الإجراءات</th>
@@ -320,7 +356,7 @@ export default function CigaretteManagement() {
                       else if (!item.patientType) itemType = 'graduate';
                       
                       return (
-                        <tr key={item.id} className="border-b hover:bg-gray-50">
+                        <tr key={item.id} className={`border-b hover:bg-gray-50 ${cigaretteType === "none" ? "bg-red-50" : "bg-green-50"}`}>
                           <td className="p-3 font-medium">{item.name}</td>
                           <td className="p-3">
                             {item.patientType && (
@@ -334,6 +370,19 @@ export default function CigaretteManagement() {
                             {!item.patientType && !item.role && (
                               <Badge variant="outline">خريج</Badge>
                             )}
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              {cigaretteType === "none" ? (
+                                <Badge variant="destructive" className="bg-red-100 text-red-800">
+                                  ✗ متوقف
+                                </Badge>
+                              ) : (
+                                <Badge variant="default" className="bg-green-100 text-green-800">
+                                  ✓ نشط
+                                </Badge>
+                              )}
+                            </div>
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
@@ -360,7 +409,7 @@ export default function CigaretteManagement() {
                               {cigaretteType === "none" ? (
                                 <Cigarette className="w-3 h-3" />
                               ) : (
-                                <CigaretteOff className="w-3 h-3" />
+                                <Edit3 className="w-3 h-3" />
                               )}
                             </Button>
                           </td>
@@ -481,7 +530,7 @@ export default function CigaretteManagement() {
       <SectionCard
         title="قسم المرضى الخريجين"
         icon={GraduationCap}
-        items={activeGraduatesWithCigarettes}
+        items={activeGraduatesAll}
         sectionKey="graduates"
         color="bg-purple-600"
       />
