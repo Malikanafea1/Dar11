@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Plus, Users, GraduationCap, Briefcase } from "lucide-react";
+import { Printer, Plus, Users, GraduationCap, Briefcase, RefreshCw } from "lucide-react";
 import { Patient, Staff, Graduate } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Helper function to get cigarette display text
 const getCigaretteTypeText = (type: string) => {
@@ -29,6 +31,7 @@ const calculateCigaretteCost = (type: string) => {
 
 export default function CigaretteManagement() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch data
   const { data: patients = [], isLoading: patientsLoading } = useQuery<Patient[]>({
@@ -42,6 +45,53 @@ export default function CigaretteManagement() {
   const { data: graduates = [], isLoading: graduatesLoading } = useQuery<Graduate[]>({
     queryKey: ["/api/graduates/active"],
   });
+
+  // Mutation لتحديث بيانات المرضى
+  const updatePatientsMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/patients/update-cigarette-fields", {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      toast({
+        title: "تم تحديث بيانات المرضى",
+        description: "تم إضافة حقول السجائر للمرضى الموجودين بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في التحديث",
+        description: "فشل في تحديث بيانات المرضى",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation لتحديث بيانات الموظفين
+  const updateStaffMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/staff/update-cigarette-fields", {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      toast({
+        title: "تم تحديث بيانات الموظفين",
+        description: "تم إضافة حقول السجائر للموظفين الموجودين بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في التحديث",
+        description: "فشل في تحديث بيانات الموظفين",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleUpdateData = async () => {
+    try {
+      await updatePatientsMutation.mutateAsync();
+      await updateStaffMutation.mutateAsync();
+    } catch (error) {
+      console.error("Error updating data:", error);
+    }
+  };
 
   // Filter active patients and separate by type
   const activePatients = patients.filter(p => p.status === "active");
@@ -210,6 +260,15 @@ export default function CigaretteManagement() {
           <p className="text-gray-600 mt-2">متابعة توزيع السجائر اليومية للمرضى والخريجين والموظفين</p>
         </div>
         <div className="flex gap-3">
+          <Button 
+            onClick={handleUpdateData}
+            variant="outline"
+            disabled={updatePatientsMutation.isPending || updateStaffMutation.isPending}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${(updatePatientsMutation.isPending || updateStaffMutation.isPending) ? 'animate-spin' : ''}`} />
+            تحديث البيانات
+          </Button>
           <Button className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             إضافة تسديد سجائر

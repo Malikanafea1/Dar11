@@ -1265,4 +1265,75 @@ export class FirebaseStorage implements IStorage {
       return [];
     }
   }
+
+  // تحديث المرضى الموجودين لإضافة حقول السجائر
+  async updateExistingPatientsWithCigaretteFields(): Promise<void> {
+    try {
+      const snapshot = await getDocs(collection(db, "patients"));
+      const updatePromises = snapshot.docs.map(async (docSnapshot) => {
+        const patient = docSnapshot.data();
+        
+        // التحقق من عدم وجود الحقول الجديدة
+        if (!patient.patientType || !patient.dailyCigaretteType) {
+          const updates: any = {};
+          
+          // إضافة نوع المريض بشكل عشوائي
+          if (!patient.patientType) {
+            updates.patientType = Math.random() > 0.5 ? "detox" : "recovery";
+          }
+          
+          // إضافة نوع السجائر بشكل عشوائي
+          if (!patient.dailyCigaretteType) {
+            const cigaretteTypes = ["none", "half_pack", "full_pack"];
+            const randomType = cigaretteTypes[Math.floor(Math.random() * cigaretteTypes.length)];
+            updates.dailyCigaretteType = randomType;
+            updates.dailyCigaretteCost = randomType === "full_pack" ? 50 : 
+                                         randomType === "half_pack" ? 25 : 0;
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            await updateDoc(doc(db, "patients", docSnapshot.id), updates);
+            console.log(`Updated patient ${docSnapshot.id} with cigarette fields`);
+          }
+        }
+      });
+      
+      await Promise.all(updatePromises);
+      console.log("Finished updating existing patients with cigarette fields");
+    } catch (error) {
+      console.error("Error updating existing patients:", error);
+      throw error;
+    }
+  }
+
+  // تحديث الموظفين الموجودين لإضافة حقول السجائر
+  async updateExistingStaffWithCigaretteFields(): Promise<void> {
+    try {
+      const snapshot = await getDocs(collection(db, "staff"));
+      const updatePromises = snapshot.docs.map(async (docSnapshot) => {
+        const staff = docSnapshot.data();
+        
+        // التحقق من عدم وجود الحقول الجديدة
+        if (!staff.dailyCigaretteType) {
+          const updates: any = {};
+          
+          // إضافة نوع السجائر بشكل عشوائي
+          const cigaretteTypes = ["none", "half_pack", "full_pack"];
+          const randomType = cigaretteTypes[Math.floor(Math.random() * cigaretteTypes.length)];
+          updates.dailyCigaretteType = randomType;
+          updates.dailyCigaretteCost = randomType === "full_pack" ? 50 : 
+                                       randomType === "half_pack" ? 25 : 0;
+          
+          await updateDoc(doc(db, "staff", docSnapshot.id), updates);
+          console.log(`Updated staff ${docSnapshot.id} with cigarette fields`);
+        }
+      });
+      
+      await Promise.all(updatePromises);
+      console.log("Finished updating existing staff with cigarette fields");
+    } catch (error) {
+      console.error("Error updating existing staff:", error);
+      throw error;
+    }
+  }
 }

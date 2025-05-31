@@ -628,6 +628,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // إضافة endpoint لتحديث المرضى الموجودين
+  app.post("/api/patients/update-cigarette-fields", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
+    try {
+      if (storage.updateExistingPatientsWithCigaretteFields) {
+        await storage.updateExistingPatientsWithCigaretteFields();
+        res.json({ message: "Successfully updated existing patients with cigarette fields" });
+      } else {
+        res.status(400).json({ message: "Update function not available" });
+      }
+    } catch (error) {
+      console.error("Error updating patients:", error);
+      res.status(500).json({ message: "Failed to update existing patients" });
+    }
+  });
+
+  // إضافة endpoint لتحديث الموظفين الموجودين
+  app.post("/api/staff/update-cigarette-fields", requireAuth, requirePermission(PERMISSIONS.MANAGE_STAFF), async (req, res) => {
+    try {
+      if (storage.updateExistingStaffWithCigaretteFields) {
+        await storage.updateExistingStaffWithCigaretteFields();
+        res.json({ message: "Successfully updated existing staff with cigarette fields" });
+      } else {
+        res.status(400).json({ message: "Update function not available" });
+      }
+    } catch (error) {
+      console.error("Error updating staff:", error);
+      res.status(500).json({ message: "Failed to update existing staff" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
