@@ -130,6 +130,8 @@ export class MemStorage implements IStorage {
   private bonuses: Map<string, Bonus>;
   private advances: Map<string, Advance>;
   private deductions: Map<string, Deduction>;
+  private graduates: Map<string, Graduate>;
+  private cigarettePayments: Map<string, CigarettePayment>;
   private settings: Settings | undefined;
   private currentUserId: number;
   private currentPatientId: number;
@@ -140,6 +142,8 @@ export class MemStorage implements IStorage {
   private currentBonusId: number;
   private currentAdvanceId: number;
   private currentDeductionId: number;
+  private currentGraduateId: number;
+  private currentCigarettePaymentId: number;
 
   constructor() {
     this.users = new Map();
@@ -151,6 +155,8 @@ export class MemStorage implements IStorage {
     this.bonuses = new Map();
     this.advances = new Map();
     this.deductions = new Map();
+    this.graduates = new Map();
+    this.cigarettePayments = new Map();
     this.settings = {
       id: "1",
       username: "مسؤول النظام",
@@ -175,6 +181,8 @@ export class MemStorage implements IStorage {
     this.currentBonusId = 1;
     this.currentAdvanceId = 1;
     this.currentDeductionId = 1;
+    this.currentGraduateId = 1;
+    this.currentCigarettePaymentId = 1;
     
     // إنشاء المدير الافتراضي
     this.createDefaultAdmin();
@@ -708,6 +716,83 @@ export class MemStorage implements IStorage {
 
   async getDeductionsByStaff(staffId: string): Promise<Deduction[]> {
     return Array.from(this.deductions.values()).filter(d => d.staffId === staffId);
+  }
+
+  // Graduate methods
+  async getGraduates(): Promise<Graduate[]> {
+    return Array.from(this.graduates.values());
+  }
+
+  async getGraduate(id: string): Promise<Graduate | undefined> {
+    return this.graduates.get(id);
+  }
+
+  async createGraduate(insertGraduate: InsertGraduate): Promise<Graduate> {
+    const id = (this.currentGraduateId++).toString();
+    const graduate: Graduate = { 
+      ...insertGraduate, 
+      id,
+      addedDate: new Date().toISOString()
+    };
+    this.graduates.set(id, graduate);
+    return graduate;
+  }
+
+  async updateGraduate(id: string, updates: Partial<Graduate>): Promise<Graduate> {
+    const existing = this.graduates.get(id);
+    if (!existing) throw new Error("Graduate not found");
+    
+    const updated = { ...existing, ...updates };
+    this.graduates.set(id, updated);
+    return updated;
+  }
+
+  async deleteGraduate(id: string): Promise<void> {
+    this.graduates.delete(id);
+  }
+
+  async getActiveGraduates(): Promise<Graduate[]> {
+    return Array.from(this.graduates.values()).filter(g => g.isActive);
+  }
+
+  // Cigarette Payment methods
+  async getCigarettePayments(): Promise<CigarettePayment[]> {
+    return Array.from(this.cigarettePayments.values());
+  }
+
+  async getCigarettePayment(id: string): Promise<CigarettePayment | undefined> {
+    return this.cigarettePayments.get(id);
+  }
+
+  async createCigarettePayment(insertCigarettePayment: InsertCigarettePayment): Promise<CigarettePayment> {
+    const id = (this.currentCigarettePaymentId++).toString();
+    const payment: CigarettePayment = { 
+      ...insertCigarettePayment, 
+      id,
+      createdAt: new Date().toISOString()
+    };
+    this.cigarettePayments.set(id, payment);
+    return payment;
+  }
+
+  async updateCigarettePayment(id: string, updates: Partial<CigarettePayment>): Promise<CigarettePayment> {
+    const existing = this.cigarettePayments.get(id);
+    if (!existing) throw new Error("Cigarette payment not found");
+    
+    const updated = { ...existing, ...updates };
+    this.cigarettePayments.set(id, updated);
+    return updated;
+  }
+
+  async getCigarettePaymentsByPerson(personId: string): Promise<CigarettePayment[]> {
+    return Array.from(this.cigarettePayments.values()).filter(p => p.personId === personId);
+  }
+
+  async getCigarettePaymentsByDateRange(startDate: Date, endDate: Date): Promise<CigarettePayment[]> {
+    return Array.from(this.cigarettePayments.values()).filter(p => {
+      const paymentDate = new Date(p.date);
+      return paymentDate >= startDate && paymentDate <= endDate;
+    });
   }
 }
 

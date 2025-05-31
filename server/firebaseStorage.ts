@@ -24,7 +24,9 @@ import type {
   Payroll, InsertPayroll,
   Bonus, InsertBonus,
   Advance, InsertAdvance,
-  Deduction, InsertDeduction
+  Deduction, InsertDeduction,
+  Graduate, InsertGraduate,
+  CigarettePayment, InsertCigarettePayment
 } from "@shared/schema";
 
 export class FirebaseStorage implements IStorage {
@@ -1072,6 +1074,194 @@ export class FirebaseStorage implements IStorage {
       })) as Deduction[];
     } catch (error) {
       console.error("Error getting deductions by staff:", error);
+      return [];
+    }
+  }
+
+  // Graduate methods
+  async getGraduates(): Promise<Graduate[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "graduates"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Graduate[];
+    } catch (error) {
+      console.error("Error getting graduates:", error);
+      return [];
+    }
+  }
+
+  async getGraduate(id: string): Promise<Graduate | undefined> {
+    try {
+      const graduateDoc = await getDoc(doc(db, "graduates", id));
+      if (graduateDoc.exists()) {
+        return {
+          id: graduateDoc.id,
+          ...graduateDoc.data()
+        } as Graduate;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting graduate:", error);
+      return undefined;
+    }
+  }
+
+  async createGraduate(insertGraduate: InsertGraduate): Promise<Graduate> {
+    try {
+      const graduateData = {
+        ...insertGraduate,
+        addedDate: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "graduates"), graduateData);
+      
+      return {
+        id: docRef.id,
+        ...graduateData
+      } as Graduate;
+    } catch (error) {
+      console.error("Error creating graduate:", error);
+      throw error;
+    }
+  }
+
+  async updateGraduate(id: string, updates: Partial<Graduate>): Promise<Graduate> {
+    try {
+      const graduateRef = doc(db, "graduates", id);
+      await updateDoc(graduateRef, updates);
+      
+      const updatedGraduate = await this.getGraduate(id);
+      if (!updatedGraduate) {
+        throw new Error("Graduate not found after update");
+      }
+      return updatedGraduate;
+    } catch (error) {
+      console.error("Error updating graduate:", error);
+      throw error;
+    }
+  }
+
+  async deleteGraduate(id: string): Promise<void> {
+    try {
+      await deleteDoc(doc(db, "graduates", id));
+    } catch (error) {
+      console.error("Error deleting graduate:", error);
+      throw error;
+    }
+  }
+
+  async getActiveGraduates(): Promise<Graduate[]> {
+    try {
+      const q = query(collection(db, "graduates"), where("isActive", "==", true));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Graduate[];
+    } catch (error) {
+      console.error("Error getting active graduates:", error);
+      return [];
+    }
+  }
+
+  // Cigarette Payment methods
+  async getCigarettePayments(): Promise<CigarettePayment[]> {
+    try {
+      const snapshot = await getDocs(collection(db, "cigarettePayments"));
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CigarettePayment[];
+    } catch (error) {
+      console.error("Error getting cigarette payments:", error);
+      return [];
+    }
+  }
+
+  async getCigarettePayment(id: string): Promise<CigarettePayment | undefined> {
+    try {
+      const paymentDoc = await getDoc(doc(db, "cigarettePayments", id));
+      if (paymentDoc.exists()) {
+        return {
+          id: paymentDoc.id,
+          ...paymentDoc.data()
+        } as CigarettePayment;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting cigarette payment:", error);
+      return undefined;
+    }
+  }
+
+  async createCigarettePayment(insertCigarettePayment: InsertCigarettePayment): Promise<CigarettePayment> {
+    try {
+      const paymentData = {
+        ...insertCigarettePayment,
+        createdAt: new Date().toISOString()
+      };
+      
+      const docRef = await addDoc(collection(db, "cigarettePayments"), paymentData);
+      
+      return {
+        id: docRef.id,
+        ...paymentData
+      } as CigarettePayment;
+    } catch (error) {
+      console.error("Error creating cigarette payment:", error);
+      throw error;
+    }
+  }
+
+  async updateCigarettePayment(id: string, updates: Partial<CigarettePayment>): Promise<CigarettePayment> {
+    try {
+      const paymentRef = doc(db, "cigarettePayments", id);
+      await updateDoc(paymentRef, updates);
+      
+      const updatedPayment = await this.getCigarettePayment(id);
+      if (!updatedPayment) {
+        throw new Error("Cigarette payment not found after update");
+      }
+      return updatedPayment;
+    } catch (error) {
+      console.error("Error updating cigarette payment:", error);
+      throw error;
+    }
+  }
+
+  async getCigarettePaymentsByPerson(personId: string): Promise<CigarettePayment[]> {
+    try {
+      const q = query(collection(db, "cigarettePayments"), where("personId", "==", personId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CigarettePayment[];
+    } catch (error) {
+      console.error("Error getting cigarette payments by person:", error);
+      return [];
+    }
+  }
+
+  async getCigarettePaymentsByDateRange(startDate: Date, endDate: Date): Promise<CigarettePayment[]> {
+    try {
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const q = query(
+        collection(db, "cigarettePayments"),
+        where("date", ">=", startDateStr),
+        where("date", "<=", endDateStr)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CigarettePayment[];
+    } catch (error) {
+      console.error("Error getting cigarette payments by date range:", error);
       return [];
     }
   }
