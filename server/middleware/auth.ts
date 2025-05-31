@@ -102,8 +102,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   try {
     const authHeader = req.headers.authorization;
     const userIdCookie = req.cookies?.userId;
+    const userIdHeader = req.headers['x-user-id'] as string;
     
-    if (!authHeader && !userIdCookie) {
+    // للتطوير: السماح بتمرير معرف المستخدم في header
+    if (!authHeader && !userIdCookie && !userIdHeader) {
       return res.status(401).json({ message: "يجب تسجيل الدخول أولاً" });
     }
 
@@ -115,6 +117,9 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     } else if (userIdCookie) {
       // استخدام cookie
       userId = userIdCookie;
+    } else if (userIdHeader) {
+      // استخدام header للتطوير
+      userId = userIdHeader;
     } else {
       return res.status(401).json({ message: "طريقة المصادقة غير صحيحة" });
     }
