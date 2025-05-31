@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,18 +43,7 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: staff ? {
-      name: staff.name,
-      role: staff.role,
-      department: staff.department,
-      monthlySalary: staff.monthlySalary.toString(),
-      hireDate: new Date(staff.hireDate).toISOString().split('T')[0],
-      isActive: staff.isActive ?? true,
-      phoneNumber: staff.phoneNumber || "",
-      email: staff.email || "",
-      dailyCigaretteType: staff.dailyCigaretteType || "none",
-      dailyCigaretteCost: staff.dailyCigaretteCost || 0,
-    } : {
+    defaultValues: {
       name: "",
       role: "",
       department: "",
@@ -66,6 +56,37 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
       dailyCigaretteCost: 0,
     },
   });
+
+  // Reset form with staff data when modal opens
+  useEffect(() => {
+    if (staff) {
+      form.reset({
+        name: staff.name,
+        role: staff.role,
+        department: staff.department,
+        monthlySalary: staff.monthlySalary.toString(),
+        hireDate: new Date(staff.hireDate).toISOString().split('T')[0],
+        isActive: staff.isActive ?? true,
+        phoneNumber: staff.phoneNumber || "",
+        email: staff.email || "",
+        dailyCigaretteType: staff.dailyCigaretteType || "none",
+        dailyCigaretteCost: staff.dailyCigaretteCost || 0,
+      });
+    } else {
+      form.reset({
+        name: "",
+        role: "",
+        department: "",
+        monthlySalary: "",
+        hireDate: new Date().toISOString().split('T')[0],
+        isActive: true,
+        phoneNumber: "",
+        email: "",
+        dailyCigaretteType: "none",
+        dailyCigaretteCost: 0,
+      });
+    }
+  }, [staff, form]);
 
   // Update cigarette cost when type changes
   const handleCigaretteTypeChange = (value: string) => {

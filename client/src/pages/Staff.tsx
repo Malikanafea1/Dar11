@@ -20,7 +20,9 @@ import {
   DollarSign,
   Calendar,
   Phone,
-  Mail
+  Mail,
+  Cigarette,
+  CigaretteOff
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +65,40 @@ export default function Staff() {
     },
   });
 
+  const toggleCigaretteMutation = useMutation({
+    mutationFn: async ({ staffId, newType }: { staffId: string; newType: string }) => {
+      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
+      const response = await fetch(`/api/staff/${staffId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          dailyCigaretteType: newType,
+          dailyCigaretteCost: cost,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("فشل في تحديث حالة السجائر");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث حالة السجائر بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة السجائر",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEdit = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setIsStaffModalOpen(true);
@@ -71,6 +107,33 @@ export default function Staff() {
   const handleDelete = (staffMember: Staff) => {
     if (window.confirm(`هل أنت متأكد من حذف الموظف "${staffMember.name}"؟`)) {
       deleteMutation.mutate(staffMember.id);
+    }
+  };
+
+  const handleToggleCigarette = (staffMember: Staff) => {
+    const currentType = staffMember.dailyCigaretteType || "none";
+    let newType = "none";
+    
+    if (currentType === "none") {
+      newType = "half_pack";
+    } else if (currentType === "half_pack") {
+      newType = "full_pack";
+    } else {
+      newType = "none";
+    }
+    
+    toggleCigaretteMutation.mutate({ 
+      staffId: staffMember.id, 
+      newType 
+    });
+  };
+
+  const getCigaretteTypeText = (type: string) => {
+    switch (type) {
+      case "full_pack": return "علبة كاملة";
+      case "half_pack": return "نصف علبة";
+      case "none": return "لا يدخن";
+      default: return "غير محدد";
     }
   };
 
@@ -202,6 +265,7 @@ export default function Staff() {
                 <TableHead>الراتب الشهري</TableHead>
                 <TableHead>تاريخ التوظيف</TableHead>
                 <TableHead>الحالة</TableHead>
+                <TableHead>السجائر اليومية</TableHead>
                 <TableHead>معلومات الاتصال</TableHead>
                 <TableHead>الإجراءات</TableHead>
               </TableRow>
