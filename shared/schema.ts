@@ -13,6 +13,10 @@ export interface Patient {
   notes?: string;
   totalPaid: number;
   dischargeDate?: string;
+  // Cigarette management fields
+  patientType: "detox" | "recovery";
+  dailyCigaretteType: "full_pack" | "half_pack" | "none";
+  dailyCigaretteCost: number;
 }
 
 export const insertPatientSchema = z.object({
@@ -24,6 +28,14 @@ export const insertPatientSchema = z.object({
   insurance: z.string().optional(),
   status: z.enum(["active", "discharged"]).default("active"),
   notes: z.string().optional(),
+  // Cigarette management fields
+  patientType: z.enum(["detox", "recovery"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع المريض" })
+  }),
+  dailyCigaretteType: z.enum(["full_pack", "half_pack", "none"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع السجائر اليومية" })
+  }).default("none"),
+  dailyCigaretteCost: z.number().min(0, "تكلفة السجائر يجب أن تكون أكبر من أو تساوي الصفر").default(0),
 });
 
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
@@ -39,6 +51,9 @@ export interface Staff {
   isActive: boolean;
   phoneNumber?: string;
   email?: string;
+  // Cigarette management fields
+  dailyCigaretteType: "full_pack" | "half_pack" | "none";
+  dailyCigaretteCost: number;
 }
 
 export const insertStaffSchema = z.object({
@@ -50,6 +65,11 @@ export const insertStaffSchema = z.object({
   isActive: z.boolean().default(true),
   phoneNumber: z.string().optional(),
   email: z.string().email("بريد إلكتروني غير صحيح").optional(),
+  // Cigarette management fields
+  dailyCigaretteType: z.enum(["full_pack", "half_pack", "none"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع السجائر اليومية" })
+  }).default("none"),
+  dailyCigaretteCost: z.number().min(0, "تكلفة السجائر يجب أن تكون أكبر من أو تساوي الصفر").default(0),
 });
 
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
@@ -261,3 +281,57 @@ export const insertDeductionSchema = z.object({
 });
 
 export type InsertDeduction = z.infer<typeof insertDeductionSchema>;
+
+// Graduate types and schemas (former patients)
+export interface Graduate {
+  id: string;
+  name: string;
+  dailyCigaretteType: "full_pack" | "half_pack" | "none";
+  dailyCigaretteCost: number;
+  notes?: string;
+  addedDate: string;
+  isActive: boolean;
+}
+
+export const insertGraduateSchema = z.object({
+  name: z.string().min(1, "اسم الخريج مطلوب"),
+  dailyCigaretteType: z.enum(["full_pack", "half_pack", "none"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع السجائر اليومية" })
+  }).default("none"),
+  dailyCigaretteCost: z.number().min(0, "تكلفة السجائر يجب أن تكون أكبر من أو تساوي الصفر").default(0),
+  notes: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export type InsertGraduate = z.infer<typeof insertGraduateSchema>;
+
+// Cigarette Payment types and schemas
+export interface CigarettePayment {
+  id: string;
+  personId: string; // Can be patient, graduate, or staff
+  personType: "patient" | "graduate" | "staff";
+  personName: string;
+  paymentType: "cash" | "cigarettes";
+  amount: number; // Amount in money or cigarette packs
+  date: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export const insertCigarettePaymentSchema = z.object({
+  personId: z.string().min(1, "معرف الشخص مطلوب"),
+  personType: z.enum(["patient", "graduate", "staff"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع الشخص" })
+  }),
+  personName: z.string().min(1, "اسم الشخص مطلوب"),
+  paymentType: z.enum(["cash", "cigarettes"], {
+    errorMap: () => ({ message: "يرجى اختيار نوع التسديد" })
+  }),
+  amount: z.number().min(0, "المبلغ أو الكمية يجب أن تكون أكبر من الصفر"),
+  date: z.string(),
+  notes: z.string().optional(),
+  createdBy: z.string().min(1, "المنشئ مطلوب"),
+});
+
+export type InsertCigarettePayment = z.infer<typeof insertCigarettePaymentSchema>;

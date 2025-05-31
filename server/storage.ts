@@ -8,7 +8,9 @@ import {
   type Payroll, type InsertPayroll,
   type Bonus, type InsertBonus,
   type Advance, type InsertAdvance,
-  type Deduction, type InsertDeduction
+  type Deduction, type InsertDeduction,
+  type Graduate, type InsertGraduate,
+  type CigarettePayment, type InsertCigarettePayment
 } from "@shared/schema";
 
 export interface IStorage {
@@ -79,6 +81,22 @@ export interface IStorage {
   createDeduction(deduction: InsertDeduction): Promise<Deduction>;
   updateDeduction(id: string, updates: Partial<Deduction>): Promise<Deduction>;
   getDeductionsByStaff(staffId: string): Promise<Deduction[]>;
+  
+  // Graduate methods
+  getGraduates(): Promise<Graduate[]>;
+  getGraduate(id: string): Promise<Graduate | undefined>;
+  createGraduate(graduate: InsertGraduate): Promise<Graduate>;
+  updateGraduate(id: string, updates: Partial<Graduate>): Promise<Graduate>;
+  deleteGraduate(id: string): Promise<void>;
+  getActiveGraduates(): Promise<Graduate[]>;
+  
+  // Cigarette Payment methods
+  getCigarettePayments(): Promise<CigarettePayment[]>;
+  getCigarettePayment(id: string): Promise<CigarettePayment | undefined>;
+  createCigarettePayment(payment: InsertCigarettePayment): Promise<CigarettePayment>;
+  updateCigarettePayment(id: string, updates: Partial<CigarettePayment>): Promise<CigarettePayment>;
+  getCigarettePaymentsByPerson(personId: string): Promise<CigarettePayment[]>;
+  getCigarettePaymentsByDateRange(startDate: Date, endDate: Date): Promise<CigarettePayment[]>;
   
   // Settings methods
   getSettings(): Promise<Settings | undefined>;
