@@ -11,7 +11,9 @@ import {
   insertPayrollSchema,
   insertBonusSchema,
   insertAdvanceSchema,
-  insertDeductionSchema
+  insertDeductionSchema,
+  insertGraduateSchema,
+  insertCigarettePaymentSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { 
@@ -495,6 +497,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(deductions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch deductions for staff" });
+    }
+  });
+
+  // Graduate routes - محمية بصلاحيات إدارة المرضى
+  app.get("/api/graduates", requireAuth, requirePermission(PERMISSIONS.VIEW_PATIENTS), async (req, res) => {
+    try {
+      const graduates = await storage.getGraduates();
+      res.json(graduates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch graduates" });
+    }
+  });
+
+  app.get("/api/graduates/active", requireAuth, requirePermission(PERMISSIONS.VIEW_PATIENTS), async (req, res) => {
+    try {
+      const graduates = await storage.getActiveGraduates();
+      res.json(graduates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch active graduates" });
+    }
+  });
+
+  app.get("/api/graduates/:id", requireAuth, requirePermission(PERMISSIONS.VIEW_PATIENTS), async (req, res) => {
+    try {
+      const graduate = await storage.getGraduate(req.params.id);
+      if (!graduate) {
+        return res.status(404).json({ message: "Graduate not found" });
+      }
+      res.json(graduate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch graduate" });
+    }
+  });
+
+  app.post("/api/graduates", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
+    try {
+      const validatedData = insertGraduateSchema.parse(req.body);
+      const graduate = await storage.createGraduate(validatedData);
+      res.status(201).json(graduate);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid graduate data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create graduate" });
+    }
+  });
+
+  app.patch("/api/graduates/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
+    try {
+      const graduate = await storage.updateGraduate(req.params.id, req.body);
+      res.json(graduate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update graduate" });
+    }
+  });
+
+  app.delete("/api/graduates/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_PATIENTS), async (req, res) => {
+    try {
+      await storage.deleteGraduate(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete graduate" });
+    }
+  });
+
+  // Cigarette Payment routes - محمية بصلاحيات إدارة الدفعات
+  app.get("/api/cigarette-payments", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
+    try {
+      const payments = await storage.getCigarettePayments();
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cigarette payments" });
+    }
+  });
+
+  app.get("/api/cigarette-payments/:id", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
+    try {
+      const payment = await storage.getCigarettePayment(req.params.id);
+      if (!payment) {
+        return res.status(404).json({ message: "Cigarette payment not found" });
+      }
+      res.json(payment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cigarette payment" });
+    }
+  });
+
+  app.post("/api/cigarette-payments", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
+    try {
+      const validatedData = insertCigarettePaymentSchema.parse(req.body);
+      const payment = await storage.createCigarettePayment(validatedData);
+      res.status(201).json(payment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid cigarette payment data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create cigarette payment" });
+    }
+  });
+
+  app.patch("/api/cigarette-payments/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
+    try {
+      const payment = await storage.updateCigarettePayment(req.params.id, req.body);
+      res.json(payment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update cigarette payment" });
+    }
+  });
+
+  app.get("/api/cigarette-payments/person/:personId", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
+    try {
+      const payments = await storage.getCigarettePaymentsByPerson(req.params.personId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cigarette payments for person" });
+    }
+  });
+
+  app.get("/api/cigarette-payments/date-range", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
+    try {
+      const { startDate, endDate } = req.query;
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start date and end date are required" });
+      }
+      const payments = await storage.getCigarettePaymentsByDateRange(new Date(startDate as string), new Date(endDate as string));
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cigarette payments by date range" });
     }
   });
 

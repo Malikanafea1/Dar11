@@ -14,6 +14,7 @@ import Settings from "@/pages/Settings";
 import Reports from "@/pages/Reports";
 import Payroll from "@/pages/Payroll";
 import AdminPanel from "@/pages/AdminPanel";
+import CigaretteManagement from "@/pages/CigaretteManagement";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/not-found";
 
