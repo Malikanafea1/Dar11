@@ -287,6 +287,30 @@ export default function Staff() {
                     </Badge>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={staffMember.dailyCigaretteType === "none" ? "secondary" : "default"}
+                        className={staffMember.dailyCigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
+                      >
+                        {getCigaretteTypeText(staffMember.dailyCigaretteType || "none")}
+                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleCigarette(staffMember)}
+                        disabled={toggleCigaretteMutation.isPending}
+                        className="p-1 h-7 w-7"
+                        title={staffMember.dailyCigaretteType === "none" ? "تفعيل السجائر" : "تغيير نوع السجائر"}
+                      >
+                        {staffMember.dailyCigaretteType === "none" ? (
+                          <Cigarette className="w-3 h-3" />
+                        ) : (
+                          <CigaretteOff className="w-3 h-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="space-y-1">
                       {staffMember.phoneNumber && (
                         <div className="flex items-center gap-1 text-sm text-gray-600">
