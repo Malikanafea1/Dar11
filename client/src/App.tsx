@@ -37,6 +37,7 @@ function Router({ user }: { user: User }) {
         <Route path="/finance" component={Finance} />
         <Route path="/collections" component={Collections} />
         <Route path="/payroll" component={() => <Payroll user={user} />} />
+        <Route path="/cigarettes" component={CigaretteManagement} />
         <Route path="/admin" component={() => <AdminPanel user={user} />} />
         <Route path="/reports" component={Reports} />
         <Route path="/settings" component={Settings} />

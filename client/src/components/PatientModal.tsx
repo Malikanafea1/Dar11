@@ -26,6 +26,9 @@ const formSchema = z.object({
   insurance: z.string().optional(),
   status: z.enum(["active", "discharged"]).default("active"),
   notes: z.string().optional(),
+  // حقول إدارة السجائر
+  patientType: z.enum(["detox", "recovery"]),
+  dailyCigaretteType: z.enum(["full_pack", "half_pack", "none"]).default("none"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -50,6 +53,8 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
       insurance: patient.insurance || "",
       status: patient.status,
       notes: patient.notes || "",
+      patientType: patient.patientType || "detox",
+      dailyCigaretteType: patient.dailyCigaretteType || "none",
     } : {
       name: "",
       nationalId: "",
@@ -59,6 +64,8 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
       insurance: "",
       status: "active",
       notes: "",
+      patientType: "detox",
+      dailyCigaretteType: "none",
     },
   });
 
@@ -71,6 +78,10 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
         admissionDate: data.admissionDate,
         dailyCost: parseFloat(data.dailyCost),
         status: data.status,
+        patientType: data.patientType,
+        dailyCigaretteType: data.dailyCigaretteType,
+        dailyCigaretteCost: data.dailyCigaretteType === "full_pack" ? 50 : 
+                            data.dailyCigaretteType === "half_pack" ? 25 : 0,
       };
 
       // إضافة الحقول الاختيارية فقط إذا كانت لها قيم
@@ -175,6 +186,53 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
                         max={new Date().toISOString().split('T')[0]}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* نوع المريض */}
+              <FormField
+                control={form.control}
+                name="patientType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-right">نوع المريض</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر نوع المريض" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="detox">ديتوكس</SelectItem>
+                        <SelectItem value="recovery">ريكفري</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* نوع السجائر اليومية */}
+              <FormField
+                control={form.control}
+                name="dailyCigaretteType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-right">نوع السجائر اليومية</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر نوع السجائر" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">لا يدخن</SelectItem>
+                        <SelectItem value="half_pack">نصف علبة (25 ج.م)</SelectItem>
+                        <SelectItem value="full_pack">علبة كاملة (50 ج.م)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
