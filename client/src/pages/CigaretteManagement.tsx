@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Plus, Users, GraduationCap, Briefcase, RefreshCw } from "lucide-react";
+import { Printer, Plus, Users, GraduationCap, Briefcase, RefreshCw, Cigarette, CigaretteOff, Edit3 } from "lucide-react";
 import { Patient, Staff, Graduate } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -86,6 +86,82 @@ export default function CigaretteManagement() {
     }
   });
 
+  // Mutation لتحديث حالة السجائر للموظفين
+  const updateStaffCigaretteMutation = useMutation({
+    mutationFn: async ({ staffId, newType }: { staffId: string; newType: string }) => {
+      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
+      return apiRequest("PATCH", `/api/staff/${staffId}`, {
+        dailyCigaretteType: newType,
+        dailyCigaretteCost: cost,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث حالة السجائر للموظف بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة السجائر للموظف",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation لتحديث حالة السجائر للخريجين
+  const updateGraduateCigaretteMutation = useMutation({
+    mutationFn: async ({ graduateId, newType }: { graduateId: string; newType: string }) => {
+      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
+      return apiRequest("PATCH", `/api/graduates/${graduateId}`, {
+        dailyCigaretteType: newType,
+        dailyCigaretteCost: cost,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/graduates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/graduates/active"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث حالة السجائر للخريج بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة السجائر للخريج",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation لتحديث حالة السجائر للمرضى
+  const updatePatientCigaretteMutation = useMutation({
+    mutationFn: async ({ patientId, newType }: { patientId: string; newType: string }) => {
+      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
+      return apiRequest("PATCH", `/api/patients/${patientId}`, {
+        dailyCigaretteType: newType,
+        dailyCigaretteCost: cost,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث حالة السجائر للمريض بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة السجائر للمريض",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleUpdateData = async () => {
     try {
       await updatePatientsMutation.mutateAsync();
@@ -147,6 +223,32 @@ export default function CigaretteManagement() {
     console.log(`Printing section: ${sectionName}`);
   };
 
+  // وظائف التحكم في السجائر
+  const handleToggleCigarette = (item: any, type: 'patient' | 'staff' | 'graduate') => {
+    const currentType = item.dailyCigaretteType || "none";
+    let newType = "none";
+    
+    if (currentType === "none") {
+      newType = "half_pack";
+    } else if (currentType === "half_pack") {
+      newType = "full_pack";
+    } else {
+      newType = "none";
+    }
+    
+    switch (type) {
+      case 'patient':
+        updatePatientCigaretteMutation.mutate({ patientId: item.id, newType });
+        break;
+      case 'staff':
+        updateStaffCigaretteMutation.mutate({ staffId: item.id, newType });
+        break;
+      case 'graduate':
+        updateGraduateCigaretteMutation.mutate({ graduateId: item.id, newType });
+        break;
+    }
+  };
+
   const formatCurrency = (amount: number) => `${amount} ج.م`;
 
   const SectionCard = ({ 
@@ -154,13 +256,15 @@ export default function CigaretteManagement() {
     icon: Icon, 
     items, 
     sectionKey, 
-    color 
+    color,
+    showAllItems = false
   }: { 
     title: string; 
     icon: any; 
     items: any[]; 
     sectionKey: string; 
     color: string;
+    showAllItems?: boolean;
   }) => {
     const totals = calculateSectionTotals(items);
     
@@ -203,12 +307,17 @@ export default function CigaretteManagement() {
                       <th className="text-right p-3 font-semibold">النوع/القسم</th>
                       <th className="text-right p-3 font-semibold">نوع السجائر</th>
                       <th className="text-right p-3 font-semibold">التكلفة اليومية</th>
+                      <th className="text-right p-3 font-semibold">الإجراءات</th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item) => {
                       const cigaretteType = item.dailyCigaretteType || "none";
                       const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
+                      let itemType: 'patient' | 'staff' | 'graduate' = 'patient';
+                      
+                      if (item.role) itemType = 'staff';
+                      else if (!item.patientType) itemType = 'graduate';
                       
                       return (
                         <tr key={item.id} className="border-b hover:bg-gray-50">
@@ -227,15 +336,33 @@ export default function CigaretteManagement() {
                             )}
                           </td>
                           <td className="p-3">
-                            <Badge 
-                              variant={cigaretteType === "none" ? "secondary" : "default"}
-                              className={cigaretteType === "none" ? "bg-gray-100 text-gray-600" : ""}
-                            >
-                              {getCigaretteTypeText(cigaretteType)}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={cigaretteType === "none" ? "secondary" : "default"}
+                                className={cigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
+                              >
+                                {getCigaretteTypeText(cigaretteType)}
+                              </Badge>
+                            </div>
                           </td>
                           <td className="p-3 font-semibold">
                             {formatCurrency(cost)}
+                          </td>
+                          <td className="p-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleCigarette(item, itemType)}
+                              disabled={updatePatientCigaretteMutation.isPending || updateStaffCigaretteMutation.isPending || updateGraduateCigaretteMutation.isPending}
+                              className="p-1 h-7 w-7"
+                              title={cigaretteType === "none" ? "تفعيل السجائر" : "تغيير نوع السجائر"}
+                            >
+                              {cigaretteType === "none" ? (
+                                <Cigarette className="w-3 h-3" />
+                              ) : (
+                                <CigaretteOff className="w-3 h-3" />
+                              )}
+                            </Button>
                           </td>
                         </tr>
                       );

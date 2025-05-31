@@ -74,8 +74,6 @@ export default function Staff() {
     }
   };
 
-
-
   const getCigaretteTypeText = (type: string) => {
     switch (type) {
       case "full_pack": return "علبة كاملة";

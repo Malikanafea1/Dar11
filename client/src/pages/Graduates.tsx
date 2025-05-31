@@ -84,8 +84,6 @@ export default function Graduates() {
     deleteGraduateMutation.mutate(id);
   };
 
-
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-64">
