@@ -20,9 +20,7 @@ import {
   DollarSign,
   Calendar,
   Phone,
-  Mail,
-  Cigarette,
-  CigaretteOff
+  Mail
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -65,40 +63,6 @@ export default function Staff() {
     },
   });
 
-  const toggleCigaretteMutation = useMutation({
-    mutationFn: async ({ staffId, newType }: { staffId: string; newType: string }) => {
-      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
-      const response = await fetch(`/api/staff/${staffId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          dailyCigaretteType: newType,
-          dailyCigaretteCost: cost,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("فشل في تحديث حالة السجائر");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث حالة السجائر بنجاح",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في تحديث حالة السجائر",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleEdit = (staffMember: Staff) => {
     setSelectedStaff(staffMember);
     setIsStaffModalOpen(true);
@@ -110,23 +74,7 @@ export default function Staff() {
     }
   };
 
-  const handleToggleCigarette = (staffMember: Staff) => {
-    const currentType = staffMember.dailyCigaretteType || "none";
-    let newType = "none";
-    
-    if (currentType === "none") {
-      newType = "half_pack";
-    } else if (currentType === "half_pack") {
-      newType = "full_pack";
-    } else {
-      newType = "none";
-    }
-    
-    toggleCigaretteMutation.mutate({ 
-      staffId: staffMember.id, 
-      newType 
-    });
-  };
+
 
   const getCigaretteTypeText = (type: string) => {
     switch (type) {
@@ -287,28 +235,12 @@ export default function Staff() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant={staffMember.dailyCigaretteType === "none" ? "secondary" : "default"}
-                        className={staffMember.dailyCigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
-                      >
-                        {getCigaretteTypeText(staffMember.dailyCigaretteType || "none")}
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleCigarette(staffMember)}
-                        disabled={toggleCigaretteMutation.isPending}
-                        className="p-1 h-7 w-7"
-                        title={staffMember.dailyCigaretteType === "none" ? "تفعيل السجائر" : "تغيير نوع السجائر"}
-                      >
-                        {staffMember.dailyCigaretteType === "none" ? (
-                          <Cigarette className="w-3 h-3" />
-                        ) : (
-                          <CigaretteOff className="w-3 h-3" />
-                        )}
-                      </Button>
-                    </div>
+                    <Badge 
+                      variant={staffMember.dailyCigaretteType === "none" ? "secondary" : "default"}
+                      className={staffMember.dailyCigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
+                    >
+                      {getCigaretteTypeText(staffMember.dailyCigaretteType || "none")}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Search, Edit2, Trash2, GraduationCap, Users, Cigarette, CigaretteOff } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, GraduationCap, Users } from "lucide-react";
 import { Graduate } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -52,39 +52,7 @@ export default function Graduates() {
     },
   });
 
-  const toggleCigaretteMutation = useMutation({
-    mutationFn: async ({ graduateId, newType }: { graduateId: string; newType: string }) => {
-      const cost = newType === "full_pack" ? 50 : newType === "half_pack" ? 25 : 0;
-      const response = await fetch(`/api/graduates/${graduateId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          dailyCigaretteType: newType,
-          dailyCigaretteCost: cost,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("فشل في تحديث حالة السجائر");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/graduates"] });
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث حالة السجائر بنجاح",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "خطأ",
-        description: "فشل في تحديث حالة السجائر",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   // Filter graduates based on search term
   const filteredGraduates = graduates.filter(graduate =>
@@ -116,23 +84,7 @@ export default function Graduates() {
     deleteGraduateMutation.mutate(id);
   };
 
-  const handleToggleCigarette = (graduate: Graduate) => {
-    const currentType = graduate.dailyCigaretteType || "none";
-    let newType = "none";
-    
-    if (currentType === "none") {
-      newType = "half_pack";
-    } else if (currentType === "half_pack") {
-      newType = "full_pack";
-    } else {
-      newType = "none";
-    }
-    
-    toggleCigaretteMutation.mutate({ 
-      graduateId: graduate.id, 
-      newType 
-    });
-  };
+
 
   if (isLoading) {
     return (
@@ -261,28 +213,12 @@ export default function Graduates() {
                     <tr key={graduate.id} className="border-b hover:bg-gray-50">
                       <td className="p-3 font-medium">{graduate.name}</td>
                       <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <Badge 
-                            variant={graduate.dailyCigaretteType === "none" ? "secondary" : "default"}
-                            className={graduate.dailyCigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
-                          >
-                            {getCigaretteTypeText(graduate.dailyCigaretteType)}
-                          </Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleCigarette(graduate)}
-                            disabled={toggleCigaretteMutation.isPending}
-                            className="p-1 h-7 w-7"
-                            title={graduate.dailyCigaretteType === "none" ? "تفعيل السجائر" : "تغيير نوع السجائر"}
-                          >
-                            {graduate.dailyCigaretteType === "none" ? (
-                              <Cigarette className="w-3 h-3" />
-                            ) : (
-                              <CigaretteOff className="w-3 h-3" />
-                            )}
-                          </Button>
-                        </div>
+                        <Badge 
+                          variant={graduate.dailyCigaretteType === "none" ? "secondary" : "default"}
+                          className={graduate.dailyCigaretteType === "none" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"}
+                        >
+                          {getCigaretteTypeText(graduate.dailyCigaretteType)}
+                        </Badge>
                       </td>
                       <td className="p-3 font-semibold">
                         {formatCurrency(graduate.dailyCigaretteCost || 0)}
