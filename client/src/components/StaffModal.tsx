@@ -14,10 +14,22 @@ import { Save } from "lucide-react";
 import type { Staff } from "@shared/schema";
 import { z } from "zod";
 
-const formSchema = insertStaffSchema.extend({
+const formSchema = z.object({
+  name: z.string().min(1, "اسم الموظف مطلوب"),
+  role: z.string().min(1, "المنصب مطلوب"),
+  department: z.string().min(1, "القسم مطلوب"),
+  monthlySalary: z.string().min(1, "الراتب الشهري مطلوب").refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "الراتب الشهري يجب أن يكون رقماً أكبر من الصفر"
+  }),
   hireDate: z.string().min(1, "تاريخ التوظيف مطلوب"),
-  monthlySalary: z.string().min(1, "الراتب الشهري مطلوب"),
+  isActive: z.boolean().default(true),
+  phoneNumber: z.string().optional(),
+  email: z.string().email("بريد إلكتروني غير صحيح").optional().or(z.literal("")),
+  dailyCigaretteType: z.enum(["full_pack", "half_pack", "none"]).default("none"),
+  dailyCigaretteCost: z.number().min(0, "تكلفة السجائر يجب أن تكون أكبر من أو تساوي الصفر").default(0),
 });
+
+type FormData = z.infer<typeof formSchema>;
 
 interface StaffModalProps {
   isOpen: boolean;
@@ -28,17 +40,19 @@ interface StaffModalProps {
 export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) {
   const { toast } = useToast();
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: staff ? {
       name: staff.name,
       role: staff.role,
       department: staff.department,
-      monthlySalary: staff.monthlySalary,
+      monthlySalary: staff.monthlySalary.toString(),
       hireDate: new Date(staff.hireDate).toISOString().split('T')[0],
       isActive: staff.isActive ?? true,
       phoneNumber: staff.phoneNumber || "",
       email: staff.email || "",
+      dailyCigaretteType: staff.dailyCigaretteType || "none",
+      dailyCigaretteCost: staff.dailyCigaretteCost || 0,
     } : {
       name: "",
       role: "",
@@ -48,15 +62,25 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
       isActive: true,
       phoneNumber: "",
       email: "",
+      dailyCigaretteType: "none",
+      dailyCigaretteCost: 0,
     },
   });
 
+  // Update cigarette cost when type changes
+  const handleCigaretteTypeChange = (value: string) => {
+    const cost = value === "full_pack" ? 50 : value === "half_pack" ? 25 : 0;
+    form.setValue("dailyCigaretteCost", cost);
+  };
+
   const mutation = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: FormData) => {
       const payload = {
         ...data,
         hireDate: new Date(data.hireDate).toISOString(),
         monthlySalary: parseFloat(data.monthlySalary),
+        email: data.email || undefined,
+        phoneNumber: data.phoneNumber || undefined,
       };
       
       if (staff) {
@@ -84,7 +108,7 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: FormData) => {
     mutation.mutate(data);
   };
 
@@ -227,6 +251,57 @@ export default function StaffModal({ isOpen, onClose, staff }: StaffModalProps) 
                 )}
               />
               
+              {/* نوع السجائر اليومية */}
+              <FormField
+                control={form.control}
+                name="dailyCigaretteType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-right">نوع السجائر اليومية</FormLabel>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      handleCigaretteTypeChange(value);
+                    }} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="اختر نوع السجائر" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">لا يدخن</SelectItem>
+                        <SelectItem value="half_pack">نصف علبة (25 ج.م)</SelectItem>
+                        <SelectItem value="full_pack">علبة كاملة (50 ج.م)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* تكلفة السجائر اليومية */}
+              <FormField
+                control={form.control}
+                name="dailyCigaretteCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-right">تكلفة السجائر اليومية (ج.م)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="0" 
+                        min="0"
+                        step="0.01"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value}
+                        disabled={form.watch("dailyCigaretteType") !== "none"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="isActive"
