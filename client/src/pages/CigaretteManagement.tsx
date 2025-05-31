@@ -480,32 +480,52 @@ export default function CigaretteManagement() {
           <CardTitle className="text-xl font-bold text-center">الإحصائيات الإجمالية</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="text-2xl font-bold text-blue-600">{detoxTotals.totalCount}</p>
-              <p className="text-sm text-gray-600">مرضى ديتوكس</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+              <p className="text-2xl font-bold text-blue-600">{detoxTotals.totalPacks}</p>
+              <p className="text-sm text-gray-600">علبة ديتوكس</p>
+              <p className="text-xs text-gray-500">{detoxTotals.activeCount} نشط</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="text-2xl font-bold text-green-600">{recoveryTotals.totalCount}</p>
-              <p className="text-sm text-gray-600">مرضى ريكفري</p>
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+              <p className="text-2xl font-bold text-green-600">{recoveryTotals.totalPacks}</p>
+              <p className="text-sm text-gray-600">علبة ريكفري</p>
+              <p className="text-xs text-gray-500">{recoveryTotals.activeCount} نشط</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="text-2xl font-bold text-purple-600">{graduatesTotals.totalCount}</p>
-              <p className="text-sm text-gray-600">خريجين</p>
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+              <p className="text-2xl font-bold text-purple-600">{graduatesTotals.totalPacks}</p>
+              <p className="text-sm text-gray-600">علبة خريجين</p>
+              <p className="text-xs text-gray-500">{graduatesTotals.activeCount} نشط</p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="text-2xl font-bold text-orange-600">{staffTotals.totalCount}</p>
-              <p className="text-sm text-gray-600">موظفين</p>
+            <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-orange-500">
+              <p className="text-2xl font-bold text-orange-600">{staffTotals.totalPacks}</p>
+              <p className="text-sm text-gray-600">علبة موظفين</p>
+              <p className="text-xs text-gray-500">{staffTotals.activeCount} نشط</p>
             </div>
           </div>
           
           <Separator className="my-4" />
           
-          <div className="text-center bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">الإجمالي الكلي</h3>
-            <p className="text-3xl font-bold text-blue-600 mb-1">{formatCurrency(grandTotal)}</p>
-            <p className="text-gray-600">إجمالي التكلفة اليومية للسجائر</p>
-            <p className="text-sm text-gray-500 mt-2">{grandTotalCount} شخص يحصل على سجائر</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold mb-2 text-blue-800">إجمالي علب السجائر المطلوبة</h3>
+              <p className="text-4xl font-bold text-blue-600 mb-2">{grandTotalPacks}</p>
+              <div className="text-sm text-blue-700">
+                <p>{grandTotalFullPacks} علبة كاملة</p>
+                <p>{grandTotalHalfPacks} نصف علبة</p>
+              </div>
+            </div>
+            
+            <div className="text-center bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold mb-2 text-green-800">الأشخاص النشطين</h3>
+              <p className="text-4xl font-bold text-green-600 mb-2">{grandTotalCount}</p>
+              <p className="text-sm text-green-700">يحصلون على سجائر</p>
+            </div>
+            
+            <div className="text-center bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold mb-2 text-purple-800">التكلفة اليومية</h3>
+              <p className="text-4xl font-bold text-purple-600 mb-2">{formatCurrency(grandTotal)}</p>
+              <p className="text-sm text-purple-700">إجمالي تكلفة السجائر</p>
+            </div>
           </div>
         </CardContent>
       </Card>

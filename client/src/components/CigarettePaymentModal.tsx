@@ -80,22 +80,50 @@ export default function CigarettePaymentModal({ isOpen, onClose }: CigarettePaym
     const selectedPerson = people.find(p => p.id === personId);
     if (selectedPerson) {
       form.setValue("personName", selectedPerson.name);
+      
+      // Auto-fill amount based on cigarette type and payment type
+      const paymentType = form.watch("paymentType");
+      if (paymentType === "cash") {
+        const dailyCost = selectedPerson.dailyCigaretteCost || 
+          (selectedPerson.dailyCigaretteType === "full_pack" ? 50 : 25);
+        form.setValue("amount", dailyCost.toString());
+      } else if (paymentType === "cigarettes") {
+        // For cigarette payments, default to 1 pack
+        form.setValue("amount", "1");
+      }
     }
   };
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
+      let finalAmount = parseFloat(data.amount);
+      
+      // If payment type is cigarettes, convert to monetary value
+      if (data.paymentType === "cigarettes") {
+        const people = getAvailablePeople();
+        const selectedPerson = people.find(p => p.id === data.personId);
+        if (selectedPerson) {
+          const pricePerPack = selectedPerson.dailyCigaretteType === "full_pack" ? 50 : 25;
+          finalAmount = parseFloat(data.amount) * pricePerPack;
+        }
+      }
+      
       const payload = {
         ...data,
-        amount: parseFloat(data.amount),
+        amount: finalAmount,
       };
       return apiRequest("POST", "/api/cigarette-payments", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cigarette-payments"] });
+      // Invalidate related data to refresh balances
+      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/graduates/active"] });
+      
       toast({
         title: "تم إضافة التسديد بنجاح",
-        description: "تم تسجيل تسديد السجائر في النظام",
+        description: "تم تسجيل تسديد السجائر وخصم المبلغ من الحساب",
       });
       onClose();
       form.reset();
