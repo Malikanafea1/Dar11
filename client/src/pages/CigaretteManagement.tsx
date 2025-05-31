@@ -95,11 +95,28 @@ export default function CigaretteManagement() {
     }
   };
 
-  // Filter active patients and separate by type
+  // Filter active patients and separate by type - only show those with cigarettes
   const activePatients = patients.filter(p => p.status === "active");
-  const detoxPatients = activePatients.filter(p => p.patientType === "detox");
-  const recoveryPatients = activePatients.filter(p => p.patientType === "recovery");
-  const activeStaff = staff.filter(s => s.isActive);
+  const detoxPatients = activePatients.filter(p => 
+    p.patientType === "detox" && 
+    (p.dailyCigaretteType && p.dailyCigaretteType !== "none")
+  );
+  const recoveryPatients = activePatients.filter(p => 
+    p.patientType === "recovery" && 
+    (p.dailyCigaretteType && p.dailyCigaretteType !== "none")
+  );
+  
+  // Filter staff and graduates to only show those with cigarettes
+  const activeStaff = staff.filter(s => 
+    s.isActive && 
+    (s.dailyCigaretteType && s.dailyCigaretteType !== "none")
+  );
+  
+  // Filter graduates to only show active ones with cigarettes
+  const activeGraduatesWithCigarettes = graduates.filter(g => 
+    g.isActive && 
+    (g.dailyCigaretteType && g.dailyCigaretteType !== "none")
+  );
 
   // Calculate totals for each section
   const calculateSectionTotals = (items: any[]) => {
@@ -117,7 +134,7 @@ export default function CigaretteManagement() {
 
   const detoxTotals = calculateSectionTotals(detoxPatients);
   const recoveryTotals = calculateSectionTotals(recoveryPatients);
-  const graduatesTotals = calculateSectionTotals(graduates);
+  const graduatesTotals = calculateSectionTotals(activeGraduatesWithCigarettes);
   const staffTotals = calculateSectionTotals(activeStaff);
 
   const grandTotal = detoxTotals.totalDaily + recoveryTotals.totalDaily + 
@@ -337,7 +354,7 @@ export default function CigaretteManagement() {
       <SectionCard
         title="قسم المرضى الخريجين"
         icon={GraduationCap}
-        items={graduates}
+        items={activeGraduatesWithCigarettes}
         sectionKey="graduates"
         color="bg-purple-600"
       />
