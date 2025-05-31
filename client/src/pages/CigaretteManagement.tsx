@@ -8,6 +8,7 @@ import { Printer, Plus, Users, GraduationCap, Briefcase, RefreshCw } from "lucid
 import { Patient, Staff, Graduate } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import CigarettePaymentModal from "@/components/CigarettePaymentModal";
 
 // Helper function to get cigarette display text
 const getCigaretteTypeText = (type: string) => {
@@ -31,6 +32,7 @@ const calculateCigaretteCost = (type: string) => {
 
 export default function CigaretteManagement() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Fetch data
@@ -269,7 +271,10 @@ export default function CigaretteManagement() {
             <RefreshCw className={`w-4 h-4 ${(updatePatientsMutation.isPending || updateStaffMutation.isPending) ? 'animate-spin' : ''}`} />
             تحديث البيانات
           </Button>
-          <Button className="flex items-center gap-2">
+          <Button 
+            onClick={() => setIsPaymentModalOpen(true)}
+            className="flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             إضافة تسديد سجائر
           </Button>
@@ -343,6 +348,12 @@ export default function CigaretteManagement() {
         items={activeStaff}
         sectionKey="staff"
         color="bg-orange-600"
+      />
+
+      {/* Cigarette Payment Modal */}
+      <CigarettePaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
       />
     </div>
   );
