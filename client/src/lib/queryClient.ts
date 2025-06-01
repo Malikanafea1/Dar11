@@ -22,9 +22,10 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
   
-  // إضافة معرف المستخدم في header إذا كان متوفراً
+  // إضافة معرف المستخدم في header بعدة طرق للتأكد من المصادقة
   if (userId) {
     headers["Authorization"] = `Bearer ${userId}`;
+    headers["x-user-id"] = userId; // إضافة كـ header إضافي
   }
 
   const res = await fetch(url, {
@@ -50,9 +51,10 @@ export const getQueryFn: <T>(options: {
     
     const headers: Record<string, string> = {};
     
-    // إضافة معرف المستخدم في header إذا كان متوفراً
+    // إضافة معرف المستخدم في header بعدة طرق للتأكد من المصادقة
     if (userId) {
       headers["Authorization"] = `Bearer ${userId}`;
+      headers["x-user-id"] = userId; // إضافة كـ header إضافي
     }
 
     const res = await fetch(queryKey[0] as string, {

@@ -311,11 +311,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // تحديث آخر تسجيل دخول
       await storage.updateLastLogin(user.id);
 
+      // إعداد cookie للمصادقة
+      res.cookie('userId', user.id, {
+        httpOnly: false, // السماح للعميل بالوصول للcookie
+        secure: false, // للتطوير - في الإنتاج يجب أن تكون true
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 ساعة
+      });
+
       // إرسال بيانات المستخدم (بدون كلمة المرور)
       const { password: _, ...userWithoutPassword } = user;
       res.json({ user: userWithoutPassword });
     } catch (error) {
       res.status(500).json({ message: "فشل في تسجيل الدخول" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      // مسح cookie المصادقة
+      res.clearCookie('userId');
+      res.json({ message: "تم تسجيل الخروج بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "فشل في تسجيل الخروج" });
     }
   });
 
