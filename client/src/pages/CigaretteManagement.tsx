@@ -9,6 +9,7 @@ import { Patient, Staff, Graduate } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CigarettePaymentModal from "@/components/CigarettePaymentModal";
+import jsPDF from 'jspdf';
 
 // Helper function to get cigarette display text
 const getCigaretteTypeText = (type: string) => {
@@ -243,8 +244,179 @@ export default function CigaretteManagement() {
                              graduatesTotals.halfPacks + staffTotals.halfPacks;
 
   const handlePrintSection = (sectionName: string) => {
-    // Print functionality will be implemented
-    console.log(`Printing section: ${sectionName}`);
+    let sectionData: any[] = [];
+    let sectionTitle = "";
+    let totals: any = {};
+    
+    switch (sectionName) {
+      case 'detox':
+        sectionData = detoxPatients;
+        sectionTitle = "قسم مرضى الديتوكس";
+        totals = detoxTotals;
+        break;
+      case 'recovery':
+        sectionData = recoveryPatients;
+        sectionTitle = "قسم مرضى الريكفري";
+        totals = recoveryTotals;
+        break;
+      case 'graduates':
+        sectionData = activeGraduatesAll;
+        sectionTitle = "قسم المرضى الخريجين";
+        totals = graduatesTotals;
+        break;
+      case 'staff':
+        sectionData = activeStaff;
+        sectionTitle = "قسم الموظفين والعاملين";
+        totals = staffTotals;
+        break;
+      default:
+        return;
+    }
+
+    generatePDF(sectionTitle, sectionData, totals);
+  };
+
+  const generatePDF = (title: string, data: any[], totals: any) => {
+    const pdf = new jsPDF();
+    
+    // إعداد الخط العربي
+    pdf.setFont('helvetica');
+    pdf.setFontSize(16);
+    
+    // عنوان التقرير
+    const currentDate = new Date().toLocaleDateString('ar-EG');
+    pdf.text('تقرير السجائر اليومية', 105, 20, { align: 'center' });
+    pdf.setFontSize(14);
+    pdf.text(title, 105, 30, { align: 'center' });
+    pdf.setFontSize(10);
+    pdf.text(`التاريخ: ${currentDate}`, 105, 40, { align: 'center' });
+    
+    // الإحصائيات الإجمالية
+    let yPos = 60;
+    pdf.setFontSize(12);
+    pdf.text(`إجمالي عدد العلب المطلوبة: ${totals.totalPacks}`, 20, yPos);
+    yPos += 10;
+    pdf.text(`العلب الكاملة: ${totals.fullPacks} | الأنصاف: ${totals.halfPacks}`, 20, yPos);
+    yPos += 10;
+    pdf.text(`الأشخاص النشطين: ${totals.activeCount} | المتوقفين: ${totals.inactiveCount}`, 20, yPos);
+    yPos += 10;
+    pdf.text(`التكلفة اليومية: ${formatCurrency(totals.totalDaily)}`, 20, yPos);
+    
+    // خط فاصل
+    yPos += 15;
+    pdf.line(20, yPos, 190, yPos);
+    yPos += 15;
+    
+    // عناوين الجدول
+    pdf.setFontSize(10);
+    pdf.text('الاسم', 20, yPos);
+    pdf.text('النوع/القسم', 70, yPos);
+    pdf.text('حالة السجائر', 110, yPos);
+    pdf.text('نوع السجائر', 140, yPos);
+    pdf.text('التكلفة', 170, yPos);
+    
+    yPos += 5;
+    pdf.line(20, yPos, 190, yPos);
+    yPos += 10;
+    
+    // بيانات الجدول
+    data.forEach((item) => {
+      if (yPos > 270) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      const cigaretteType = item.dailyCigaretteType || "none";
+      const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
+      
+      pdf.text(item.name || '', 20, yPos);
+      
+      // النوع/القسم
+      let typeText = '';
+      if (item.patientType) {
+        typeText = item.patientType === "detox" ? "ديتوكس" : "ريكفري";
+      } else if (item.role) {
+        typeText = item.role;
+      } else {
+        typeText = "خريج";
+      }
+      pdf.text(typeText, 70, yPos);
+      
+      // حالة السجائر
+      const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
+      pdf.text(statusText, 110, yPos);
+      
+      // نوع السجائر
+      pdf.text(getCigaretteTypeText(cigaretteType), 140, yPos);
+      
+      // التكلفة
+      pdf.text(formatCurrency(cost), 170, yPos);
+      
+      yPos += 8;
+    });
+    
+    // عرض خيارات الطباعة والتنزيل
+    const fileName = `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // فتح نافذة المعاينة مع خيارات الطباعة والتنزيل
+    const pdfOutput = pdf.output('blob');
+    const url = URL.createObjectURL(pdfOutput);
+    
+    // إنشاء نافذة جديدة للمعاينة
+    const printWindow = window.open(url, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        // إضافة أزرار للطباعة والتنزيل
+        const buttonContainer = printWindow.document.createElement('div');
+        buttonContainer.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 1000;
+          background: white;
+          padding: 10px;
+          border-radius: 5px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        `;
+        
+        const printBtn = printWindow.document.createElement('button');
+        printBtn.textContent = 'طباعة';
+        printBtn.style.cssText = `
+          margin-right: 10px;
+          padding: 8px 16px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        `;
+        printBtn.onclick = () => printWindow.print();
+        
+        const downloadBtn = printWindow.document.createElement('button');
+        downloadBtn.textContent = 'تنزيل';
+        downloadBtn.style.cssText = `
+          padding: 8px 16px;
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        `;
+        downloadBtn.onclick = () => {
+          const link = printWindow.document.createElement('a');
+          link.href = url;
+          link.download = fileName;
+          link.click();
+        };
+        
+        buttonContainer.appendChild(printBtn);
+        buttonContainer.appendChild(downloadBtn);
+        printWindow.document.body.appendChild(buttonContainer);
+      };
+    }
+    
+    // تنظيف الذاكرة بعد فترة
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
 
   // وظائف التحكم في السجائر
