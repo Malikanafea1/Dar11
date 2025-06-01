@@ -67,6 +67,19 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
       return;
     }
 
+    // التحقق من وجود المستخدم المسجل
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+      toast({
+        title: "خطأ في المصادقة",
+        description: "يرجى إعادة تسجيل الدخول",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    console.log('Creating payment with user:', JSON.parse(currentUser));
+
     createPaymentMutation.mutate({
       patientId: patient.id,
       amount: parseFloat(amount),

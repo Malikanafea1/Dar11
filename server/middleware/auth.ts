@@ -104,38 +104,28 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     const userIdCookie = req.cookies?.userId;
     const userIdHeader = req.headers['x-user-id'] as string;
     
-    console.log('Auth Debug:', {
-      authHeader: authHeader ? authHeader.substring(0, 20) + '...' : 'none',
-      userIdCookie: userIdCookie || 'none',
-      userIdHeader: userIdHeader || 'none',
-      cookies: req.cookies
-    });
-    
     let userId: string | null = null;
     
-    // محاولة الحصول على معرف المستخدم من مصادر مختلفة
+    // محاولة الحصول على معرف المستخدم من مصادر مختلفة بترتيب الأولوية
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      userId = authHeader.substring(7); // إزالة "Bearer "
-    } else if (userIdCookie) {
-      userId = userIdCookie;
+      userId = authHeader.substring(7);
     } else if (userIdHeader) {
       userId = userIdHeader;
+    } else if (userIdCookie) {
+      userId = userIdCookie;
     }
     
     if (!userId) {
-      console.log('No userId found in any source');
       return res.status(401).json({ message: "يجب تسجيل الدخول أولاً" });
     }
 
     const user = await storage.getUser(userId);
     
     if (!user) {
-      console.log('User not found for ID:', userId);
       return res.status(401).json({ message: "المستخدم غير موجود" });
     }
 
     if (!user.isActive) {
-      console.log('User is not active:', userId);
       return res.status(403).json({ message: "الحساب غير نشط" });
     }
 
@@ -149,10 +139,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       isActive: user.isActive,
     };
 
-    console.log('Auth successful for user:', user.username);
     next();
   } catch (error) {
-    console.error('Auth error:', error);
     res.status(500).json({ message: "خطأ في التحقق من الهوية" });
   }
 }

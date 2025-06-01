@@ -192,8 +192,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/payments", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
+  app.post("/api/payments", async (req, res) => {
     try {
+      // محاولة المصادقة أولاً
+      const authHeader = req.headers.authorization;
+      const userIdHeader = req.headers['x-user-id'] as string;
+      const userIdCookie = req.cookies?.userId;
+      
+      let userId: string | null = null;
+      
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        userId = authHeader.substring(7);
+      } else if (userIdHeader) {
+        userId = userIdHeader;
+      } else if (userIdCookie) {
+        userId = userIdCookie;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "يجب تسجيل الدخول أولاً" });
+      }
+
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isActive) {
+        return res.status(401).json({ message: "مستخدم غير صالح" });
+      }
+
+      // التحقق من الصلاحيات
+      if (user.role !== 'admin' && !user.permissions.includes(PERMISSIONS.MANAGE_FINANCE)) {
+        return res.status(403).json({ message: "ليس لديك صلاحية لإضافة المدفوعات" });
+      }
+
       const validatedData = insertPaymentSchema.parse(req.body);
       const payment = await storage.createPayment(validatedData);
       res.status(201).json(payment);
