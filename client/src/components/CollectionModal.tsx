@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreditCard, DollarSign, Calendar, User, Receipt } from "lucide-react";
 import { formatCurrency, formatDate, calculateDaysBetween } from "@/lib/utils";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Patient, Payment } from "@shared/schema";
 
@@ -30,17 +30,7 @@ export default function CollectionModal({ isOpen, onClose, patient, payments = [
 
   const createPaymentMutation = useMutation({
     mutationFn: async (paymentData: any) => {
-      const response = await fetch("/api/payments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentData),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create payment");
-      }
-      return response.json();
+      return await apiRequest("POST", "/api/payments", paymentData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payments"] });

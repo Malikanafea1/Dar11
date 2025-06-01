@@ -279,57 +279,123 @@ export default function CigaretteManagement() {
   const generatePDF = (title: string, data: any[], totals: any) => {
     const pdf = new jsPDF();
     
-    // إعداد الخط العربي
-    pdf.setFont('helvetica');
-    pdf.setFontSize(16);
+    // إعداد الخط والألوان
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(18);
+    
+    // إضافة خلفية ملونة للعنوان
+    pdf.setFillColor(41, 128, 185); // أزرق
+    pdf.rect(10, 10, 190, 25, 'F');
     
     // عنوان التقرير
-    const currentDate = new Date().toLocaleDateString('ar-EG');
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    pdf.setTextColor(255, 255, 255); // أبيض
     pdf.text('تقرير السجائر اليومية', 105, 20, { align: 'center' });
     pdf.setFontSize(14);
     pdf.text(title, 105, 30, { align: 'center' });
-    pdf.setFontSize(10);
-    pdf.text(`التاريخ: ${currentDate}`, 105, 40, { align: 'center' });
     
-    // الإحصائيات الإجمالية
-    let yPos = 60;
+    // تاريخ التقرير
+    pdf.setTextColor(0, 0, 0); // أسود
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.text(`تاريخ التقرير: ${currentDate}`, 105, 45, { align: 'center' });
+    
+    // قسم الإحصائيات الإجمالية
+    let yPos = 65;
+    pdf.setFillColor(46, 204, 113); // أخضر فاتح
+    pdf.rect(10, yPos - 5, 190, 45, 'F');
+    
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
-    pdf.text(`إجمالي عدد العلب المطلوبة: ${totals.totalPacks}`, 20, yPos);
-    yPos += 10;
-    pdf.text(`العلب الكاملة: ${totals.fullPacks} | الأنصاف: ${totals.halfPacks}`, 20, yPos);
-    yPos += 10;
-    pdf.text(`الأشخاص النشطين: ${totals.activeCount} | المتوقفين: ${totals.inactiveCount}`, 20, yPos);
-    yPos += 10;
-    pdf.text(`التكلفة اليومية: ${formatCurrency(totals.totalDaily)}`, 20, yPos);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text('الإحصائيات الإجمالية', 105, yPos + 5, { align: 'center' });
     
-    // خط فاصل
-    yPos += 15;
-    pdf.line(20, yPos, 190, yPos);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    pdf.setTextColor(0, 0, 0);
     yPos += 15;
     
-    // عناوين الجدول
+    // صف الإحصائيات الأول
+    pdf.text(`إجمالي العلب المطلوبة: ${totals.totalPacks}`, 20, yPos);
+    pdf.text(`التكلفة اليومية: ${formatCurrency(totals.totalDaily)}`, 110, yPos);
+    yPos += 8;
+    
+    // صف الإحصائيات الثاني
+    pdf.text(`العلب الكاملة: ${totals.fullPacks}`, 20, yPos);
+    pdf.text(`الأنصاف: ${totals.halfPacks}`, 110, yPos);
+    yPos += 8;
+    
+    // صف الإحصائيات الثالث
+    pdf.text(`الأشخاص النشطين: ${totals.activeCount}`, 20, yPos);
+    pdf.text(`المتوقفين: ${totals.inactiveCount}`, 110, yPos);
+    
+    // بداية الجدول
+    yPos += 20;
+    
+    // رأس الجدول
+    pdf.setFillColor(52, 73, 94); // رمادي داكن
+    pdf.rect(10, yPos, 190, 12, 'F');
+    
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.text('الاسم', 20, yPos);
-    pdf.text('النوع/القسم', 70, yPos);
-    pdf.text('حالة السجائر', 110, yPos);
-    pdf.text('نوع السجائر', 140, yPos);
-    pdf.text('التكلفة', 170, yPos);
+    pdf.setTextColor(255, 255, 255);
     
-    yPos += 5;
-    pdf.line(20, yPos, 190, yPos);
-    yPos += 10;
+    // عناوين الأعمدة
+    pdf.text('الاسم', 15, yPos + 8);
+    pdf.text('النوع/القسم', 55, yPos + 8);
+    pdf.text('حالة السجائر', 95, yPos + 8);
+    pdf.text('نوع السجائر', 135, yPos + 8);
+    pdf.text('التكلفة', 175, yPos + 8);
+    
+    yPos += 12;
     
     // بيانات الجدول
-    data.forEach((item) => {
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(0, 0, 0);
+    
+    data.forEach((item, index) => {
       if (yPos > 270) {
         pdf.addPage();
         yPos = 20;
+        
+        // إعادة رسم رأس الجدول في الصفحة الجديدة
+        pdf.setFillColor(52, 73, 94);
+        pdf.rect(10, yPos, 190, 12, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(255, 255, 255);
+        
+        pdf.text('الاسم', 15, yPos + 8);
+        pdf.text('النوع/القسم', 55, yPos + 8);
+        pdf.text('حالة السجائر', 95, yPos + 8);
+        pdf.text('نوع السجائر', 135, yPos + 8);
+        pdf.text('التكلفة', 175, yPos + 8);
+        
+        yPos += 12;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 0, 0);
       }
+      
+      // ألوان متناوبة للصفوف
+      if (index % 2 === 0) {
+        pdf.setFillColor(248, 249, 250); // رمادي فاتح جداً
+      } else {
+        pdf.setFillColor(255, 255, 255); // أبيض
+      }
+      pdf.rect(10, yPos, 190, 10, 'F');
       
       const cigaretteType = item.dailyCigaretteType || "none";
       const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
       
-      pdf.text(item.name || '', 20, yPos);
+      // الاسم
+      pdf.text(item.name || '', 15, yPos + 7);
       
       // النوع/القسم
       let typeText = '';
@@ -340,19 +406,27 @@ export default function CigaretteManagement() {
       } else {
         typeText = "خريج";
       }
-      pdf.text(typeText, 70, yPos);
+      pdf.text(typeText, 55, yPos + 7);
       
-      // حالة السجائر
+      // حالة السجائر مع لون
       const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
-      pdf.text(statusText, 110, yPos);
+      if (cigaretteType === "none") {
+        pdf.setTextColor(231, 76, 60); // أحمر للمتوقفين
+      } else {
+        pdf.setTextColor(39, 174, 96); // أخضر للنشطين
+      }
+      pdf.text(statusText, 95, yPos + 7);
+      
+      // إعادة تعيين اللون للأسود
+      pdf.setTextColor(0, 0, 0);
       
       // نوع السجائر
-      pdf.text(getCigaretteTypeText(cigaretteType), 140, yPos);
+      pdf.text(getCigaretteTypeText(cigaretteType), 135, yPos + 7);
       
       // التكلفة
-      pdf.text(formatCurrency(cost), 170, yPos);
+      pdf.text(formatCurrency(cost), 175, yPos + 7);
       
-      yPos += 8;
+      yPos += 10;
     });
     
     // عرض خيارات الطباعة والتنزيل
@@ -417,6 +491,273 @@ export default function CigaretteManagement() {
     
     // تنظيف الذاكرة بعد فترة
     setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  // وظيفة طباعة شاملة محسنة لجميع الأقسام
+  const generateComprehensivePDF = (title: string, allData: any[], totals: any) => {
+    const pdf = new jsPDF();
+    
+    // إعداد الخط والألوان
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(20);
+    
+    // إضافة خلفية ملونة للعنوان الرئيسي
+    pdf.setFillColor(142, 68, 173); // بنفسجي
+    pdf.rect(5, 5, 200, 30, 'F');
+    
+    // عنوان التقرير الرئيسي
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.text('تقرير السجائر الشامل', 105, 15, { align: 'center' });
+    pdf.setFontSize(14);
+    pdf.text('جميع الأقسام والمرضى والموظفين', 105, 25, { align: 'center' });
+    
+    // تاريخ التقرير
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.text(`تاريخ التقرير: ${currentDate}`, 105, 45, { align: 'center' });
+    
+    // الإحصائيات الإجمالية الشاملة
+    let yPos = 60;
+    pdf.setFillColor(231, 76, 60); // أحمر فاتح
+    pdf.rect(5, yPos - 5, 200, 55, 'F');
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(14);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text('الإحصائيات الإجمالية لجميع الأقسام', 105, yPos + 5, { align: 'center' });
+    
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(12);
+    pdf.setTextColor(0, 0, 0);
+    yPos += 20;
+    
+    // الصف الأول من الإحصائيات
+    pdf.text(`إجمالي العلب المطلوبة: ${totals.totalPacks}`, 15, yPos);
+    pdf.text(`التكلفة الإجمالية: ${formatCurrency(totals.totalDaily)}`, 110, yPos);
+    yPos += 10;
+    
+    // الصف الثاني
+    pdf.text(`العلب الكاملة: ${totals.fullPacks}`, 15, yPos);
+    pdf.text(`الأنصاف: ${totals.halfPacks}`, 110, yPos);
+    yPos += 10;
+    
+    // الصف الثالث
+    pdf.text(`الأشخاص النشطين: ${totals.activeCount}`, 15, yPos);
+    pdf.text(`المتوقفين: ${totals.inactiveCount}`, 110, yPos);
+    
+    // تجميع البيانات حسب القسم
+    const sections = {
+      'ديتوكس': allData.filter(item => item.section === 'ديتوكس'),
+      'ريكفري': allData.filter(item => item.section === 'ريكفري'),
+      'خريجين': allData.filter(item => item.section === 'خريجين'),
+      'موظفين': allData.filter(item => item.section === 'موظفين')
+    };
+    
+    yPos += 25;
+    
+    // طباعة كل قسم منفصل
+    Object.entries(sections).forEach(([sectionName, sectionData]) => {
+      if (sectionData.length === 0) return;
+      
+      // التحقق من الحاجة لصفحة جديدة
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      // عنوان القسم
+      pdf.setFillColor(52, 152, 219); // أزرق
+      pdf.rect(5, yPos, 200, 15, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`قسم ${sectionName}`, 105, yPos + 10, { align: 'center' });
+      
+      yPos += 20;
+      
+      // رأس الجدول للقسم
+      pdf.setFillColor(44, 62, 80);
+      pdf.rect(5, yPos, 200, 12, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.setTextColor(255, 255, 255);
+      
+      pdf.text('الاسم', 10, yPos + 8);
+      pdf.text('حالة السجائر', 70, yPos + 8);
+      pdf.text('نوع السجائر', 120, yPos + 8);
+      pdf.text('التكلفة', 170, yPos + 8);
+      
+      yPos += 12;
+      
+      // بيانات القسم
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(0, 0, 0);
+      
+      sectionData.forEach((item, index) => {
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+          
+          // إعادة رسم رأس الجدول
+          pdf.setFillColor(44, 62, 80);
+          pdf.rect(5, yPos, 200, 12, 'F');
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(10);
+          pdf.setTextColor(255, 255, 255);
+          
+          pdf.text('الاسم', 10, yPos + 8);
+          pdf.text('حالة السجائر', 70, yPos + 8);
+          pdf.text('نوع السجائر', 120, yPos + 8);
+          pdf.text('التكلفة', 170, yPos + 8);
+          
+          yPos += 12;
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(0, 0, 0);
+        }
+        
+        // لون متناوب للصفوف
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 249, 250);
+        } else {
+          pdf.setFillColor(255, 255, 255);
+        }
+        pdf.rect(5, yPos, 200, 10, 'F');
+        
+        const cigaretteType = item.dailyCigaretteType || "none";
+        const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
+        
+        // الاسم
+        pdf.text(item.name || '', 10, yPos + 7);
+        
+        // حالة السجائر مع لون
+        const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
+        if (cigaretteType === "none") {
+          pdf.setTextColor(231, 76, 60);
+        } else {
+          pdf.setTextColor(39, 174, 96);
+        }
+        pdf.text(statusText, 70, yPos + 7);
+        
+        pdf.setTextColor(0, 0, 0);
+        
+        // نوع السجائر
+        pdf.text(getCigaretteTypeText(cigaretteType), 120, yPos + 7);
+        
+        // التكلفة
+        pdf.text(formatCurrency(cost), 170, yPos + 7);
+        
+        yPos += 10;
+      });
+      
+      // إحصائيات القسم
+      const sectionTotals = calculateSectionTotals(sectionData);
+      yPos += 5;
+      
+      pdf.setFillColor(236, 240, 241);
+      pdf.rect(5, yPos, 200, 20, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      
+      pdf.text(`إحصائيات ${sectionName}:`, 10, yPos + 8);
+      pdf.text(`العلب: ${sectionTotals.totalPacks}`, 10, yPos + 15);
+      pdf.text(`النشطين: ${sectionTotals.activeCount}`, 80, yPos + 8);
+      pdf.text(`المتوقفين: ${sectionTotals.inactiveCount}`, 80, yPos + 15);
+      pdf.text(`التكلفة: ${formatCurrency(sectionTotals.totalDaily)}`, 150, yPos + 12);
+      
+      yPos += 30;
+    });
+    
+    // عرض خيارات الطباعة والتنزيل
+    const fileName = `تقرير_السجائر_الشامل_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    const pdfOutput = pdf.output('blob');
+    const url = URL.createObjectURL(pdfOutput);
+    
+    const printWindow = window.open(url, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        const buttonContainer = printWindow.document.createElement('div');
+        buttonContainer.style.cssText = `
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 1000;
+          background: white;
+          padding: 15px;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+          border: 2px solid #007bff;
+        `;
+        
+        const printBtn = printWindow.document.createElement('button');
+        printBtn.textContent = '🖨️ طباعة';
+        printBtn.style.cssText = `
+          margin-right: 10px;
+          padding: 10px 20px;
+          background: linear-gradient(45deg, #007bff, #0056b3);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+        `;
+        printBtn.onclick = () => printWindow.print();
+        
+        const downloadBtn = printWindow.document.createElement('button');
+        downloadBtn.textContent = '💾 تنزيل';
+        downloadBtn.style.cssText = `
+          padding: 10px 20px;
+          background: linear-gradient(45deg, #28a745, #1e7e34);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: bold;
+        `;
+        downloadBtn.onclick = () => {
+          const link = printWindow.document.createElement('a');
+          link.href = url;
+          link.download = fileName;
+          link.click();
+        };
+        
+        buttonContainer.appendChild(printBtn);
+        buttonContainer.appendChild(downloadBtn);
+        printWindow.document.body.appendChild(buttonContainer);
+      };
+    }
+    
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  };
+
+  const handlePrintAll = () => {
+    const allData = [
+      ...detoxPatients.map(p => ({ ...p, section: 'ديتوكس' })),
+      ...recoveryPatients.map(p => ({ ...p, section: 'ريكفري' })),
+      ...activeGraduatesAll.map(g => ({ ...g, section: 'خريجين' })),
+      ...activeStaff.map(s => ({ ...s, section: 'موظفين' }))
+    ];
+
+    const allTotals = {
+      totalDaily: grandTotal,
+      totalCount: grandTotalCount,
+      fullPacks: grandTotalFullPacks,
+      halfPacks: grandTotalHalfPacks,
+      totalPacks: grandTotalPacks,
+      activeCount: allData.filter(item => (item.dailyCigaretteType || "none") !== "none").length,
+      inactiveCount: allData.filter(item => (item.dailyCigaretteType || "none") === "none").length
+    };
+
+    generateComprehensivePDF("تقرير شامل لجميع الأقسام", allData, allTotals);
   };
 
   // وظائف التحكم في السجائر
