@@ -252,6 +252,35 @@ export default function CigaretteManagement() {
     const currentType = item.dailyCigaretteType || "none";
     let newType = "none";
     
+    // إذا كان متوقفاً، فعّل بنصف علبة
+    // إذا كان نشطاً، أوقفه
+    if (currentType === "none") {
+      newType = "half_pack";
+    } else {
+      newType = "none";
+    }
+    
+    console.log(`Toggling cigarette for ${item.name}: ${currentType} → ${newType}`);
+    
+    switch (type) {
+      case 'patient':
+        updatePatientCigaretteMutation.mutate({ patientId: item.id, newType });
+        break;
+      case 'staff':
+        updateStaffCigaretteMutation.mutate({ staffId: item.id, newType });
+        break;
+      case 'graduate':
+        updateGraduateCigaretteMutation.mutate({ graduateId: item.id, newType });
+        break;
+    }
+  };
+
+  // وظيفة منفصلة لتعديل نوع السجائر
+  const handleEditCigaretteType = (item: any, type: 'patient' | 'staff' | 'graduate') => {
+    const currentType = item.dailyCigaretteType || "none";
+    let newType = "none";
+    
+    // دورة تغيير نوع السجائر: none → half_pack → full_pack → none
     if (currentType === "none") {
       newType = "half_pack";
     } else if (currentType === "half_pack") {
@@ -259,6 +288,8 @@ export default function CigaretteManagement() {
     } else {
       newType = "none";
     }
+    
+    console.log(`Editing cigarette type for ${item.name}: ${currentType} → ${newType}`);
     
     switch (type) {
       case 'patient':
@@ -398,20 +429,37 @@ export default function CigaretteManagement() {
                             {formatCurrency(cost)}
                           </td>
                           <td className="p-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleToggleCigarette(item, itemType)}
-                              disabled={updatePatientCigaretteMutation.isPending || updateStaffCigaretteMutation.isPending || updateGraduateCigaretteMutation.isPending}
-                              className="p-1 h-7 w-7"
-                              title={cigaretteType === "none" ? "تفعيل السجائر" : "تغيير نوع السجائر"}
-                            >
-                              {cigaretteType === "none" ? (
-                                <Cigarette className="w-3 h-3" />
-                              ) : (
-                                <Edit3 className="w-3 h-3" />
+                            <div className="flex gap-1">
+                              {/* زر تفعيل/إيقاف السجائر */}
+                              <Button
+                                variant={cigaretteType === "none" ? "default" : "destructive"}
+                                size="sm"
+                                onClick={() => handleToggleCigarette(item, itemType)}
+                                disabled={updatePatientCigaretteMutation.isPending || updateStaffCigaretteMutation.isPending || updateGraduateCigaretteMutation.isPending}
+                                className="p-1 h-7 w-7"
+                                title={cigaretteType === "none" ? "تفعيل السجائر" : "إيقاف السجائر"}
+                              >
+                                {cigaretteType === "none" ? (
+                                  <Cigarette className="w-3 h-3" />
+                                ) : (
+                                  <CigaretteOff className="w-3 h-3" />
+                                )}
+                              </Button>
+                              
+                              {/* زر تعديل نوع السجائر - يظهر فقط عندما تكون السجائر مفعلة */}
+                              {cigaretteType !== "none" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditCigaretteType(item, itemType)}
+                                  disabled={updatePatientCigaretteMutation.isPending || updateStaffCigaretteMutation.isPending || updateGraduateCigaretteMutation.isPending}
+                                  className="p-1 h-7 w-7"
+                                  title="تغيير نوع السجائر"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                </Button>
                               )}
-                            </Button>
+                            </div>
                           </td>
                         </tr>
                       );
