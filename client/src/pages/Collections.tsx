@@ -32,17 +32,7 @@ export default function Collections() {
 
   const createPaymentMutation = useMutation({
     mutationFn: async (paymentData: any) => {
-      const response = await fetch("/api/payments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(paymentData),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create payment");
-      }
-      return response.json();
+      return await apiRequest("POST", "/api/payments", paymentData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
