@@ -105,6 +105,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/staff/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_STAFF), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const staff = await storage.updateStaff(id, req.body);
+      res.json(staff);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update staff member" });
+    }
+  });
+
+  // مسار لتحديث حقول السجائر للموظفين الموجودين
+  app.post("/api/staff/update-cigarette-fields", requireAuth, requirePermission(PERMISSIONS.MANAGE_STAFF), async (req, res) => {
+    try {
+      await storage.updateExistingStaffWithCigaretteFields();
+      res.json({ message: "Staff cigarette fields updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update staff cigarette fields" });
+    }
+  });
+
   // Expense routes - محمية بالصلاحيات
   app.get("/api/expenses", requireAuth, requirePermission(PERMISSIONS.VIEW_FINANCE), async (req, res) => {
     try {
