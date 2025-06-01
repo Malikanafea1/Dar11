@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, CreditCard, Receipt, Plus, Search, Clock } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Calendar, DollarSign, CreditCard, Receipt, Plus, Search, Clock, Edit, Trash2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import EditPaymentModal from "@/components/EditPaymentModal";
 import type { Patient, Payment } from "@shared/schema";
 
 export default function Collections() {
@@ -20,6 +22,8 @@ export default function Collections() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [notes, setNotes] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: patients = [] } = useQuery<Patient[]>({

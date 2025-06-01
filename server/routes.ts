@@ -235,6 +235,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/payments/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
+    try {
+      const id = req.params.id;
+      const payment = await storage.updatePayment(id, req.body);
+      res.json(payment);
+    } catch (error) {
+      if (error instanceof Error && error.message === "الدفعة غير موجودة") {
+        return res.status(404).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to update payment" });
+    }
+  });
+
+  app.delete("/api/payments/:id", requireAuth, requirePermission(PERMISSIONS.MANAGE_FINANCE), async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deletePayment(id);
+      res.status(204).send();
+    } catch (error) {
+      if (error instanceof Error && error.message === "الدفعة غير موجودة") {
+        return res.status(404).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to delete payment" });
+    }
+  });
+
   // Dashboard stats - محمي بالصلاحيات
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {

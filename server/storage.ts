@@ -51,6 +51,8 @@ export interface IStorage {
   getPayments(): Promise<Payment[]>;
   getPayment(id: string): Promise<Payment | undefined>;
   createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: string, updates: Partial<Payment>): Promise<Payment>;
+  deletePayment(id: string): Promise<void>;
   getPaymentsByPatient(patientId: string): Promise<Payment[]>;
   
   // Payroll methods
@@ -395,6 +397,48 @@ export class MemStorage implements IStorage {
     }
     
     return payment;
+  }
+
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment> {
+    const payment = this.payments.get(id);
+    if (!payment) {
+      throw new Error("الدفعة غير موجودة");
+    }
+    
+    // If amount is being updated, adjust patient's total paid amount
+    if (updates.amount !== undefined && updates.amount !== payment.amount) {
+      const patient = this.patients.get(payment.patientId);
+      if (patient) {
+        const currentTotal = patient.totalPaid || 0;
+        const oldAmount = payment.amount;
+        const newAmount = updates.amount;
+        const adjustedTotal = currentTotal - oldAmount + newAmount;
+        patient.totalPaid = Math.max(0, adjustedTotal);
+        this.patients.set(patient.id, patient);
+      }
+    }
+    
+    const updatedPayment = { ...payment, ...updates };
+    this.payments.set(id, updatedPayment);
+    return updatedPayment;
+  }
+
+  async deletePayment(id: string): Promise<void> {
+    const payment = this.payments.get(id);
+    if (!payment) {
+      throw new Error("الدفعة غير موجودة");
+    }
+    
+    // Update patient's total paid amount
+    const patient = this.patients.get(payment.patientId);
+    if (patient) {
+      const currentTotal = patient.totalPaid || 0;
+      const adjustedTotal = currentTotal - payment.amount;
+      patient.totalPaid = Math.max(0, adjustedTotal);
+      this.patients.set(patient.id, patient);
+    }
+    
+    this.payments.delete(id);
   }
 
   async getPaymentsByPatient(patientId: string): Promise<Payment[]> {

@@ -490,6 +490,76 @@ export class FirebaseStorage implements IStorage {
     }
   }
 
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment> {
+    try {
+      const paymentRef = doc(db, "payments", id);
+      const paymentSnap = await getDoc(paymentRef);
+      
+      if (!paymentSnap.exists()) {
+        throw new Error("الدفعة غير موجودة");
+      }
+      
+      const oldPayment = paymentSnap.data() as Payment;
+      
+      // If amount is being updated, adjust patient's total paid amount
+      if (updates.amount !== undefined && updates.amount !== oldPayment.amount) {
+        const patientRef = doc(db, "patients", oldPayment.patientId);
+        const patientSnap = await getDoc(patientRef);
+        
+        if (patientSnap.exists()) {
+          const patient = patientSnap.data() as Patient;
+          const currentTotal = patient.totalPaid || 0;
+          const oldAmount = oldPayment.amount;
+          const newAmount = updates.amount;
+          const adjustedTotal = currentTotal - oldAmount + newAmount;
+          
+          await updateDoc(patientRef, {
+            totalPaid: Math.max(0, adjustedTotal)
+          });
+        }
+      }
+      
+      await updateDoc(paymentRef, updates);
+      const updatedPayment = { ...oldPayment, ...updates };
+      return updatedPayment;
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      throw error;
+    }
+  }
+
+  async deletePayment(id: string): Promise<void> {
+    try {
+      const paymentRef = doc(db, "payments", id);
+      const paymentSnap = await getDoc(paymentRef);
+      
+      if (!paymentSnap.exists()) {
+        throw new Error("الدفعة غير موجودة");
+      }
+      
+      const payment = paymentSnap.data() as Payment;
+      
+      // Update patient's total paid amount
+      const patientRef = doc(db, "patients", payment.patientId);
+      const patientSnap = await getDoc(patientRef);
+      
+      if (patientSnap.exists()) {
+        const patient = patientSnap.data() as Patient;
+        const currentTotal = patient.totalPaid || 0;
+        const adjustedTotal = currentTotal - payment.amount;
+        
+        await updateDoc(patientRef, {
+          totalPaid: Math.max(0, adjustedTotal)
+        });
+      }
+      
+      await deleteDoc(paymentRef);
+    } catch (error) {
+      console.error("Error deleting payment:", error);
+      throw error;
+    }
+  }
+
   async getPaymentsByPatient(patientId: string): Promise<Payment[]> {
     try {
       const q = query(
