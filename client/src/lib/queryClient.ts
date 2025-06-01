@@ -16,6 +16,13 @@ export async function apiRequest(
   const currentUser = localStorage.getItem("currentUser");
   const userId = currentUser ? JSON.parse(currentUser).id : null;
   
+  console.log('API Request Debug:', {
+    method,
+    url,
+    userId: userId ? userId.substring(0, 10) + '...' : 'none',
+    currentUser: currentUser ? 'exists' : 'missing'
+  });
+  
   const headers: Record<string, string> = {};
   
   if (data) {
@@ -26,6 +33,8 @@ export async function apiRequest(
   if (userId) {
     headers["Authorization"] = `Bearer ${userId}`;
     headers["x-user-id"] = userId; // إضافة كـ header إضافي
+  } else {
+    console.warn('No userId available for API request');
   }
 
   const res = await fetch(url, {
@@ -35,6 +44,8 @@ export async function apiRequest(
     credentials: "include",
   });
 
+  console.log('Response status:', res.status);
+  
   await throwIfResNotOk(res);
   return res;
 }
