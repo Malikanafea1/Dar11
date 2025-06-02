@@ -332,12 +332,13 @@ export default function Collections() {
                               {payment.paymentMethod === "check" && "شيك"}
                             </Badge>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 ml-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditPayment(payment)}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0 flex items-center justify-center"
+                              title="تعديل الدفعة"
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -346,7 +347,8 @@ export default function Collections() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center justify-center"
+                                  title="حذف الدفعة"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
@@ -412,7 +414,7 @@ export default function Collections() {
               return (
                 <div key={payment.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900">
                         {patient?.name || "مريض غير معروف"}
                       </p>
@@ -420,9 +422,52 @@ export default function Collections() {
                         {formatDate(payment.paymentDate)}
                       </p>
                     </div>
-                    <p className="font-bold text-green-600">
-                      {formatCurrency(payment.amount)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-green-600">
+                        {formatCurrency(payment.amount)}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditPayment(payment)}
+                          className="h-6 w-6 p-0 flex items-center justify-center"
+                          title="تعديل الدفعة"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 flex items-center justify-center"
+                              title="حذف الدفعة"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هل أنت متأكد من حذف هذه الدفعة؟ سيتم خصم المبلغ من إجمالي المدفوعات للمريض.
+                                هذا الإجراء لا يمكن التراجع عنه.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeletePayment(payment.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                حذف
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
                   </div>
                   <Badge variant="outline">
                     {payment.paymentMethod === "cash" && "نقدي"}
