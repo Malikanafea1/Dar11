@@ -41,6 +41,7 @@ export default function Collections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "تم تسجيل الدفعة بنجاح",
         description: "تم إضافة الدفعة الجديدة للمريض",
@@ -55,6 +56,28 @@ export default function Collections() {
       toast({
         title: "خطأ في تسجيل الدفعة",
         description: error.message || "حدث خطأ أثناء تسجيل الدفعة",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deletePaymentMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      return await apiRequest("DELETE", `/api/payments/${paymentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "تم حذف الدفعة بنجاح",
+        description: "تم حذف الدفعة من النظام",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في حذف الدفعة",
+        description: error.message || "حدث خطأ أثناء حذف الدفعة",
         variant: "destructive",
       });
     },
@@ -107,6 +130,15 @@ export default function Collections() {
   const calculateTotalCost = (patient: Patient) => {
     const days = calculateDaysBetween(patient.admissionDate);
     return days * patient.dailyCost;
+  };
+
+  const handleEditPayment = (payment: Payment) => {
+    setEditingPayment(payment);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeletePayment = (paymentId: string) => {
+    deletePaymentMutation.mutate(paymentId);
   };
 
   return (
@@ -286,7 +318,7 @@ export default function Collections() {
                     patientPayments.map((payment) => (
                       <div key={payment.id} className="border rounded-lg p-3">
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="flex-1">
                             <p className="font-medium text-green-600">
                               {formatCurrency(payment.amount)}
                             </p>
@@ -300,7 +332,45 @@ export default function Collections() {
                               {payment.paymentMethod === "check" && "شيك"}
                             </Badge>
                           </div>
-                          <CreditCard className="h-4 w-4 text-gray-400" />
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditPayment(payment)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    هل أنت متأكد من حذف هذه الدفعة؟ سيتم خصم المبلغ من إجمالي المدفوعات للمريض.
+                                    هذا الإجراء لا يمكن التراجع عنه.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeletePayment(payment.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    حذف
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
                         {payment.notes && (
                           <p className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">
@@ -366,6 +436,16 @@ export default function Collections() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Payment Modal */}
+      <EditPaymentModal 
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingPayment(null);
+        }}
+        payment={editingPayment}
+      />
     </div>
   );
 }
