@@ -288,30 +288,23 @@ export default function CigaretteManagement() {
     pdf.rect(10, 10, 190, 25, 'F');
     
     // عنوان التقرير
-    const currentDate = new Date().toLocaleDateString('en-US', {
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
     
     pdf.setTextColor(255, 255, 255); // أبيض
-    pdf.text('Daily Cigarette Report', 105, 20, { align: 'center' });
+    pdf.text('تقرير السجائر اليومي', 105, 20, { align: 'center' });
     pdf.setFontSize(14);
-    // Convert Arabic title to English
-    let englishTitle = '';
-    if (title.includes('ديتوكس')) englishTitle = 'Detox Section';
-    else if (title.includes('ريكفري')) englishTitle = 'Recovery Section';
-    else if (title.includes('خريجين')) englishTitle = 'Graduates Section';
-    else if (title.includes('موظفين')) englishTitle = 'Staff Section';
-    else englishTitle = 'All Sections';
     
-    pdf.text(englishTitle, 105, 30, { align: 'center' });
+    pdf.text(title, 105, 30, { align: 'center' });
     
     // تاريخ التقرير
     pdf.setTextColor(0, 0, 0); // أسود
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    pdf.text(`Report Date: ${currentDate}`, 105, 45, { align: 'center' });
+    pdf.text(`تاريخ التقرير: ${currentDate}`, 105, 45, { align: 'center' });
     
     // قسم الإحصائيات الإجمالية
     let yPos = 65;
@@ -321,7 +314,7 @@ export default function CigaretteManagement() {
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(12);
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Overall Statistics', 105, yPos + 5, { align: 'center' });
+    pdf.text('الإحصائيات الإجمالية', 105, yPos + 5, { align: 'center' });
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
@@ -329,18 +322,18 @@ export default function CigaretteManagement() {
     yPos += 15;
     
     // صف الإحصائيات الأول
-    pdf.text(`Total Packs Required: ${totals.totalPacks}`, 20, yPos);
-    pdf.text(`Daily Cost: ${formatCurrency(totals.totalDaily)}`, 110, yPos);
+    pdf.text(`إجمالي العلب المطلوبة: ${totals.totalPacks}`, 20, yPos);
+    pdf.text(`التكلفة اليومية: ${formatCurrency(totals.totalDaily)}`, 110, yPos);
     yPos += 8;
     
     // صف الإحصائيات الثاني
-    pdf.text(`Full Packs: ${totals.fullPacks}`, 20, yPos);
-    pdf.text(`Half Packs: ${totals.halfPacks}`, 110, yPos);
+    pdf.text(`العلب الكاملة: ${totals.fullPacks}`, 20, yPos);
+    pdf.text(`الأنصاف: ${totals.halfPacks}`, 110, yPos);
     yPos += 8;
     
     // صف الإحصائيات الثالث
-    pdf.text(`Active People: ${totals.activeCount}`, 20, yPos);
-    pdf.text(`Inactive People: ${totals.inactiveCount}`, 110, yPos);
+    pdf.text(`الأشخاص النشطين: ${totals.activeCount}`, 20, yPos);
+    pdf.text(`المتوقفين: ${totals.inactiveCount}`, 110, yPos);
     
     // بداية الجدول
     yPos += 20;
@@ -354,11 +347,11 @@ export default function CigaretteManagement() {
     pdf.setTextColor(255, 255, 255);
     
     // عناوين الأعمدة
-    pdf.text('Name', 15, yPos + 8);
-    pdf.text('Type/Section', 55, yPos + 8);
-    pdf.text('Cigarette Status', 95, yPos + 8);
-    pdf.text('Cigarette Type', 135, yPos + 8);
-    pdf.text('Cost', 175, yPos + 8);
+    pdf.text('الاسم', 15, yPos + 8);
+    pdf.text('النوع/القسم', 55, yPos + 8);
+    pdf.text('حالة السجائر', 95, yPos + 8);
+    pdf.text('نوع السجائر', 135, yPos + 8);
+    pdf.text('التكلفة', 175, yPos + 8);
     
     yPos += 12;
     
@@ -408,16 +401,16 @@ export default function CigaretteManagement() {
       // النوع/القسم
       let typeText = '';
       if (item.patientType) {
-        typeText = item.patientType === "detox" ? "Detox" : "Recovery";
+        typeText = item.patientType === "detox" ? "ديتوكس" : "ريكفري";
       } else if (item.role) {
         typeText = item.role;
       } else {
-        typeText = "Graduate";
+        typeText = "خريج";
       }
       pdf.text(typeText, 55, yPos + 7);
       
       // حالة السجائر مع لون
-      const statusText = cigaretteType === "none" ? "Inactive" : "Active";
+      const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
       if (cigaretteType === "none") {
         pdf.setTextColor(231, 76, 60); // أحمر للمتوقفين
       } else {
@@ -429,9 +422,9 @@ export default function CigaretteManagement() {
       pdf.setTextColor(0, 0, 0);
       
       // نوع السجائر
-      const cigaretteTypeEnglish = cigaretteType === "full_pack" ? "Full Pack" : 
-                                  cigaretteType === "half_pack" ? "Half Pack" : "None";
-      pdf.text(cigaretteTypeEnglish, 135, yPos + 7);
+      const cigaretteTypeArabic = cigaretteType === "full_pack" ? "علبة كاملة" : 
+                                  cigaretteType === "half_pack" ? "نصف علبة" : "لا يدخن";
+      pdf.text(cigaretteTypeArabic, 135, yPos + 7);
       
       // التكلفة
       pdf.text(formatCurrency(cost), 175, yPos + 7);
@@ -523,15 +516,15 @@ export default function CigaretteManagement() {
     });
     
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Comprehensive Cigarette Report', 105, 15, { align: 'center' });
+    pdf.text('تقرير السجائر الشامل', 105, 15, { align: 'center' });
     pdf.setFontSize(14);
-    pdf.text('All Sections - Patients & Staff', 105, 25, { align: 'center' });
+    pdf.text('جميع الأقسام - مرضى وموظفين', 105, 25, { align: 'center' });
     
     // تاريخ التقرير
     pdf.setTextColor(0, 0, 0);
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    pdf.text(`Report Date: ${currentDate}`, 105, 45, { align: 'center' });
+    pdf.text(`تاريخ التقرير: ${currentDate}`, 105, 45, { align: 'center' });
     
     // الإحصائيات الإجمالية الشاملة
     let yPos = 60;
@@ -541,7 +534,7 @@ export default function CigaretteManagement() {
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(14);
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Overall Statistics for All Sections', 105, yPos + 5, { align: 'center' });
+    pdf.text('الإحصائيات الإجمالية لجميع الأقسام', 105, yPos + 5, { align: 'center' });
     
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
