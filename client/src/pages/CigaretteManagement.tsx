@@ -273,7 +273,347 @@ export default function CigaretteManagement() {
         return;
     }
 
-    generatePDF(sectionTitle, sectionData, totals);
+    generateHTMLReport(sectionTitle, sectionData, totals);
+  };
+
+  const generateHTMLReport = (title: string, data: any[], totals: any) => {
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تقرير السجائر اليومي - ${title}</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+            
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            
+            body {
+                font-family: 'Cairo', Arial, sans-serif;
+                direction: rtl;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: 1000px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #2980b9, #3498db);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
+            
+            .header h2 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 10px;
+            }
+            
+            .header p {
+                font-size: 1rem;
+                opacity: 0.9;
+            }
+            
+            .stats-section {
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                padding: 25px;
+                margin: 20px;
+                border-radius: 10px;
+            }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-top: 15px;
+            }
+            
+            .stat-item {
+                background: rgba(255,255,255,0.2);
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+                font-weight: 700;
+                display: block;
+            }
+            
+            .stat-label {
+                font-size: 0.9rem;
+                opacity: 0.9;
+            }
+            
+            .table-container {
+                margin: 20px;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9rem;
+            }
+            
+            th {
+                background: linear-gradient(135deg, #34495e, #2c3e50);
+                color: white;
+                padding: 15px 10px;
+                text-align: center;
+                font-weight: 600;
+            }
+            
+            td {
+                padding: 12px 10px;
+                text-align: center;
+                border-bottom: 1px solid #ecf0f1;
+            }
+            
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            
+            tr:hover {
+                background-color: #e3f2fd;
+            }
+            
+            .status-active {
+                background: #d4edda;
+                color: #155724;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .status-inactive {
+                background: #f8d7da;
+                color: #721c24;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .type-badge {
+                background: #cce5ff;
+                color: #0056b3;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .footer {
+                background: #f8f9fa;
+                padding: 20px;
+                text-align: center;
+                border-top: 3px solid #3498db;
+            }
+            
+            .total-section {
+                background: linear-gradient(135deg, #e74c3c, #c0392b);
+                color: white;
+                padding: 20px;
+                margin: 20px;
+                border-radius: 10px;
+                text-align: center;
+            }
+            
+            .buttons {
+                text-align: center;
+                padding: 20px;
+                background: #f8f9fa;
+            }
+            
+            .btn {
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                border: none;
+                padding: 12px 25px;
+                margin: 0 10px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 1rem;
+                transition: transform 0.2s;
+            }
+            
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+            
+            .btn-success {
+                background: linear-gradient(135deg, #27ae60, #229954);
+            }
+            
+            @media print {
+                body {
+                    background: white;
+                    padding: 0;
+                }
+                .buttons {
+                    display: none;
+                }
+                .container {
+                    box-shadow: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>تقرير السجائر اليومي</h1>
+                <h2>${title}</h2>
+                <p>تاريخ التقرير: ${currentDate}</p>
+            </div>
+            
+            <div class="stats-section">
+                <h3 style="text-align: center; margin-bottom: 15px;">الإحصائيات الإجمالية</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number">${totals.totalPacks}</span>
+                        <span class="stat-label">إجمالي العلب المطلوبة</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${formatCurrency(totals.totalDaily)}</span>
+                        <span class="stat-label">التكلفة اليومية</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${totals.fullPacks}</span>
+                        <span class="stat-label">العلب الكاملة</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${totals.halfPacks}</span>
+                        <span class="stat-label">الأنصاف</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${totals.activeCount}</span>
+                        <span class="stat-label">الأشخاص النشطين</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${totals.inactiveCount}</span>
+                        <span class="stat-label">المتوقفين</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>النوع/القسم</th>
+                            <th>حالة السجائر</th>
+                            <th>نوع السجائر</th>
+                            <th>التكلفة اليومية</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => {
+                          const cigaretteType = item.dailyCigaretteType || "none";
+                          const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
+                          
+                          let typeText = '';
+                          if (item.patientType) {
+                            typeText = item.patientType === "detox" ? "ديتوكس" : "ريكفري";
+                          } else if (item.role) {
+                            typeText = item.role;
+                          } else {
+                            typeText = "خريج";
+                          }
+                          
+                          const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
+                          const statusClass = cigaretteType === "none" ? "status-inactive" : "status-active";
+                          const cigaretteTypeText = getCigaretteTypeText(cigaretteType);
+                          
+                          return `
+                            <tr>
+                                <td><strong>${item.name}</strong></td>
+                                <td><span class="type-badge">${typeText}</span></td>
+                                <td><span class="${statusClass}">${statusText}</span></td>
+                                <td>${cigaretteTypeText}</td>
+                                <td><strong>${formatCurrency(cost)}</strong></td>
+                            </tr>
+                          `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="total-section">
+                <h3>إجمالي القسم: ${formatCurrency(totals.totalDaily)}</h3>
+                <p>عدد الأشخاص: ${totals.totalCount}</p>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+                <button class="btn btn-success" onclick="downloadReport()">💾 تنزيل التقرير</button>
+            </div>
+            
+            <div class="footer">
+                <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المستشفى</p>
+                <p>تاريخ الإنشاء: ${new Date().toLocaleString('ar-EG')}</p>
+            </div>
+        </div>
+        
+        <script>
+            function downloadReport() {
+                const element = document.querySelector('.container');
+                const filename = '${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html';
+                
+                const htmlContent = document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
+    </html>
+    `;
+
+    // فتح التقرير في نافذة جديدة
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    }
   };
 
   const generatePDF = (title: string, data: any[], totals: any) => {
@@ -760,7 +1100,405 @@ export default function CigaretteManagement() {
       inactiveCount: allData.filter(item => (item.dailyCigaretteType || "none") === "none").length
     };
 
-    generateComprehensivePDF("تقرير شامل لجميع الأقسام", allData, allTotals);
+    generateComprehensiveHTMLReport("تقرير شامل لجميع الأقسام", allData, allTotals);
+  };
+
+  const generateComprehensiveHTMLReport = (title: string, allData: any[], totals: any) => {
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // تجميع البيانات حسب القسم
+    const sections = {
+      'ديتوكس': allData.filter(item => item.section === 'ديتوكس'),
+      'ريكفري': allData.filter(item => item.section === 'ريكفري'),
+      'خريجين': allData.filter(item => item.section === 'خريجين'),
+      'موظفين': allData.filter(item => item.section === 'موظفين')
+    };
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${title}</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+            
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            
+            body {
+                font-family: 'Cairo', Arial, sans-serif;
+                direction: rtl;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 20px;
+            }
+            
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            
+            .header {
+                background: linear-gradient(135deg, #8e44ad, #9b59b6);
+                color: white;
+                padding: 40px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 3rem;
+                font-weight: 700;
+                margin-bottom: 15px;
+            }
+            
+            .header p {
+                font-size: 1.2rem;
+                opacity: 0.9;
+            }
+            
+            .grand-stats {
+                background: linear-gradient(135deg, #e74c3c, #c0392b);
+                color: white;
+                padding: 30px;
+                margin: 20px;
+                border-radius: 15px;
+            }
+            
+            .grand-stats h2 {
+                text-align: center;
+                font-size: 2rem;
+                margin-bottom: 25px;
+            }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            }
+            
+            .stat-card {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                border: 2px solid rgba(255,255,255,0.3);
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+                font-weight: 700;
+                display: block;
+                margin-bottom: 10px;
+            }
+            
+            .stat-label {
+                font-size: 1rem;
+                opacity: 0.9;
+            }
+            
+            .section {
+                margin: 30px 20px;
+                border-radius: 15px;
+                overflow: hidden;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            }
+            
+            .section-header {
+                padding: 20px;
+                color: white;
+                text-align: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+            
+            .detox-header { background: linear-gradient(135deg, #3498db, #2980b9); }
+            .recovery-header { background: linear-gradient(135deg, #27ae60, #229954); }
+            .graduates-header { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+            .staff-header { background: linear-gradient(135deg, #f39c12, #e67e22); }
+            
+            .section-stats {
+                background: #f8f9fa;
+                padding: 15px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .section-stat {
+                background: white;
+                padding: 10px;
+                border-radius: 8px;
+                border-left: 4px solid #3498db;
+            }
+            
+            .section-stat-number {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #2c3e50;
+            }
+            
+            .section-stat-label {
+                font-size: 0.8rem;
+                color: #7f8c8d;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+            }
+            
+            th {
+                background: #34495e;
+                color: white;
+                padding: 15px 10px;
+                text-align: center;
+                font-weight: 600;
+            }
+            
+            td {
+                padding: 12px 10px;
+                text-align: center;
+                border-bottom: 1px solid #ecf0f1;
+            }
+            
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            
+            tr:hover {
+                background-color: #e3f2fd;
+            }
+            
+            .status-active {
+                background: #d4edda;
+                color: #155724;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .status-inactive {
+                background: #f8d7da;
+                color: #721c24;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .type-badge {
+                background: #cce5ff;
+                color: #0056b3;
+                padding: 5px 10px;
+                border-radius: 15px;
+                font-weight: 600;
+            }
+            
+            .buttons {
+                text-align: center;
+                padding: 30px;
+                background: #f8f9fa;
+            }
+            
+            .btn {
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                margin: 0 10px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 1.1rem;
+                transition: transform 0.2s;
+            }
+            
+            .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+            
+            .btn-success {
+                background: linear-gradient(135deg, #27ae60, #229954);
+            }
+            
+            .footer {
+                background: #2c3e50;
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            
+            @media print {
+                body {
+                    background: white;
+                    padding: 0;
+                }
+                .buttons {
+                    display: none;
+                }
+                .container {
+                    box-shadow: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>${title}</h1>
+                <p>تاريخ التقرير: ${currentDate}</p>
+            </div>
+            
+            <div class="grand-stats">
+                <h2>الإحصائيات الإجمالية الشاملة</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number">${totals.totalPacks}</span>
+                        <span class="stat-label">إجمالي العلب المطلوبة</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${formatCurrency(totals.totalDaily)}</span>
+                        <span class="stat-label">التكلفة الإجمالية اليومية</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${totals.fullPacks}</span>
+                        <span class="stat-label">العلب الكاملة</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${totals.halfPacks}</span>
+                        <span class="stat-label">الأنصاف</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${totals.activeCount}</span>
+                        <span class="stat-label">الأشخاص النشطين</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">${totals.inactiveCount}</span>
+                        <span class="stat-label">المتوقفين</span>
+                    </div>
+                </div>
+            </div>
+            
+            ${Object.entries(sections).map(([sectionName, sectionData], index) => {
+              if (sectionData.length === 0) return '';
+              
+              const sectionTotals = calculateSectionTotals(sectionData);
+              const headerClass = ['detox-header', 'recovery-header', 'graduates-header', 'staff-header'][index];
+              
+              return `
+                <div class="section">
+                    <div class="section-header ${headerClass}">
+                        قسم ${sectionName}
+                    </div>
+                    
+                    <div class="section-stats">
+                        <div class="section-stat">
+                            <div class="section-stat-number">${sectionTotals.totalPacks}</div>
+                            <div class="section-stat-label">علبة مطلوبة</div>
+                        </div>
+                        <div class="section-stat">
+                            <div class="section-stat-number">${formatCurrency(sectionTotals.totalDaily)}</div>
+                            <div class="section-stat-label">تكلفة يومية</div>
+                        </div>
+                        <div class="section-stat">
+                            <div class="section-stat-number">${sectionTotals.activeCount}</div>
+                            <div class="section-stat-label">نشط</div>
+                        </div>
+                        <div class="section-stat">
+                            <div class="section-stat-number">${sectionTotals.inactiveCount}</div>
+                            <div class="section-stat-label">متوقف</div>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>حالة السجائر</th>
+                                <th>نوع السجائر</th>
+                                <th>التكلفة اليومية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sectionData.map(item => {
+                              const cigaretteType = item.dailyCigaretteType || "none";
+                              const cost = item.dailyCigaretteCost || calculateCigaretteCost(cigaretteType);
+                              const statusText = cigaretteType === "none" ? "متوقف" : "نشط";
+                              const statusClass = cigaretteType === "none" ? "status-inactive" : "status-active";
+                              const cigaretteTypeText = getCigaretteTypeText(cigaretteType);
+                              
+                              return `
+                                <tr>
+                                    <td><strong>${item.name}</strong></td>
+                                    <td><span class="${statusClass}">${statusText}</span></td>
+                                    <td>${cigaretteTypeText}</td>
+                                    <td><strong>${formatCurrency(cost)}</strong></td>
+                                </tr>
+                              `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+              `;
+            }).join('')}
+            
+            <div class="buttons">
+                <button class="btn" onclick="window.print()">🖨️ طباعة التقرير الشامل</button>
+                <button class="btn btn-success" onclick="downloadReport()">💾 تنزيل التقرير الشامل</button>
+            </div>
+            
+            <div class="footer">
+                <h3>ملخص نهائي</h3>
+                <p>إجمالي التكلفة اليومية لجميع الأقسام: ${formatCurrency(totals.totalDaily)}</p>
+                <p>إجمالي عدد الأشخاص النشطين: ${totals.activeCount}</p>
+                <p>إجمالي العلب المطلوبة: ${totals.totalPacks}</p>
+                <hr style="margin: 20px 0; border: 1px solid #34495e;">
+                <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المستشفى</p>
+                <p>تاريخ الإنشاء: ${new Date().toLocaleString('ar-EG')}</p>
+            </div>
+        </div>
+        
+        <script>
+            function downloadReport() {
+                const filename = '${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.html';
+                
+                const htmlContent = document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+            }
+        </script>
+    </body>
+    </html>
+    `;
+
+    // فتح التقرير في نافذة جديدة
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    }
   };
 
   // وظائف التحكم في السجائر
@@ -1027,6 +1765,14 @@ export default function CigaretteManagement() {
           >
             <RefreshCw className={`w-4 h-4 ${(updatePatientsMutation.isPending || updateStaffMutation.isPending) ? 'animate-spin' : ''}`} />
             تحديث البيانات
+          </Button>
+          <Button 
+            onClick={handlePrintAll}
+            variant="outline"
+            className="flex items-center gap-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+          >
+            <Printer className="w-4 h-4" />
+            طباعة جميع الأقسام
           </Button>
           <Button 
             onClick={() => setIsPaymentModalOpen(true)}
