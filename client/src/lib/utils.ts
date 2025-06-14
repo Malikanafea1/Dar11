@@ -74,8 +74,14 @@ export function formatDateTime(date: string | Date, dateSystem: 'gregorian' | 'h
 }
 
 export function calculateDaysBetween(startDate: string | Date, endDate?: string | Date): number {
+  if (!startDate) return 0;
+  
   const start = typeof startDate === "string" ? new Date(startDate) : startDate;
   const end = endDate ? (typeof endDate === "string" ? new Date(endDate) : endDate) : new Date();
+  
+  // Check if dates are valid
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+  
   const diffTime = Math.abs(end.getTime() - start.getTime());
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }

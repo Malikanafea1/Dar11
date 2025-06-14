@@ -130,8 +130,8 @@ export default function Dashboard() {
     if (!patient.admissionDate || !patient.dailyCost) return sum;
     const days = calculateDaysBetween(patient.admissionDate, new Date());
     const totalCost = days * patient.dailyCost;
-    const totalPaid = payments?.filter((p: any) => p.patientId === patient.id)
-      .reduce((total: number, payment: any) => total + payment.amount, 0) || 0;
+    const totalPaid = Array.isArray(payments) ? payments.filter((p: any) => p.patientId === patient.id)
+      .reduce((total: number, payment: any) => total + payment.amount, 0) : 0;
     return sum + Math.max(0, totalCost - totalPaid);
   }, 0);
 
