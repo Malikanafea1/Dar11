@@ -73,27 +73,30 @@ export default function Dashboard() {
   
   // حساب المرضى الذين يحتاجون متابعة (أكثر من 7 أيام)
   const criticalPatients = activePatients.filter((p: any) => {
+    if (!p.admissionDate) return false;
     const daysSinceAdmission = calculateDaysBetween(p.admissionDate, new Date());
     return daysSinceAdmission > 7;
   });
 
   // حساب متوسط مدة الإقامة
   const avgStayDuration = activePatients.length > 0 
-    ? activePatients.reduce((sum, p) => sum + calculateDaysBetween(p.admissionDate, new Date()), 0) / activePatients.length
+    ? activePatients
+        .filter(p => p.admissionDate)
+        .reduce((sum, p) => sum + calculateDaysBetween(p.admissionDate, new Date()), 0) / activePatients.filter(p => p.admissionDate).length
     : 0;
 
   // الحصول على آخر المدفوعات
-  const recentPayments = payments?.slice(0, 3) || [];
+  const recentPayments = Array.isArray(payments) ? payments.slice(0, 3) : [];
 
   // تحليل الإيرادات الشهرية
-  const monthlyRevenue = payments?.reduce((sum: number, payment: any) => {
+  const monthlyRevenue = Array.isArray(payments) ? payments.reduce((sum: number, payment: any) => {
     const paymentDate = new Date(payment.paymentDate);
     const currentMonth = new Date().getMonth();
     if (paymentDate.getMonth() === currentMonth) {
       return sum + payment.amount;
     }
     return sum;
-  }, 0) || 0;
+  }, 0) : 0;
 
   // حساب المرضى الذين موعدهم اليوم للتحصيل
   const getTodayCollectionPatients = () => {
@@ -101,15 +104,17 @@ export default function Dashboard() {
     const todayStr = today.toISOString().split('T')[0];
     
     return activePatients.filter((patient: any) => {
+      if (!patient.admissionDate) return false;
+      
       const admissionDate = new Date(patient.admissionDate);
       const daysSinceAdmission = calculateDaysBetween(patient.admissionDate, today);
       
       // المرضى الذين أكملوا أسبوع أو أكثر ولم يدفعوا اليوم
       if (daysSinceAdmission >= 7) {
-        const recentPayments = payments?.filter((payment: any) => 
+        const recentPayments = Array.isArray(payments) ? payments.filter((payment: any) => 
           payment.patientId === patient.id && 
           payment.paymentDate === todayStr
-        ) || [];
+        ) : [];
         
         return recentPayments.length === 0;
       }
@@ -122,6 +127,7 @@ export default function Dashboard() {
 
   // حساب المبلغ المتوقع تحصيله اليوم
   const expectedTodayCollection = todayCollectionPatients.reduce((sum, patient: any) => {
+    if (!patient.admissionDate || !patient.dailyCost) return sum;
     const days = calculateDaysBetween(patient.admissionDate, new Date());
     const totalCost = days * patient.dailyCost;
     const totalPaid = payments?.filter((p: any) => p.patientId === patient.id)
