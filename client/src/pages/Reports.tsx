@@ -26,6 +26,7 @@ import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import type { Patient, Staff, Expense, Payment, Settings } from "@shared/schema";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface ReportData {
   patients: Patient[];
@@ -364,8 +365,372 @@ export default function Reports() {
         revenuePerPatient: data.patients.length > 0 ? totalRevenue / data.patients.length : 0,
         averageStaySalary: data.staff.length > 0 ? totalSalaries / data.staff.length : 0,
         profitMargin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0
+      },
+      details: {
+        patients: data.patients.map(p => ({
+          name: p.name,
+          nationalId: p.nationalId,
+          admissionDate: formatDate(p.admissionDate),
+          roomNumber: p.roomNumber || "غير محدد",
+          dailyCost: formatCurrency(p.dailyCost),
+          status: p.status === "active" ? "نشط" : "خرج"
+        })),
+        staff: data.staff.map(s => ({
+          name: s.name,
+          role: s.role,
+          department: s.department,
+          salary: formatCurrency(s.monthlySalary),
+          status: s.isActive ? "نشط" : "غير نشط"
+        })),
+        payments: data.payments.map(p => ({
+          patientId: p.patientId,
+          amount: formatCurrency(p.amount),
+          method: p.paymentMethod,
+          date: formatDate(p.paymentDate)
+        })),
+        expenses: data.expenses.map(e => ({
+          description: e.description,
+          amount: formatCurrency(e.amount),
+          category: e.category,
+          date: formatDate(e.date)
+        }))
       }
     };
+  };
+
+  const generateComprehensiveHTML = () => {
+    if (!selectedReport || selectedReport.type !== 'comprehensive') return;
+
+    const currentDate = new Date().toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+
+    const currentTime = new Date().toLocaleTimeString('ar-EG', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقرير الشامل</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #1e293b;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+            font-size: 18px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-value {
+            font-weight: bold;
+            color: #059669;
+        }
+        .metric-negative {
+            color: #dc2626;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section h2 {
+            background: #f1f5f9;
+            padding: 15px;
+            margin: 0 0 20px 0;
+            border-radius: 8px;
+            color: #334155;
+            font-size: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f8fafc;
+        }
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            color: #64748b;
+        }
+        @media print {
+            body { margin: 0; padding: 15px; }
+            .header { break-inside: avoid; }
+            .section { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>التقرير الشامل</h1>
+        <p>الفترة: ${selectedReport.period}</p>
+        <p>تاريخ الإنشاء: ${currentDate} - ${currentTime}</p>
+    </div>
+
+    <div class="overview-grid">
+        <div class="card">
+            <h3>المرضى</h3>
+            <div class="metric">
+                <span>إجمالي المرضى</span>
+                <span class="metric-value">${selectedReport.overview.totalPatients}</span>
+            </div>
+            <div class="metric">
+                <span>المرضى النشطين</span>
+                <span class="metric-value">${selectedReport.overview.activePatients}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>الموظفون</h3>
+            <div class="metric">
+                <span>إجمالي الموظفين</span>
+                <span class="metric-value">${selectedReport.overview.totalStaff}</span>
+            </div>
+            <div class="metric">
+                <span>الموظفون النشطون</span>
+                <span class="metric-value">${selectedReport.overview.activeStaff}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>الإيرادات والمصروفات</h3>
+            <div class="metric">
+                <span>إجمالي الإيرادات</span>
+                <span class="metric-value">${formatCurrency(selectedReport.overview.totalRevenue)}</span>
+            </div>
+            <div class="metric">
+                <span>إجمالي المصروفات</span>
+                <span class="metric-value metric-negative">${formatCurrency(selectedReport.overview.totalExpenses)}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>المؤشرات المالية</h3>
+            <div class="metric">
+                <span>صافي الربح</span>
+                <span class="metric-value ${selectedReport.overview.netProfit < 0 ? 'metric-negative' : ''}">${formatCurrency(selectedReport.overview.netProfit)}</span>
+            </div>
+            <div class="metric">
+                <span>هامش الربح</span>
+                <span class="metric-value">${selectedReport.kpis.profitMargin.toFixed(1)}%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>تفاصيل المرضى (أول 10)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>الرقم المدني</th>
+                    <th>رقم الغرفة</th>
+                    <th>التكلفة اليومية</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${selectedReport.details.patients.slice(0, 10).map(patient => `
+                    <tr>
+                        <td>${patient.name}</td>
+                        <td>${patient.nationalId}</td>
+                        <td>${patient.roomNumber}</td>
+                        <td>${patient.dailyCost}</td>
+                        <td><span class="${patient.status === 'نشط' ? 'status-active' : 'status-inactive'}">${patient.status}</span></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${selectedReport.details.patients.length > 10 ? `<p>تم عرض أول 10 مرضى من إجمالي ${selectedReport.details.patients.length} مريض</p>` : ''}
+    </div>
+
+    <div class="section">
+        <h2>تفاصيل الموظفين (أول 10)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>المنصب</th>
+                    <th>القسم</th>
+                    <th>الراتب</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${selectedReport.details.staff.slice(0, 10).map(staff => `
+                    <tr>
+                        <td>${staff.name}</td>
+                        <td>${staff.role}</td>
+                        <td>${staff.department}</td>
+                        <td>${staff.salary}</td>
+                        <td><span class="${staff.status === 'نشط' ? 'status-active' : 'status-inactive'}">${staff.status}</span></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${selectedReport.details.staff.length > 10 ? `<p>تم عرض أول 10 موظفين من إجمالي ${selectedReport.details.staff.length} موظف</p>` : ''}
+    </div>
+
+    <div class="section">
+        <h2>آخر المدفوعات (أول 8)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>معرف المريض</th>
+                    <th>المبلغ</th>
+                    <th>طريقة الدفع</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${selectedReport.details.payments.slice(0, 8).map(payment => `
+                    <tr>
+                        <td>${payment.patientId}</td>
+                        <td style="color: #059669; font-weight: bold;">${payment.amount}</td>
+                        <td>${payment.method}</td>
+                        <td>${payment.date}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${selectedReport.details.payments.length > 8 ? `<p>تم عرض أول 8 مدفوعات من إجمالي ${selectedReport.details.payments.length} مدفوعة</p>` : ''}
+    </div>
+
+    <div class="section">
+        <h2>آخر المصروفات (أول 8)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>الوصف</th>
+                    <th>المبلغ</th>
+                    <th>الفئة</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${selectedReport.details.expenses.slice(0, 8).map(expense => `
+                    <tr>
+                        <td>${expense.description}</td>
+                        <td style="color: #dc2626; font-weight: bold;">${expense.amount}</td>
+                        <td>${expense.category}</td>
+                        <td>${expense.date}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${selectedReport.details.expenses.length > 8 ? `<p>تم عرض أول 8 مصروفات من إجمالي ${selectedReport.details.expenses.length} مصروف</p>` : ''}
+    </div>
+
+    <div class="footer">
+        <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المستشفى</p>
+        <p>تاريخ الإنشاء: ${currentDate} في ${currentTime}</p>
+    </div>
+</body>
+</html>`;
+
+    // Create and download HTML file
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `comprehensive-report-${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "تم بنجاح",
+      description: "تم تنزيل التقرير الشامل بصيغة HTML",
+    });
   };
 
   const generatePDF = async () => {

@@ -46,13 +46,13 @@ export default function AccountStatementModal({
   });
 
   // جلب بيانات الشخص (مريض أو موظف)
-  const { data: person } = useQuery({
+  const { data: person, isLoading: personLoading, error: personError } = useQuery({
     queryKey: [`/api/${personType === 'patient' ? 'patients' : 'staff'}/${personId}`],
     enabled: isOpen && !!personId,
   });
 
   // جلب المدفوعات/الرواتب
-  const { data: transactions } = useQuery({
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
     queryKey: personType === 'patient' 
       ? [`/api/payments/patient/${personId}`]
       : [`/api/payrolls/staff/${personId}`],
@@ -60,35 +60,75 @@ export default function AccountStatementModal({
   });
 
   // جلب المكافآت والسلف للموظفين
-  const { data: bonuses } = useQuery({
+  const { data: bonuses, isLoading: bonusesLoading } = useQuery({
     queryKey: [`/api/bonuses/staff/${personId}`],
     enabled: isOpen && personType === 'staff' && !!personId,
   });
 
-  const { data: advances } = useQuery({
+  const { data: advances, isLoading: advancesLoading } = useQuery({
     queryKey: [`/api/advances/staff/${personId}`],
     enabled: isOpen && personType === 'staff' && !!personId,
   });
 
-  const { data: deductions } = useQuery({
+  const { data: deductions, isLoading: deductionsLoading } = useQuery({
     queryKey: [`/api/deductions/staff/${personId}`],
     enabled: isOpen && personType === 'staff' && !!personId,
   });
 
+  const isLoading = personLoading || transactionsLoading || 
+    (personType === 'staff' && (bonusesLoading || advancesLoading || deductionsLoading));
+
+  if (!isOpen) return null;
+  
+  if (personError) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 text-red-300" />
+            <p className="text-red-600">خطأ في تحميل البيانات</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-3"></div>
+            <p>جاري تحميل البيانات...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   if (!person) {
-    return null;
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-gray-600">لم يتم العثور على البيانات</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   // حساب البيانات للمريض
   const calculatePatientAccount = () => {
-    if (!person.admissionDate) return { totalCost: 0, totalPaid: 0, balance: 0, days: 0 };
+    if (!person || !person.admissionDate) return { totalCost: 0, totalPaid: 0, balance: 0, days: 0 };
     
     const days = calculateDaysBetween(
       person.admissionDate, 
       person.dischargeDate || new Date()
     );
     const totalCost = days * (person.dailyCost || 0);
-    const totalPaid = (transactions || []).reduce((sum: number, payment: any) => sum + payment.amount, 0);
+    const totalPaid = Array.isArray(transactions) ? transactions.reduce((sum: number, payment: any) => sum + payment.amount, 0) : 0;
     const balance = totalCost - totalPaid;
     
     return { totalCost, totalPaid, balance, days };
@@ -96,10 +136,10 @@ export default function AccountStatementModal({
 
   // حساب البيانات للموظف
   const calculateStaffAccount = () => {
-    const totalSalary = (transactions || []).reduce((sum: number, payroll: any) => sum + payroll.amount, 0);
-    const totalBonuses = (bonuses || []).reduce((sum: number, bonus: any) => sum + bonus.amount, 0);
-    const totalAdvances = (advances || []).reduce((sum: number, advance: any) => sum + advance.amount, 0);
-    const totalDeductions = (deductions || []).reduce((sum: number, deduction: any) => sum + deduction.amount, 0);
+    const totalSalary = Array.isArray(transactions) ? transactions.reduce((sum: number, payroll: any) => sum + payroll.amount, 0) : 0;
+    const totalBonuses = Array.isArray(bonuses) ? bonuses.reduce((sum: number, bonus: any) => sum + bonus.amount, 0) : 0;
+    const totalAdvances = Array.isArray(advances) ? advances.reduce((sum: number, advance: any) => sum + advance.amount, 0) : 0;
+    const totalDeductions = Array.isArray(deductions) ? deductions.reduce((sum: number, deduction: any) => sum + deduction.amount, 0) : 0;
     const netTotal = totalSalary + totalBonuses - totalAdvances - totalDeductions;
     
     return { totalSalary, totalBonuses, totalAdvances, totalDeductions, netTotal };
