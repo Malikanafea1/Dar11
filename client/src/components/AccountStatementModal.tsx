@@ -150,6 +150,8 @@ export default function AccountStatementModal({
 
   // إنشاء PDF
   const generatePDF = () => {
+    if (!person) return;
+    
     const doc = new jsPDF();
     
     // إعداد الخط العربي (يحتاج خط عربي مناسب)
@@ -164,13 +166,13 @@ export default function AccountStatementModal({
     
     if (personType === 'patient' && patientAccount) {
       doc.setFontSize(12);
-      doc.text(`Patient ID: ${person.nationalId || person.id}`, 20, yPosition);
+      doc.text(`Patient ID: ${(person as any).nationalId || (person as any).id}`, 20, yPosition);
       yPosition += 10;
-      doc.text(`Admission Date: ${formatDate(person.admissionDate)}`, 20, yPosition);
+      doc.text(`Admission Date: ${formatDate((person as any).admissionDate)}`, 20, yPosition);
       yPosition += 10;
       doc.text(`Days: ${patientAccount.days}`, 20, yPosition);
       yPosition += 10;
-      doc.text(`Daily Cost: ${formatCurrency(person.dailyCost || 0)}`, 20, yPosition);
+      doc.text(`Daily Cost: ${formatCurrency((person as any).dailyCost || 0)}`, 20, yPosition);
       yPosition += 10;
       doc.text(`Total Cost: ${formatCurrency(patientAccount.totalCost)}`, 20, yPosition);
       yPosition += 10;
@@ -183,21 +185,23 @@ export default function AccountStatementModal({
       doc.text('Payments:', 20, yPosition);
       yPosition += 10;
       
-      (transactions || []).forEach((payment: any, index: number) => {
-        if (yPosition > 270) {
-          doc.addPage();
-          yPosition = 20;
-        }
-        doc.text(`${index + 1}. ${formatDate(payment.paymentDate)} - ${formatCurrency(payment.amount)} - ${payment.paymentMethod}`, 20, yPosition);
-        yPosition += 10;
-      });
+      if (Array.isArray(transactions)) {
+        transactions.forEach((payment: any, index: number) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+          doc.text(`${index + 1}. ${formatDate(payment.paymentDate)} - ${formatCurrency(payment.amount)} - ${payment.paymentMethod}`, 20, yPosition);
+          yPosition += 10;
+        });
+      }
     } else if (personType === 'staff' && staffAccount) {
       doc.setFontSize(12);
-      doc.text(`Staff ID: ${person.nationalId || person.id}`, 20, yPosition);
+      doc.text(`Staff ID: ${(person as any).nationalId || (person as any).id}`, 20, yPosition);
       yPosition += 10;
-      doc.text(`Position: ${person.position || 'N/A'}`, 20, yPosition);
+      doc.text(`Position: ${(person as any).position || 'N/A'}`, 20, yPosition);
       yPosition += 10;
-      doc.text(`Department: ${person.department || 'N/A'}`, 20, yPosition);
+      doc.text(`Department: ${(person as any).department || 'N/A'}`, 20, yPosition);
       yPosition += 20;
       
       doc.text(`Total Salary: ${formatCurrency(staffAccount.totalSalary)}`, 20, yPosition);
@@ -237,24 +241,24 @@ export default function AccountStatementModal({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">الاسم</p>
-                  <p className="font-medium">{person.name}</p>
+                  <p className="font-medium">{(person as any).name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
                     {personType === 'patient' ? 'الرقم المدني' : 'رقم الموظف'}
                   </p>
-                  <p className="font-medium">{person.nationalId || person.id}</p>
+                  <p className="font-medium">{(person as any).nationalId || (person as any).id}</p>
                 </div>
-                {person.phone && (
+                {(person as any).phone && (
                   <div>
                     <p className="text-sm text-gray-600">الهاتف</p>
-                    <p className="font-medium">{person.phone}</p>
+                    <p className="font-medium">{(person as any).phone}</p>
                   </div>
                 )}
                 {personType === 'staff' && (
                   <div>
                     <p className="text-sm text-gray-600">المنصب</p>
-                    <p className="font-medium">{person.position || 'غير محدد'}</p>
+                    <p className="font-medium">{(person as any).position || 'غير محدد'}</p>
                   </div>
                 )}
               </div>

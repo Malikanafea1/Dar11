@@ -1227,6 +1227,15 @@ export default function Reports() {
                 {selectedReport.title}
               </CardTitle>
               <div className="flex gap-2">
+                {selectedReport.type === 'comprehensive' && (
+                  <Button 
+                    onClick={generateComprehensiveHTML}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <FileText className="w-4 h-4 ml-2" />
+                    تقرير HTML
+                  </Button>
+                )}
                 <Button 
                   onClick={generatePDF}
                   disabled={isGeneratingPDF}
