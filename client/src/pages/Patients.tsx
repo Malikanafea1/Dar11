@@ -6,13 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle, Search, Filter, Trash2 } from "lucide-react";
+import { Plus, UserRound, Calendar, MapPin, DollarSign, CreditCard, Upload, LogOut, CheckCircle, Search, Filter, Trash2, FileText } from "lucide-react";
 import { formatCurrency, formatDate, calculateDaysBetween } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Patient } from "@shared/schema";
 import PatientModal from "@/components/PatientModal";
 import ExcelImportModal from "@/components/ExcelImportModal";
+import AccountStatementModal from "@/components/AccountStatementModal";
 
 export default function Patients() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,6 +21,8 @@ export default function Patients() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isAccountStatementOpen, setIsAccountStatementOpen] = useState(false);
+  const [selectedPatientForStatement, setSelectedPatientForStatement] = useState<{id: string, name: string} | null>(null);
   const { toast } = useToast();
 
   const { data: patients, isLoading } = useQuery<Patient[]>({
@@ -99,6 +102,16 @@ export default function Patients() {
     if (confirm(`هل أنت متأكد من تسجيل خروج المريض ${patient.name}؟`)) {
       dischargeMutation.mutate(patient.id);
     }
+  };
+
+  const handleAccountStatement = (patient: Patient) => {
+    setSelectedPatientForStatement({ id: patient.id, name: patient.name });
+    setIsAccountStatementOpen(true);
+  };
+
+  const closeAccountStatement = () => {
+    setSelectedPatientForStatement(null);
+    setIsAccountStatementOpen(false);
   };
 
   const calculateTotalCost = (patient: Patient) => {
@@ -306,6 +319,16 @@ export default function Patients() {
                     </div>
                     
                     <div className="flex flex-col sm:flex-row gap-2 mt-4 sm:mt-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAccountStatement(patient)}
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      >
+                        <FileText className="ml-2 w-4 h-4" />
+                        كشف حساب
+                      </Button>
+                      
                       {patient.status === "active" && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
