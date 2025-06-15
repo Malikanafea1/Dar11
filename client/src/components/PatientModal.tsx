@@ -63,13 +63,13 @@ export default function PatientModal({ isOpen, onClose, patient }: PatientModalP
   useEffect(() => {
     if (patient) {
       form.reset({
-        name: patient.name,
-        nationalId: patient.nationalId,
-        admissionDate: patient.admissionDate,
+        name: patient.name || "",
+        nationalId: patient.nationalId || "",
+        admissionDate: patient.admissionDate || new Date().toISOString().split('T')[0],
         roomNumber: patient.roomNumber || "",
-        dailyCost: patient.dailyCost.toString(),
+        dailyCost: patient.dailyCost ? patient.dailyCost.toString() : "",
         insurance: patient.insurance || "",
-        status: patient.status,
+        status: patient.status || "active",
         notes: patient.notes || "",
         patientType: patient.patientType || "detox",
         dailyCigaretteType: patient.dailyCigaretteType || "none",
