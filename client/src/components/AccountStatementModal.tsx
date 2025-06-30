@@ -121,17 +121,49 @@ export default function AccountStatementModal({
 
   // حساب البيانات للمريض
   const calculatePatientAccount = () => {
-    if (!person || !person.admissionDate) return { totalCost: 0, totalPaid: 0, balance: 0, days: 0 };
+    if (!person || !(person as any).admissionDate) return { 
+      totalCost: 0, 
+      totalPaid: 0, 
+      balance: 0, 
+      days: 0, 
+      admissionDate: null,
+      dischargeDate: null,
+      dailyCost: 0,
+      cigaretteCost: 0,
+      totalCigaretteCost: 0,
+      grandTotal: 0
+    };
     
-    const days = calculateDaysBetween(
-      person.admissionDate, 
-      person.dischargeDate || new Date()
-    );
-    const totalCost = days * (person.dailyCost || 0);
+    const patientData = person as any;
+    const admissionDate = new Date(patientData.admissionDate);
+    const dischargeDate = patientData.dischargeDate ? new Date(patientData.dischargeDate) : new Date();
+    const days = calculateDaysBetween(patientData.admissionDate, patientData.dischargeDate || new Date());
+    
+    const dailyCost = patientData.dailyCost || 0;
+    const totalCost = days * dailyCost;
+    
+    // حساب تكلفة السجائر
+    const cigaretteCost = patientData.cigaretteCost || 0;
+    const totalCigaretteCost = days * cigaretteCost;
+    
+    // الإجمالي الكلي
+    const grandTotal = totalCost + totalCigaretteCost;
+    
     const totalPaid = Array.isArray(transactions) ? transactions.reduce((sum: number, payment: any) => sum + payment.amount, 0) : 0;
-    const balance = totalCost - totalPaid;
+    const balance = grandTotal - totalPaid;
     
-    return { totalCost, totalPaid, balance, days };
+    return { 
+      totalCost, 
+      totalPaid, 
+      balance, 
+      days,
+      admissionDate,
+      dischargeDate,
+      dailyCost,
+      cigaretteCost,
+      totalCigaretteCost,
+      grandTotal
+    };
   };
 
   // حساب البيانات للموظف
@@ -275,31 +307,99 @@ export default function AccountStatementModal({
             </CardHeader>
             <CardContent>
               {personType === 'patient' && patientAccount ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">مدة الإقامة</p>
-                    <p className="text-2xl font-bold text-blue-600">{patientAccount.days} يوم</p>
+                <div className="space-y-6">
+                  {/* بيانات التواريخ والمدة */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">تاريخ الدخول</p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {patientAccount.admissionDate ? formatDate(patientAccount.admissionDate.toString()) : 'غير محدد'}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">
+                        {(person as any).status === 'discharged' ? 'تاريخ الخروج' : 'التاريخ الحالي'}
+                      </p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {patientAccount.dischargeDate ? formatDate(patientAccount.dischargeDate.toString()) : 'غير محدد'}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">مدة الإقامة</p>
+                      <p className="text-2xl font-bold text-blue-600">{patientAccount.days} يوم</p>
+                    </div>
                   </div>
-                  <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <p className="text-sm text-gray-600">التكلفة الإجمالية</p>
-                    <p className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(patientAccount.totalCost)}
-                    </p>
+
+                  {/* تفاصيل التكاليف */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800">تفاصيل التكاليف اليومية</h4>
+                      
+                      <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                        <span className="text-sm text-gray-600">التكلفة اليومية للعلاج</span>
+                        <span className="font-bold text-blue-600">{formatCurrency(patientAccount.dailyCost)}</span>
+                      </div>
+                      
+                      {patientAccount.cigaretteCost > 0 && (
+                        <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                          <span className="text-sm text-gray-600">تكلفة السجائر اليومية</span>
+                          <span className="font-bold text-yellow-600">{formatCurrency(patientAccount.cigaretteCost)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                        <span className="text-sm text-gray-600">إجمالي تكلفة العلاج</span>
+                        <span className="font-bold text-orange-600">{formatCurrency(patientAccount.totalCost)}</span>
+                      </div>
+                      
+                      {patientAccount.totalCigaretteCost > 0 && (
+                        <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                          <span className="text-sm text-gray-600">إجمالي تكلفة السجائر</span>
+                          <span className="font-bold text-yellow-600">{formatCurrency(patientAccount.totalCigaretteCost)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800">ملخص المدفوعات</h4>
+                      
+                      <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                        <span className="text-sm text-gray-600">الإجمالي الكلي</span>
+                        <span className="font-bold text-purple-600">{formatCurrency(patientAccount.grandTotal)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                        <span className="text-sm text-gray-600">إجمالي المدفوع</span>
+                        <span className="font-bold text-green-600">{formatCurrency(patientAccount.totalPaid)}</span>
+                      </div>
+                      
+                      <div className={`flex justify-between items-center p-3 rounded-lg ${
+                        patientAccount.balance > 0 ? 'bg-red-50' : 'bg-green-50'
+                      }`}>
+                        <span className="text-sm text-gray-600">الرصيد المتبقي</span>
+                        <span className={`font-bold text-xl ${
+                          patientAccount.balance > 0 ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          {formatCurrency(patientAccount.balance)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-600">إجمالي المدفوع</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(patientAccount.totalPaid)}
-                    </p>
-                  </div>
-                  <div className={`text-center p-4 rounded-lg ${
-                    patientAccount.balance > 0 ? 'bg-red-50' : 'bg-green-50'
+
+                  {/* حالة الدفع */}
+                  <div className={`p-4 rounded-lg text-center ${
+                    patientAccount.balance === 0 ? 'bg-green-100 border border-green-300' : 
+                    patientAccount.balance < 0 ? 'bg-blue-100 border border-blue-300' :
+                    'bg-red-100 border border-red-300'
                   }`}>
-                    <p className="text-sm text-gray-600">الرصيد</p>
-                    <p className={`text-2xl font-bold ${
-                      patientAccount.balance > 0 ? 'text-red-600' : 'text-green-600'
+                    <p className={`font-semibold ${
+                      patientAccount.balance === 0 ? 'text-green-800' : 
+                      patientAccount.balance < 0 ? 'text-blue-800' :
+                      'text-red-800'
                     }`}>
-                      {formatCurrency(patientAccount.balance)}
+                      {patientAccount.balance === 0 ? '✓ الحساب مسدد بالكامل' : 
+                       patientAccount.balance < 0 ? '💰 يوجد مبلغ زائد مدفوع' :
+                       '⚠️ يوجد مبلغ مستحق'}
                     </p>
                   </div>
                 </div>
@@ -350,7 +450,7 @@ export default function AccountStatementModal({
             </CardHeader>
             <CardContent>
               <div className="space-y-3 max-h-60 overflow-y-auto">
-                {transactions && transactions.length > 0 ? (
+                {Array.isArray(transactions) && transactions.length > 0 ? (
                   transactions.map((transaction: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
@@ -389,14 +489,14 @@ export default function AccountStatementModal({
           {personType === 'staff' && (
             <div className="grid gap-4 md:grid-cols-3">
               {/* المكافآت */}
-              {bonuses && bonuses.length > 0 && (
+              {Array.isArray(bonuses) && bonuses.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm text-green-600">المكافآت</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {bonuses.map((bonus: any, index: number) => (
+                      {(bonuses as any[]).map((bonus: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
                           <span>{formatDate(bonus.date)}</span>
                           <span className="font-medium text-green-600">
@@ -410,14 +510,14 @@ export default function AccountStatementModal({
               )}
 
               {/* السلف */}
-              {advances && advances.length > 0 && (
+              {Array.isArray(advances) && advances.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm text-yellow-600">السلف</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {advances.map((advance: any, index: number) => (
+                      {(advances as any[]).map((advance: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
                           <span>{formatDate(advance.date)}</span>
                           <span className="font-medium text-yellow-600">
@@ -431,14 +531,14 @@ export default function AccountStatementModal({
               )}
 
               {/* الاستقطاعات */}
-              {deductions && deductions.length > 0 && (
+              {Array.isArray(deductions) && deductions.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm text-red-600">الاستقطاعات</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {deductions.map((deduction: any, index: number) => (
+                      {(deductions as any[]).map((deduction: any, index: number) => (
                         <div key={index} className="flex justify-between text-sm">
                           <span>{formatDate(deduction.date)}</span>
                           <span className="font-medium text-red-600">
