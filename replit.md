@@ -96,6 +96,13 @@ This is a comprehensive Arabic hospital management system built with modern web 
 - ESBuild for server bundling
 - Drizzle Kit for database management
 
+### Desktop Application
+- **Electron** framework for cross-platform desktop app
+- **Electron Builder** for creating distribution packages
+- Native desktop experience with custom menus and shortcuts
+- Supports Windows, macOS, and Linux platforms
+- Maintains internet connectivity for Firebase integration
+
 ## Deployment Strategy
 
 ### Production Setup
@@ -117,6 +124,7 @@ This is a comprehensive Arabic hospital management system built with modern web 
 - Production/development environment detection
 
 ## Changelog
+- June 30, 2025. Added Electron desktop application support
 - June 14, 2025. Initial setup
 
 ## User Preferences

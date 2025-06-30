@@ -1,0 +1,38 @@
+{
+  "name": "hospital-management-desktop",
+  "version": "1.0.0",
+  "description": "نظام إدارة المستشفى - تطبيق سطح المكتب",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron": "electron .",
+    "electron-dev": "NODE_ENV=development electron .",
+    "build-desktop": "electron-builder",
+    "dist-win": "electron-builder --win",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.hospitalmanagement.app",
+    "productName": "نظام إدارة المستشفى",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/main.js",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "electron/assets/icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "electron/assets/icon.png"
+    }
+  }
+}
