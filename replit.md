@@ -119,7 +119,8 @@ This is a comprehensive Arabic hospital management system built with modern web 
 - Production/development environment detection
 
 ## Changelog
-- June 30, 2025. Reverted to web-only version, removed Electron desktop application support
+- June 30, 2025. Enhanced patient account statement with detailed breakdown including daily costs, cigarette costs, admission dates, and payment history. Fixed account statement modal integration in patient management page.
+- June 30, 2025. Reverted to web-only version, removed Electron desktop application support  
 - June 14, 2025. Initial setup
 
 ## User Preferences

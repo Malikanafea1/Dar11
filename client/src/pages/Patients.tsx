@@ -450,6 +450,16 @@ export default function Patients() {
           queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
         }}
       />
+
+      {selectedPatientForStatement && (
+        <AccountStatementModal
+          isOpen={isAccountStatementOpen}
+          onClose={closeAccountStatement}
+          personId={selectedPatientForStatement.id}
+          personType="patient"
+          personName={selectedPatientForStatement.name}
+        />
+      )}
     </>
   );
 }
