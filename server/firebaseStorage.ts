@@ -562,16 +562,16 @@ export class FirebaseStorage implements IStorage {
 
   async getPaymentsByPatient(patientId: string): Promise<Payment[]> {
     try {
-      const q = query(
-        collection(db, "payments"), 
-        where("patientId", "==", patientId),
-        orderBy("paymentDate", "desc")
-      );
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Payment[];
+      // Get all payments and filter by patientId to avoid index requirement
+      const allPayments = await this.getPayments();
+      const patientPayments = allPayments.filter(payment => payment.patientId === patientId);
+      
+      // Sort by payment date DESC
+      return patientPayments.sort((a, b) => {
+        const dateA = new Date(a.paymentDate);
+        const dateB = new Date(b.paymentDate);
+        return dateB.getTime() - dateA.getTime();
+      });
     } catch (error) {
       console.error("Error getting payments by patient:", error);
       return [];
@@ -879,12 +879,8 @@ export class FirebaseStorage implements IStorage {
 
   async getPayrollsByStaff(staffId: string): Promise<Payroll[]> {
     try {
-      const q = query(collection(db, "payrolls"), where("staffId", "==", staffId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Payroll[];
+      const allPayrolls = await this.getPayrolls();
+      return allPayrolls.filter(payroll => payroll.staffId === staffId);
     } catch (error) {
       console.error("Error getting payrolls by staff:", error);
       return [];
@@ -972,12 +968,8 @@ export class FirebaseStorage implements IStorage {
 
   async getBonusesByStaff(staffId: string): Promise<Bonus[]> {
     try {
-      const q = query(collection(db, "bonuses"), where("staffId", "==", staffId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Bonus[];
+      const allBonuses = await this.getBonuses();
+      return allBonuses.filter(bonus => bonus.staffId === staffId);
     } catch (error) {
       console.error("Error getting bonuses by staff:", error);
       return [];
@@ -1057,12 +1049,8 @@ export class FirebaseStorage implements IStorage {
 
   async getAdvancesByStaff(staffId: string): Promise<Advance[]> {
     try {
-      const q = query(collection(db, "advances"), where("staffId", "==", staffId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Advance[];
+      const allAdvances = await this.getAdvances();
+      return allAdvances.filter(advance => advance.staffId === staffId);
     } catch (error) {
       console.error("Error getting advances by staff:", error);
       return [];
@@ -1136,12 +1124,8 @@ export class FirebaseStorage implements IStorage {
 
   async getDeductionsByStaff(staffId: string): Promise<Deduction[]> {
     try {
-      const q = query(collection(db, "deductions"), where("staffId", "==", staffId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Deduction[];
+      const allDeductions = await this.getDeductions();
+      return allDeductions.filter(deduction => deduction.staffId === staffId);
     } catch (error) {
       console.error("Error getting deductions by staff:", error);
       return [];
